@@ -5,13 +5,40 @@ export type ToolId =
   | "edit-text"
   | "sign"
   | "draw"
+  | "line"
+  | "arrow"
+  | "rectangle"
+  | "circle"
+  | "polygon"
   | "highlight"
   | "image"
   | "stamp"
   | "link"
   | "note";
 
-export type PDFObjectType = "text" | "image" | "signature" | "shape" | "note" | "highlight";
+export type ShapeKind = "line" | "arrow" | "rectangle" | "circle" | "polygon";
+
+export type PDFObjectType =
+  | "text"
+  | "image"
+  | "signature"
+  | "drawing"
+  | "shape"
+  | "note"
+  | "highlight"
+  | "link"
+  | "stamp";
+
+export interface TextProps {
+  value: string;
+  fontFamily: string;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  color: string;
+  align: "left" | "center" | "right";
+}
 
 export interface PDFObject {
   id: string;
@@ -23,16 +50,15 @@ export interface PDFObject {
   height: number;
   rotation: number;
   opacity: number;
-  text?: {
-    value: string;
-    fontFamily: string;
-    fontSize: number;
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-    color: string;
-    align: "left" | "center" | "right";
-  };
+  text?: TextProps;
+  image?: { src: string; alt: string };
+  signature?: { kind: "draw" | "type" | "upload"; src?: string; name?: string; font?: string };
+  drawing?: { paths: string[]; stroke: string; thickness: number };
+  shape?: { kind: ShapeKind; stroke: string; fill: string; thickness: number };
+  highlight?: { color: string };
+  note?: { body: string; author: string };
+  link?: { url: string };
+  stamp?: { label: string; color: string };
 }
 
 export interface PDFPage {
@@ -42,6 +68,7 @@ export interface PDFPage {
   rotation: number;
   width: number;
   height: number;
+  template: number;
   objects: PDFObject[];
 }
 
@@ -51,6 +78,7 @@ export interface PDFDocument {
   pageSize: "A4" | "Letter" | "Legal";
   orientation: "Portrait" | "Landscape";
   pages: PDFPage[];
+  textOverrides: Record<string, string>;
 }
 
 export type ViewMode = "single" | "continuous";
