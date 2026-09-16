@@ -1,24 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { UploadPage } from "@/pages/UploadPage";
+
+const title = "PDF Studio — Edit PDFs. Simply.";
+const description =
+  "Edit, annotate, sign and manage your PDF documents from one fast, private workspace.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GitHub Migration Test" },
-      { name: "description", content: "A temporary project for testing GitHub synchronization." },
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
     ],
   }),
-  component: Index,
+  component: UploadPage,
 });
-
-function Index() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <h1 className="text-4xl font-semibold tracking-tight text-foreground">
-        GitHub Migration Test
-      </h1>
-      <p className="mt-3 text-base text-muted-foreground">
-        This is a temporary project.
-      </p>
-    </main>
-  );
-}
