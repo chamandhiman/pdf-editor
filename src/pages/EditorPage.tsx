@@ -7,10 +7,19 @@ import { ThumbnailSidebar } from "@/components/editor/ThumbnailSidebar";
 import { PdfWorkspace } from "@/components/editor/PdfWorkspace";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { BottomToolbar } from "@/components/editor/BottomToolbar";
+import { SignatureModal } from "@/components/editor/modals/SignatureModal";
+import { ImageModal } from "@/components/editor/modals/ImageModal";
+import { LinkModal } from "@/components/editor/modals/LinkModal";
 import { useEditorState } from "@/components/editor/useEditorState";
 
 export function EditorPage({ fileName }: { fileName?: string }) {
   const editor = useEditorState(fileName);
+  const closeModal = (open: boolean) => {
+    if (!open) {
+      editor.setModal(null);
+      editor.setTool("select");
+    }
+  };
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
