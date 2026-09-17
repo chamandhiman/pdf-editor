@@ -137,16 +137,25 @@ function IconAction({
   onClick,
   children,
   className,
+  disabled,
 }: {
   label: string;
   onClick: () => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={label} onClick={onClick} className={className}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={label}
+          onClick={onClick}
+          disabled={disabled}
+          className={className}
+        >
           {children}
         </Button>
       </TooltipTrigger>
