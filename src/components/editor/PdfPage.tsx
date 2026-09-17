@@ -5,10 +5,11 @@ interface Props {
   page: PDFPage;
   active: boolean;
   onActivate: () => void;
-  onSelectObject: () => void;
+  children?: React.ReactNode;
 }
 
-export function PdfPage({ page, active, onActivate, onSelectObject }: Props) {
+export function PdfPage({ page, active, onActivate, children }: Props) {
+  const template = page.template;
   return (
     <div
       id={`pdf-page-${page.index + 1}`}
@@ -17,14 +18,18 @@ export function PdfPage({ page, active, onActivate, onSelectObject }: Props) {
         "relative w-[794px] max-w-full shrink-0 bg-page text-page-foreground shadow-page ring-1 ring-black/5 transition-shadow",
         active && "ring-2 ring-brand/30",
       )}
-      style={{ aspectRatio: "794 / 1123" }}
+      style={{
+        aspectRatio: "794 / 1123",
+        transform: page.rotation ? `rotate(${page.rotation}deg)` : undefined,
+      }}
     >
       <div className="h-full overflow-hidden px-[76px] py-[72px] font-serif text-[13.5px] leading-[1.75]">
-        {page.index === 0 && <PageOne onSelectObject={onSelectObject} />}
-        {page.index === 1 && <PageTwo />}
-        {page.index === 2 && <PageThree />}
-        {page.index === 3 && <PageFour />}
+        {template === 0 && <PageOne />}
+        {template === 1 && <PageTwo />}
+        {template === 2 && <PageThree />}
+        {template === 3 && <PageFour />}
       </div>
+      {children}
       <span className="absolute -bottom-6 left-0 text-[11px] font-sans tabular-nums text-muted-foreground">
         Page {page.index + 1}
       </span>
