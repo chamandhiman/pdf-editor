@@ -78,14 +78,7 @@ function PageOne() {
 
       <Heading>Employee Information</Heading>
       <dl className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-[12.5px]">
-        <Field label="Full name">
-          <button
-            onClick={onSelectObject}
-            className="rounded-sm px-0.5 -mx-0.5 text-left underline decoration-brand/40 decoration-dotted underline-offset-2 hover:bg-brand-soft"
-          >
-            Aarav Sharma
-          </button>
-        </Field>
+        <Field label="Full name">Aarav Sharma</Field>
         <Field label="Employee ID">NB-20416</Field>
         <Field label="Designation">Senior Data Engineer</Field>
         <Field label="Department">Platform Engineering</Field>
