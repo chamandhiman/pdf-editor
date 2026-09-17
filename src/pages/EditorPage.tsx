@@ -7,10 +7,19 @@ import { ThumbnailSidebar } from "@/components/editor/ThumbnailSidebar";
 import { PdfWorkspace } from "@/components/editor/PdfWorkspace";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { BottomToolbar } from "@/components/editor/BottomToolbar";
+import { SignatureModal } from "@/components/editor/modals/SignatureModal";
+import { ImageModal } from "@/components/editor/modals/ImageModal";
+import { LinkModal } from "@/components/editor/modals/LinkModal";
 import { useEditorState } from "@/components/editor/useEditorState";
 
 export function EditorPage({ fileName }: { fileName?: string }) {
   const editor = useEditorState(fileName);
+  const closeModal = (open: boolean) => {
+    if (!open) {
+      editor.setModal(null);
+      editor.setTool("select");
+    }
+  };
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
@@ -76,6 +85,34 @@ export function EditorPage({ fileName }: { fileName?: string }) {
       <div className="hidden lg:block">
         <BottomToolbar editor={editor} />
       </div>
+
+      <SignatureModal
+        open={editor.modal === "signature"}
+        onOpenChange={closeModal}
+        onApply={(signature) => {
+          editor.addSignature(editor.activePage, signature);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
+      <ImageModal
+        open={editor.modal === "image"}
+        onOpenChange={closeModal}
+        onApply={(src, alt) => {
+          editor.addImage(editor.activePage, src, alt);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
+      <LinkModal
+        open={editor.modal === "link"}
+        onOpenChange={closeModal}
+        onApply={(url) => {
+          editor.addLink(editor.activePage, url);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
     </div>
   );
 }

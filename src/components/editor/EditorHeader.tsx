@@ -57,10 +57,10 @@ export function EditorHeader({ editor }: { editor: EditorState }) {
       </DropdownMenu>
 
       <div className="mx-auto flex items-center gap-1">
-        <IconAction label="Undo" onClick={() => soon("Undo")}>
+        <IconAction label="Undo" onClick={editor.undo} disabled={!editor.canUndo}>
           <Undo2 className="h-4 w-4" />
         </IconAction>
-        <IconAction label="Redo" onClick={() => soon("Redo")}>
+        <IconAction label="Redo" onClick={editor.redo} disabled={!editor.canRedo}>
           <Redo2 className="h-4 w-4" />
         </IconAction>
       </div>
@@ -137,16 +137,25 @@ function IconAction({
   onClick,
   children,
   className,
+  disabled,
 }: {
   label: string;
   onClick: () => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={label} onClick={onClick} className={className}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={label}
+          onClick={onClick}
+          disabled={disabled}
+          className={className}
+        >
           {children}
         </Button>
       </TooltipTrigger>

@@ -1,5 +1,4 @@
 import { Copy, MoreVertical, RotateCcw, RotateCw, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,13 +14,17 @@ export function ThumbnailItem({
   page,
   active,
   onSelect,
+  onRotate,
+  onDuplicate,
+  onDelete,
 }: {
   page: PDFPage;
   active: boolean;
   onSelect: () => void;
+  onRotate: (delta: number) => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
 }) {
-  const soon = (label: string) => toast(`${label} — page ${page.index + 1} (UI only for now).`);
-
   return (
     <div className="group relative">
       <button
@@ -35,7 +38,7 @@ export function ThumbnailItem({
         )}
       >
         <div className="aspect-[1/1.414] w-full overflow-hidden rounded-[5px] p-3">
-          <MiniPage index={page.index} />
+          <MiniPage index={page.template} />
         </div>
       </button>
 
@@ -52,17 +55,17 @@ export function ThumbnailItem({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onSelect={() => soon("Rotate clockwise")}>
+            <DropdownMenuItem onSelect={() => onRotate(90)}>
               <RotateCw className="mr-2 h-4 w-4" /> Rotate Clockwise
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => soon("Rotate counter-clockwise")}>
+            <DropdownMenuItem onSelect={() => onRotate(-90)}>
               <RotateCcw className="mr-2 h-4 w-4" /> Rotate Counter-clockwise
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => soon("Duplicate")}>
+            <DropdownMenuItem onSelect={onDuplicate}>
               <Copy className="mr-2 h-4 w-4" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => soon("Delete")}>
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={onDelete}>
               <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
