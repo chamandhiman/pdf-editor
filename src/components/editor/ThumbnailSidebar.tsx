@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { demoAnnotations, demoBookmarks, demoOutline } from "@/lib/demo-document";
-import type { SidebarTab } from "@/types/pdf";
+import { demoBookmarks, demoOutline } from "@/lib/demo-document";
+import type { PDFObject, SidebarTab } from "@/types/pdf";
 import { ThumbnailItem } from "./ThumbnailItem";
 import type { EditorState } from "./useEditorState";
 
@@ -16,9 +16,16 @@ const tabs: { id: SidebarTab; label: string; icon: React.ComponentType<{ classNa
   { id: "bookmarks", label: "Bookmarks", icon: Bookmark },
 ];
 
-export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
-  const soon = (label: string) => toast(`${label} is coming in the next pass.`);
+const summarise = (o: PDFObject) => {
+  if (o.type === "note") return o.note?.body || "Empty note";
+  if (o.type === "link") return o.link?.url ?? "";
+  if (o.type === "stamp") return o.stamp?.label ?? "";
+  if (o.type === "signature") return o.signature?.name ?? "Signature placed";
+  if (o.type === "highlight") return "Highlighted area";
+  return "Freehand drawing";
+};
 
+export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
   return (
     <div className="flex h-full w-full flex-col bg-toolbar">
       <Tabs
@@ -53,6 +60,9 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
                 page={page}
                 active={editor.activePage === page.index + 1}
                 onSelect={() => editor.setActivePage(page.index + 1)}
+                onRotate={(delta) => editor.rotatePage(page.id, delta)}
+                onDuplicate={() => editor.duplicatePage(page.id)}
+                onDelete={() => editor.deletePage(page.id)}
               />
             ))}
           </TabsContent>
@@ -72,20 +82,27 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
           </TabsContent>
 
           <TabsContent value="annotations" className="m-0 space-y-2 p-3">
-            {demoAnnotations.map((a) => (
+            {editor.annotations.length === 0 && (
+              <p className="px-1 py-6 text-center text-[12px] text-muted-foreground">
+                No annotations yet. Add a note, highlight or stamp to see it here.
+              </p>
+            )}
+            {editor.annotations.map(({ object, page }) => (
               <button
-                key={a.id}
-                onClick={() => editor.setActivePage(a.page)}
+                key={object.id}
+                onClick={() => {
+                  editor.setActivePage(page);
+                  editor.setSelectedId(object.id);
+                }}
                 className="block w-full rounded-md border border-border bg-background p-2.5 text-left transition-colors hover:border-brand/50"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-brand">
-                    {a.type}
+                    {object.type}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">p. {a.page}</span>
+                  <span className="text-[11px] text-muted-foreground">p. {page}</span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-[13px] text-foreground">{a.text}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{a.author}</p>
+                <p className="mt-1 line-clamp-2 text-[13px] text-foreground">{summarise(object)}</p>
               </button>
             ))}
           </TabsContent>
@@ -111,7 +128,10 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
           variant="outline"
           size="sm"
           className="w-full justify-start gap-2"
-          onClick={() => soon("Add Page")}
+          onClick={() => {
+            editor.addPage();
+            toast("Blank page added at the end.");
+          }}
         >
           <FilePlus2 className="h-4 w-4" /> Add Page
         </Button>
@@ -119,7 +139,7 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground"
-          onClick={() => soon("Import Pages")}
+          onClick={() => toast("Importing pages from another file is coming next.")}
         >
           <Import className="h-4 w-4" /> Import Pages
         </Button>
