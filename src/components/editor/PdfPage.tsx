@@ -45,7 +45,7 @@ function Heading({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PageOne({ onSelectObject }: { onSelectObject: () => void }) {
+function PageOne() {
   return (
     <>
       <div className="flex items-start justify-between border-b border-black/10 pb-4">

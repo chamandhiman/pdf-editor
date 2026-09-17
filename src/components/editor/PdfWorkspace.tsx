@@ -1,4 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PageLayer } from "./PageLayer";
 import { PdfPage } from "./PdfPage";
 import type { EditorState } from "./useEditorState";
 
@@ -21,8 +22,9 @@ export function PdfWorkspace({ editor }: { editor: EditorState }) {
               page={page}
               active={editor.activePage === page.index + 1}
               onActivate={() => editor.setActivePage(page.index + 1)}
-              onSelectObject={editor.selectMockObject}
-            />
+            >
+              <PageLayer page={page} editor={editor} pageNumber={page.index + 1} />
+            </PdfPage>
           ))}
         </div>
       </div>
