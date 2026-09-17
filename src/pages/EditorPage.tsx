@@ -85,6 +85,34 @@ export function EditorPage({ fileName }: { fileName?: string }) {
       <div className="hidden lg:block">
         <BottomToolbar editor={editor} />
       </div>
+
+      <SignatureModal
+        open={editor.modal === "signature"}
+        onOpenChange={closeModal}
+        onApply={(signature) => {
+          editor.addSignature(editor.activePage, signature);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
+      <ImageModal
+        open={editor.modal === "image"}
+        onOpenChange={closeModal}
+        onApply={(src, alt) => {
+          editor.addImage(editor.activePage, src, alt);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
+      <LinkModal
+        open={editor.modal === "link"}
+        onOpenChange={closeModal}
+        onApply={(url) => {
+          editor.addLink(editor.activePage, url);
+          editor.setModal(null);
+          editor.setTool("select");
+        }}
+      />
     </div>
   );
 }
