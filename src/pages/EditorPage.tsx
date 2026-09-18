@@ -1,4 +1,6 @@
-import { Files, SlidersHorizontal } from "lucide-react";
+import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
+import { FileUp, Files, Loader2, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { EditorHeader } from "@/components/editor/EditorHeader";
@@ -11,9 +13,17 @@ import { SignatureModal } from "@/components/editor/modals/SignatureModal";
 import { ImageModal } from "@/components/editor/modals/ImageModal";
 import { LinkModal } from "@/components/editor/modals/LinkModal";
 import { useEditorState } from "@/components/editor/useEditorState";
+import { PdfDocContext, usePdfUpload } from "@/components/editor/usePdfDocument";
 
 export function EditorPage({ fileName }: { fileName?: string }) {
   const editor = useEditorState(fileName);
+  const { status, pdf } = usePdfUpload();
+  const setPdfPages = editor.setPdfPages;
+
+  useEffect(() => {
+    if (pdf) setPdfPages(pdf.sizes, pdf.fileName);
+  }, [pdf, setPdfPages]);
+
   const closeModal = (open: boolean) => {
     if (!open) {
       editor.setModal(null);
@@ -21,7 +31,37 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (status !== "ready") {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card shadow-panel">
+          <FileUp className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <div>
+          <h1 className="text-[19px] font-semibold tracking-tight">
+            {status === "error" ? "That file could not be opened" : "No document open"}
+          </h1>
+          <p className="mt-1 text-[13.5px] text-muted-foreground">
+            Choose a PDF from your device to start editing.
+          </p>
+        </div>
+        <Button variant="brand" size="lg" asChild>
+          <Link to="/">Upload a PDF</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
+    <PdfDocContext.Provider value={pdf?.doc ?? null}>
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
       <EditorHeader editor={editor} />
       <EditorToolbar editor={editor} />
