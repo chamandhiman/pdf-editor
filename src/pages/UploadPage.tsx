@@ -28,8 +28,19 @@ export function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  const openEditor = (name?: string) =>
-    navigate({ to: "/editor", search: { file: name ?? "Sample-Document.pdf" } });
+  const [error, setError] = useState<string | null>(null);
+
+  const openFile = async (file?: File | null) => {
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("Please choose a PDF file.");
+      return;
+    }
+    setError(null);
+    const bytes = await file.arrayBuffer();
+    setUploadedPdf(bytes, file.name);
+    navigate({ to: "/editor", search: { file: file.name } });
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
