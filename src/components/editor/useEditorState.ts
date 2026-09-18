@@ -407,6 +407,33 @@ export function useEditorState(fileName?: string) {
     [commit],
   );
 
+  const setPdfPages = useCallback(
+    (sizes: { width: number; height: number }[], name: string) => {
+      past.current = [];
+      future.current = [];
+      setDoc({
+        id: "doc-1",
+        fileName: name,
+        pageSize: "A4",
+        orientation: "Portrait",
+        textOverrides: {},
+        pages: sizes.map((s, i) => ({
+          id: `page-${i + 1}`,
+          index: i,
+          label: `Page ${i + 1}`,
+          rotation: 0,
+          width: s.width,
+          height: s.height,
+          template: -1,
+          objects: [],
+        })),
+      });
+      setActivePage(1);
+      setHistoryTick((t) => t + 1);
+    },
+    [],
+  );
+
   const setTextOverride = useCallback(
     (key: string, value: string) => {
       commit((prev) => ({ ...prev, textOverrides: { ...prev.textOverrides, [key]: value } }));
@@ -496,6 +523,7 @@ export function useEditorState(fileName?: string) {
     rotatePage,
     movePage,
     setTextOverride,
+    setPdfPages,
     undo,
     redo,
     canUndo: past.current.length > 0,
