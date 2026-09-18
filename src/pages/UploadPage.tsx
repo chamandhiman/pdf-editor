@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { BrandMark } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
+import { setUploadedPdf } from "@/lib/pdf-store";
 
 const nav = ["Tools", "Features", "Pricing", "Resources"];
 
@@ -65,7 +66,7 @@ export function UploadPage() {
             <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
               Sign In
             </Button>
-            <Button variant="brand" size="sm" onClick={() => openEditor()}>
+            <Button variant="brand" size="sm" onClick={() => inputRef.current?.click()}>
               Get Started
             </Button>
             <Sheet>
@@ -118,7 +119,7 @@ export function UploadPage() {
           onDrop={(e) => {
             e.preventDefault();
             setDragging(false);
-            openEditor(e.dataTransfer.files?.[0]?.name);
+            void openFile(e.dataTransfer.files?.[0]);
           }}
           onClick={() => inputRef.current?.click()}
           role="button"
@@ -154,8 +155,9 @@ export function UploadPage() {
             type="file"
             accept="application/pdf"
             className="hidden"
-            onChange={(e) => openEditor(e.target.files?.[0]?.name)}
+            onChange={(e) => void openFile(e.target.files?.[0])}
           />
+          {error && <p className="mt-3 text-[12.5px] text-destructive">{error}</p>}
         </div>
 
         <p className="mt-5 flex items-center justify-center gap-1.5 text-[12.5px] text-muted-foreground">
