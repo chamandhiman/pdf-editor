@@ -154,5 +154,6 @@ export function EditorPage({ fileName }: { fileName?: string }) {
         }}
       />
     </div>
+    </PdfDocContext.Provider>
   );
 }
