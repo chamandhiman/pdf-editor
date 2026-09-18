@@ -20,6 +20,7 @@ export function PdfWorkspace({ editor }: { editor: EditorState }) {
             <PdfPage
               key={page.id}
               page={page}
+              editor={editor}
               active={editor.activePage === page.index + 1}
               onActivate={() => editor.setActivePage(page.index + 1)}
             >
