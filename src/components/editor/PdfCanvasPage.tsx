@@ -36,7 +36,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
     if (activeIdx === null) return;
     const blurActiveText = (event: PointerEvent) => {
       const active = document.activeElement;
-      if (!(active instanceof HTMLElement) || active.dataset.idx !== String(activeIdx)) return;
+      if (!(active instanceof HTMLElement) || active.dataset["idx"] !== String(activeIdx)) return;
       if (event.target instanceof Node && active.contains(event.target)) return;
       active.blur();
     };
