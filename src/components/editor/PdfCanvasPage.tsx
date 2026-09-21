@@ -14,11 +14,12 @@ interface TextItem {
   fontSize: number;
   width: number;
   fontFamily: string;
+  fontWeight: React.CSSProperties["fontWeight"];
+  fontStyle: React.CSSProperties["fontStyle"];
 }
 
 interface Colors {
   text: string;
-  bg: string;
 }
 
 export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorState }) {
@@ -30,6 +31,18 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [colors, setColors] = useState<Record<number, Colors>>({});
   const editable = editor.tool === "edit-text";
+
+  useEffect(() => {
+    if (activeIdx === null) return;
+    const blurActiveText = (event: PointerEvent) => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active.dataset["idx"] !== String(activeIdx)) return;
+      if (event.target instanceof Node && active.contains(event.target)) return;
+      active.blur();
+    };
+    document.addEventListener("pointerdown", blurActiveText, true);
+    return () => document.removeEventListener("pointerdown", blurActiveText, true);
+  }, [activeIdx]);
 
   useEffect(() => {
     if (!doc) return;
@@ -64,6 +77,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         const style = (content.styles as Record<string, { fontFamily?: string }>)[
           item.fontName ?? ""
         ];
+        const fontIdentity = `${item.fontName ?? ""} ${style?.fontFamily ?? ""}`;
         next.push({
           idx: i,
           str: item.str,
@@ -72,6 +86,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           fontSize,
           width: item.width ?? 0,
           fontFamily: style?.fontFamily ?? "serif",
+          fontWeight: /bold|black|heavy|semibold|demi/i.test(fontIdentity) ? 700 : 400,
+          fontStyle: /italic|oblique/i.test(fontIdentity) ? "italic" : "normal",
         });
       });
       setItems(next);
@@ -102,17 +118,15 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const sample = (item: TextItem): Colors => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !ctx) return { text: "#000000", bg: "#ffffff" };
+    if (!canvas || !ctx) return { text: "#000000" };
     const x = Math.max(0, Math.floor(item.left * RENDER_SCALE));
     const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2) * RENDER_SCALE));
     const w = Math.min(canvas.width - x, Math.ceil((item.width || item.fontSize) * RENDER_SCALE));
     const h = Math.min(canvas.height - y, Math.ceil(item.fontSize * 1.4 * RENDER_SCALE));
-    if (w <= 0 || h <= 0) return { text: "#000000", bg: "#ffffff" };
+    if (w <= 0 || h <= 0) return { text: "#000000" };
     const data = ctx.getImageData(x, y, w, h).data;
     let dark = [0, 0, 0];
-    let light = [255, 255, 255];
     let dl = 1e9;
-    let ll = -1;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i]!;
       const g = data[i + 1]!;
@@ -122,14 +136,10 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         dl = lum;
         dark = [r, g, b];
       }
-      if (lum > ll) {
-        ll = lum;
-        light = [r, g, b];
-      }
     }
     const hex = (c: number[]) =>
       "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
-    return { text: hex(dark), bg: hex(light) };
+    return { text: hex(dark) };
   };
 
   const keyFor = (idx: number) => `${page.index}:${idx}`;
@@ -140,7 +150,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       <canvas ref={canvasRef} className="h-full w-full" />
       <div
         ref={layerRef}
-        className="absolute inset-0"
+        className="absolute inset-0 z-30"
         style={{
           width: page.width,
           height: page.height,
@@ -153,22 +163,9 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           const active = activeIdx === item.idx;
           const dirty = override !== undefined && override !== item.str;
           const shown = active || dirty;
-          const c = colors[item.idx] ?? { text: "#000000", bg: "#ffffff" };
+          const c = colors[item.idx] ?? { text: "#000000" };
           return (
             <span key={item.idx} className="contents">
-              {shown && (
-                <span
-                  aria-hidden
-                  className="absolute"
-                  style={{
-                    left: item.left - 1,
-                    top: item.top - item.fontSize * 0.22,
-                    width: Math.max(item.width, 4) + 2,
-                    height: item.fontSize * 1.42,
-                    background: c.bg,
-                  }}
-                />
-              )}
               <span
                 data-idx={item.idx}
                 contentEditable={editable}
@@ -196,12 +193,15 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   top: item.top,
                   fontSize: item.fontSize,
                   fontFamily: item.fontFamily,
+                  fontWeight: item.fontWeight,
+                  fontStyle: item.fontStyle,
                   lineHeight: 1.18,
                   whiteSpace: "pre",
                   transformOrigin: "0 0",
-                  transform: shown ? undefined : `scaleX(${scales[item.idx] ?? 1})`,
+                  transform: `scaleX(${scales[item.idx] ?? 1})`,
                   color: shown ? c.text : "transparent",
                   background: "transparent",
+                  caretColor: c.text,
                 }}
               >
                 {override ?? item.str}
