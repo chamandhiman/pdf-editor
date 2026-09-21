@@ -20,7 +20,6 @@ interface TextItem {
 
 interface Colors {
   text: string;
-  bg: string;
 }
 
 export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorState }) {
@@ -107,17 +106,15 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const sample = (item: TextItem): Colors => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !ctx) return { text: "#000000", bg: "#ffffff" };
+    if (!canvas || !ctx) return { text: "#000000" };
     const x = Math.max(0, Math.floor(item.left * RENDER_SCALE));
     const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2) * RENDER_SCALE));
     const w = Math.min(canvas.width - x, Math.ceil((item.width || item.fontSize) * RENDER_SCALE));
     const h = Math.min(canvas.height - y, Math.ceil(item.fontSize * 1.4 * RENDER_SCALE));
-    if (w <= 0 || h <= 0) return { text: "#000000", bg: "#ffffff" };
+    if (w <= 0 || h <= 0) return { text: "#000000" };
     const data = ctx.getImageData(x, y, w, h).data;
     let dark = [0, 0, 0];
-    let light = [255, 255, 255];
     let dl = 1e9;
-    let ll = -1;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i]!;
       const g = data[i + 1]!;
@@ -127,14 +124,10 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         dl = lum;
         dark = [r, g, b];
       }
-      if (lum > ll) {
-        ll = lum;
-        light = [r, g, b];
-      }
     }
     const hex = (c: number[]) =>
       "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
-    return { text: hex(dark), bg: hex(light) };
+    return { text: hex(dark) };
   };
 
   const keyFor = (idx: number) => `${page.index}:${idx}`;
@@ -158,7 +151,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           const active = activeIdx === item.idx;
           const dirty = override !== undefined && override !== item.str;
           const shown = active || dirty;
-          const c = colors[item.idx] ?? { text: "#000000", bg: "#ffffff" };
+          const c = colors[item.idx] ?? { text: "#000000" };
           return (
             <span key={item.idx} className="contents">
               <span
