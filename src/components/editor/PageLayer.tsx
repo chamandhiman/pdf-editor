@@ -134,7 +134,11 @@ export function PageLayer({
         tool === "hand" && "cursor-grab",
       )}
     >
-      <div className={cn("absolute inset-0", tool === "select" && "pointer-events-auto")}
+      <div
+        className={cn(
+          "absolute inset-0",
+          tool === "select" ? "pointer-events-auto" : "pointer-events-none",
+        )}
         onPointerDown={(e) => {
           if (tool === "select" && e.target === e.currentTarget) editor.setSelectedId(null);
         }}

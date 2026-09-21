@@ -33,6 +33,18 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const editable = editor.tool === "edit-text";
 
   useEffect(() => {
+    if (activeIdx === null) return;
+    const blurActiveText = (event: PointerEvent) => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active.dataset.idx !== String(activeIdx)) return;
+      if (event.target instanceof Node && active.contains(event.target)) return;
+      active.blur();
+    };
+    document.addEventListener("pointerdown", blurActiveText, true);
+    return () => document.removeEventListener("pointerdown", blurActiveText, true);
+  }, [activeIdx]);
+
+  useEffect(() => {
     if (!doc) return;
     let cancelled = false;
     (async () => {
@@ -138,7 +150,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       <canvas ref={canvasRef} className="h-full w-full" />
       <div
         ref={layerRef}
-        className="absolute inset-0"
+        className="absolute inset-0 z-30"
         style={{
           width: page.width,
           height: page.height,
