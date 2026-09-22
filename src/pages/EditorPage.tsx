@@ -31,7 +31,16 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     }
   };
 
-  if (status === "loading") {
+  const documentIsSynced =
+    pdf !== null &&
+    editor.document.fileName === pdf.fileName &&
+    editor.document.pages.length === pdf.sizes.length &&
+    editor.document.pages.every(
+      (page, index) =>
+        page.width === pdf.sizes[index]?.width && page.height === pdf.sizes[index]?.height,
+    );
+
+  if (status === "loading" || (status === "ready" && !documentIsSynced)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
