@@ -77,7 +77,17 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         const style = (content.styles as Record<string, { fontFamily?: string }>)[
           item.fontName ?? ""
         ];
-        const fontIdentity = `${item.fontName ?? ""} ${style?.fontFamily ?? ""}`;
+        let embeddedFont:
+          | { loadedName?: string; name?: string; fallbackName?: string; bold?: boolean; italic?: boolean }
+          | undefined;
+        if (item.fontName) {
+          try {
+            embeddedFont = p.commonObjs.get(item.fontName) as typeof embeddedFont;
+          } catch {
+            embeddedFont = undefined;
+          }
+        }
+        const fontIdentity = `${embeddedFont?.name ?? ""} ${item.fontName ?? ""} ${style?.fontFamily ?? ""}`;
         next.push({
           idx: i,
           str: item.str,
@@ -85,9 +95,12 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           top: tx[5]! - fontSize,
           fontSize,
           width: item.width ?? 0,
-          fontFamily: style?.fontFamily ?? "serif",
-          fontWeight: /bold|black|heavy|semibold|demi/i.test(fontIdentity) ? 700 : 400,
-          fontStyle: /italic|oblique/i.test(fontIdentity) ? "italic" : "normal",
+          fontFamily:
+            embeddedFont?.loadedName ?? embeddedFont?.fallbackName ?? style?.fontFamily ?? "serif",
+          fontWeight:
+            embeddedFont?.bold || /bold|black|heavy|semibold|demi/i.test(fontIdentity) ? 700 : 400,
+          fontStyle:
+            embeddedFont?.italic || /italic|oblique/i.test(fontIdentity) ? "italic" : "normal",
         });
       });
       setItems(next);
