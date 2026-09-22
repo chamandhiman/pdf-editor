@@ -26,6 +26,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const doc = usePdfDoc();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
+  const pristineCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [items, setItems] = useState<TextItem[]>([]);
   const [scales, setScales] = useState<Record<number, number>>({});
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -59,6 +60,12 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       if (!ctx) return;
       await p.render({ canvas, canvasContext: ctx, viewport }).promise;
       if (cancelled) return;
+
+      const pristine = document.createElement("canvas");
+      pristine.width = canvas.width;
+      pristine.height = canvas.height;
+      pristine.getContext("2d")?.drawImage(canvas, 0, 0);
+      pristineCanvasRef.current = pristine;
 
       const unit = p.getViewport({ scale: 1 });
       const content = await p.getTextContent();
@@ -109,6 +116,32 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       cancelled = true;
     };
   }, [doc, page.index]);
+
+  // The PDF canvas already contains its printed text. Whenever an editable
+  // counterpart is visible, remove that glyph run from the canvas first so
+  // the user edits one line rather than seeing two lines overlaid.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const pristine = pristineCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !pristine || !ctx || items.length === 0) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(pristine, 0, 0);
+
+    items.forEach((item) => {
+      const key = `${page.index}:${item.idx}`;
+      const override = editor.document.textOverrides[key];
+      if (activeIdx !== item.idx && (override === undefined || override === item.str)) return;
+
+      const pad = 1.5 * RENDER_SCALE;
+      const x = item.left * RENDER_SCALE - pad;
+      const y = item.top * RENDER_SCALE - pad;
+      const width = (item.width || item.fontSize) * RENDER_SCALE + pad * 2;
+      const height = item.fontSize * 1.25 * RENDER_SCALE + pad * 2;
+      ctx.clearRect(x, y, width, height);
+    });
+  }, [activeIdx, editor.document.textOverrides, items, page.index]);
 
   // match each span's rendered width to the original glyph run
   useLayoutEffect(() => {
