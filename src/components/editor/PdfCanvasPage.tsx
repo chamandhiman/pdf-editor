@@ -16,6 +16,7 @@ interface TextItem {
   fontFamily: string;
   fontWeight: React.CSSProperties["fontWeight"];
   fontStyle: React.CSSProperties["fontStyle"];
+  angle: number;
 }
 
 interface Colors {
@@ -26,7 +27,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const doc = usePdfDoc();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
-  const pristineCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fullCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [items, setItems] = useState<TextItem[]>([]);
   const [scales, setScales] = useState<Record<number, number>>({});
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -54,18 +55,35 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       const viewport = p.getViewport({ scale: RENDER_SCALE });
       const canvas = canvasRef.current;
       if (!canvas || cancelled) return;
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      await p.render({ canvas, canvasContext: ctx, viewport }).promise;
-      if (cancelled) return;
+      const width = Math.floor(viewport.width);
+      const height = Math.floor(viewport.height);
+      canvas.width = width;
+      canvas.height = height;
 
-      const pristine = document.createElement("canvas");
-      pristine.width = canvas.width;
-      pristine.height = canvas.height;
-      pristine.getContext("2d")?.drawImage(canvas, 0, 0);
-      pristineCanvasRef.current = pristine;
+      const fullCanvas = document.createElement("canvas");
+      fullCanvas.width = width;
+      fullCanvas.height = height;
+      const fullContext = fullCanvas.getContext("2d", { willReadFrequently: true });
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!fullContext || !ctx) return;
+
+      await p.render({ canvas: fullCanvas, canvasContext: fullContext, viewport }).promise;
+      if (cancelled) return;
+      fullCanvasRef.current = fullCanvas;
+
+      const operatorList = await p.getOperatorList();
+      const textOperators = new Set([
+        pdfjs.OPS.showText,
+        pdfjs.OPS.showSpacedText,
+        pdfjs.OPS.nextLineShowText,
+      ]);
+      await p.render({
+        canvas,
+        canvasContext: ctx,
+        viewport,
+        operationsFilter: (index: number) => !textOperators.has(operatorList.fnArray[index] ?? -1),
+      }).promise;
+      if (cancelled) return;
 
       const unit = p.getViewport({ scale: 1 });
       const content = await p.getTextContent();
@@ -81,6 +99,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         if (!item.str || !item.str.trim() || !item.transform) return;
         const tx = pdfjs.Util.transform(unit.transform, item.transform);
         const fontSize = Math.hypot(tx[2]!, tx[3]!);
+        const angle = Math.atan2(tx[1]!, tx[0]!);
         const style = (content.styles as Record<string, { fontFamily?: string }>)[
           item.fontName ?? ""
         ];
@@ -108,6 +127,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
             embeddedFont?.bold || /bold|black|heavy|semibold|demi/i.test(fontIdentity) ? 700 : 400,
           fontStyle:
             embeddedFont?.italic || /italic|oblique/i.test(fontIdentity) ? "italic" : "normal",
+          angle,
         });
       });
       setItems(next);
@@ -116,32 +136,6 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       cancelled = true;
     };
   }, [doc, page.index]);
-
-  // The PDF canvas already contains its printed text. Whenever an editable
-  // counterpart is visible, remove that glyph run from the canvas first so
-  // the user edits one line rather than seeing two lines overlaid.
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const pristine = pristineCanvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !pristine || !ctx || items.length === 0) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(pristine, 0, 0);
-
-    items.forEach((item) => {
-      const key = `${page.index}:${item.idx}`;
-      const override = editor.document.textOverrides[key];
-      if (activeIdx !== item.idx && (override === undefined || override === item.str)) return;
-
-      const pad = 1.5 * RENDER_SCALE;
-      const x = item.left * RENDER_SCALE - pad;
-      const y = item.top * RENDER_SCALE - pad;
-      const width = (item.width || item.fontSize) * RENDER_SCALE + pad * 2;
-      const height = item.fontSize * 1.25 * RENDER_SCALE + pad * 2;
-      ctx.clearRect(x, y, width, height);
-    });
-  }, [activeIdx, editor.document.textOverrides, items, page.index]);
 
   // match each span's rendered width to the original glyph run
   useLayoutEffect(() => {
@@ -162,30 +156,36 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   }, [items]);
 
   const sample = (item: TextItem): Colors => {
-    const canvas = canvasRef.current;
+    const canvas = fullCanvasRef.current;
+    const background = canvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !ctx) return { text: "#000000" };
+    const backgroundContext = background?.getContext("2d", { willReadFrequently: true });
+    if (!canvas || !background || !ctx || !backgroundContext) return { text: "#000000" };
     const x = Math.max(0, Math.floor(item.left * RENDER_SCALE));
     const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2) * RENDER_SCALE));
     const w = Math.min(canvas.width - x, Math.ceil((item.width || item.fontSize) * RENDER_SCALE));
     const h = Math.min(canvas.height - y, Math.ceil(item.fontSize * 1.4 * RENDER_SCALE));
     if (w <= 0 || h <= 0) return { text: "#000000" };
     const data = ctx.getImageData(x, y, w, h).data;
-    let dark = [0, 0, 0];
-    let dl = 1e9;
+    const backgroundData = backgroundContext.getImageData(x, y, w, h).data;
+    let text = [0, 0, 0];
+    let greatestDifference = 0;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i]!;
       const g = data[i + 1]!;
       const b = data[i + 2]!;
-      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      if (lum < dl) {
-        dl = lum;
-        dark = [r, g, b];
+      const difference =
+        Math.abs(r - backgroundData[i]!) +
+        Math.abs(g - backgroundData[i + 1]!) +
+        Math.abs(b - backgroundData[i + 2]!);
+      if (difference > greatestDifference) {
+        greatestDifference = difference;
+        text = [r, g, b];
       }
     }
     const hex = (c: number[]) =>
       "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
-    return { text: hex(dark) };
+    return { text: hex(text) };
   };
 
   const keyFor = (idx: number) => `${page.index}:${idx}`;
@@ -206,10 +206,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         {items.map((item) => {
           const key = keyFor(item.idx);
           const override = overrides[key];
-          const active = activeIdx === item.idx;
-          const dirty = override !== undefined && override !== item.str;
-          const shown = active || dirty;
-          const c = colors[item.idx] ?? { text: "#000000" };
+          const c = colors[item.idx] ?? sample(item);
           return (
             <span key={item.idx} className="contents">
               <span
@@ -244,8 +241,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   lineHeight: 1.18,
                   whiteSpace: "pre",
                   transformOrigin: "0 0",
-                  transform: `scaleX(${scales[item.idx] ?? 1})`,
-                  color: shown ? c.text : "transparent",
+                  transform: `rotate(${item.angle}rad) scaleX(${scales[item.idx] ?? 1})`,
+                  color: c.text,
                   background: "transparent",
                   caretColor: c.text,
                 }}
