@@ -13,9 +13,27 @@ export const usePdfDoc = () => useContext(PdfDocContext);
 
 type Status = "empty" | "loading" | "ready" | "error";
 
+function describeLoadFailure(error: unknown): string {
+  const raw = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  if (/password/i.test(raw)) {
+    return "This PDF is password protected. Remove the password and try again.";
+  }
+  if (/InvalidPDF|structure|header|corrupt/i.test(raw)) {
+    return "This file is not a valid PDF, or it is damaged.";
+  }
+  if (/detached|ArrayBuffer/i.test(raw)) {
+    return "The file data was lost. Please choose the PDF again.";
+  }
+  if (/fetch|worker|network|import/i.test(raw)) {
+    return "The PDF engine could not start. Check your connection and reload.";
+  }
+  return `The PDF could not be read (${raw}).`;
+}
+
 export function usePdfUpload() {
   const [status, setStatus] = useState<Status>("loading");
   const [pdf, setPdf] = useState<LoadedPdf | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,8 +55,12 @@ export function usePdfUpload() {
         if (cancelled) return;
         setPdf({ doc, fileName: upload.fileName, sizes });
         setStatus("ready");
-      } catch {
-        if (!cancelled) setStatus("error");
+      } catch (error) {
+        console.error("[pdf] failed to open document", error);
+        if (!cancelled) {
+          setErrorMessage(describeLoadFailure(error));
+          setStatus("error");
+        }
       }
     })();
     return () => {
@@ -46,5 +68,5 @@ export function usePdfUpload() {
     };
   }, []);
 
-  return { status, pdf };
+  return { status, pdf, errorMessage };
 }
