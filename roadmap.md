@@ -5,3 +5,4 @@
 - [x] Verify the full upload-to-edit flow in the browser.
 - [x] Remove the original canvas glyphs while their editable text is visible.
 - [x] Keep PDF artwork transparent behind edited text and preserve original text styling.
+- [ ] Prevent untouched extracted text from appearing as duplicate layers.

@@ -28,6 +28,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const fullCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const artworkCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [items, setItems] = useState<TextItem[]>([]);
   const [scales, setScales] = useState<Record<number, number>>({});
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -63,14 +64,19 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       const fullCanvas = document.createElement("canvas");
       fullCanvas.width = width;
       fullCanvas.height = height;
-      const fullContext = fullCanvas.getContext("2d", { willReadFrequently: true });
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const fullContext = fullCanvas.getContext("2d", { willReadFrequently: true });
       if (!fullContext || !ctx) return;
 
       await p.render({ canvas: fullCanvas, canvasContext: fullContext, viewport }).promise;
       if (cancelled) return;
       fullCanvasRef.current = fullCanvas;
 
+      const artworkCanvas = document.createElement("canvas");
+      artworkCanvas.width = width;
+      artworkCanvas.height = height;
+      const artworkContext = artworkCanvas.getContext("2d", { willReadFrequently: true });
+      if (!artworkContext) return;
       const operatorList = await p.getOperatorList();
       const textOperators = new Set([
         pdfjs.OPS.showText,
@@ -78,12 +84,15 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         pdfjs.OPS.nextLineShowText,
       ]);
       await p.render({
-        canvas,
-        canvasContext: ctx,
+        canvas: artworkCanvas,
+        canvasContext: artworkContext,
         viewport,
         operationsFilter: (index: number) => !textOperators.has(operatorList.fnArray[index] ?? -1),
       }).promise;
       if (cancelled) return;
+      artworkCanvasRef.current = artworkCanvas;
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(fullCanvas, 0, 0);
 
       const unit = p.getViewport({ scale: 1 });
       const content = await p.getTextContent();
@@ -155,9 +164,49 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
+  // Keep the original PDF visible and replace only actively edited or saved text
+  // with the text-free artwork beneath it. This avoids exposing duplicate or
+  // poorly positioned accessibility text records elsewhere on the page.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const fullCanvas = fullCanvasRef.current;
+    const artworkCanvas = artworkCanvasRef.current;
+    const ctx = canvas?.getContext("2d", { willReadFrequently: true });
+    if (!canvas || !fullCanvas || !artworkCanvas || !ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(fullCanvas, 0, 0);
+
+    items.forEach((item) => {
+      const key = `${page.index}:${item.idx}`;
+      if (activeIdx !== item.idx && overrides[key] === undefined) return;
+
+      const runWidth = Math.max(item.width, item.fontSize);
+      const runHeight = item.fontSize * 1.45;
+      const sin = Math.abs(Math.sin(item.angle));
+      const cos = Math.abs(Math.cos(item.angle));
+      const boxWidth = runWidth * cos + runHeight * sin;
+      const boxHeight = runWidth * sin + runHeight * cos;
+      const pad = Math.max(2, item.fontSize * 0.14);
+      const x = Math.max(0, Math.floor((item.left - pad) * RENDER_SCALE));
+      const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2 - pad) * RENDER_SCALE));
+      const width = Math.min(
+        canvas.width - x,
+        Math.ceil((boxWidth + pad * 2) * RENDER_SCALE),
+      );
+      const height = Math.min(
+        canvas.height - y,
+        Math.ceil((boxHeight + pad * 2) * RENDER_SCALE),
+      );
+      if (width > 0 && height > 0) {
+        ctx.drawImage(artworkCanvas, x, y, width, height, x, y, width, height);
+      }
+    });
+  }, [activeIdx, items, overrides, page.index]);
+
   const sample = (item: TextItem): Colors => {
     const canvas = fullCanvasRef.current;
-    const background = canvasRef.current;
+    const background = artworkCanvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
     const backgroundContext = background?.getContext("2d", { willReadFrequently: true });
     if (!canvas || !background || !ctx || !backgroundContext) return { text: "#000000" };
@@ -207,6 +256,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           const key = keyFor(item.idx);
           const override = overrides[key];
           const c = colors[item.idx] ?? sample(item);
+          const shown = activeIdx === item.idx || override !== undefined;
           return (
             <span key={item.idx} className="contents">
               <span
@@ -242,9 +292,9 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   whiteSpace: "pre",
                   transformOrigin: "0 0",
                   transform: `rotate(${item.angle}rad) scaleX(${scales[item.idx] ?? 1})`,
-                  color: c.text,
+                  color: shown ? c.text : "transparent",
                   background: "transparent",
-                  caretColor: c.text,
+                  caretColor: shown ? c.text : "transparent",
                 }}
               >
                 {override ?? item.str}
