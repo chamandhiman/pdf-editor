@@ -34,6 +34,7 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [colors, setColors] = useState<Record<number, Colors>>({});
   const editable = editor.tool === "edit-text";
+  const overrides = editor.document.textOverrides;
 
   useEffect(() => {
     if (activeIdx === null) return;
@@ -238,7 +239,6 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   };
 
   const keyFor = (idx: number) => `${page.index}:${idx}`;
-  const overrides = editor.document.textOverrides;
 
   return (
     <div className="absolute inset-0 overflow-hidden">
