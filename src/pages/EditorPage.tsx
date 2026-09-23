@@ -17,7 +17,7 @@ import { PdfDocContext, usePdfUpload } from "@/components/editor/usePdfDocument"
 
 export function EditorPage({ fileName }: { fileName?: string }) {
   const editor = useEditorState(fileName);
-  const { status, pdf } = usePdfUpload();
+  const { status, pdf, errorMessage } = usePdfUpload();
   const setPdfPages = editor.setPdfPages;
 
   useEffect(() => {
@@ -58,8 +58,10 @@ export function EditorPage({ fileName }: { fileName?: string }) {
           <h1 className="text-[19px] font-semibold tracking-tight">
             {status === "error" ? "That file could not be opened" : "No document open"}
           </h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
-            Choose a PDF from your device to start editing.
+          <p className="mt-1 max-w-md text-[13.5px] text-muted-foreground">
+            {status === "error" && errorMessage
+              ? errorMessage
+              : "Choose a PDF from your device to start editing."}
           </p>
         </div>
         <Button variant="brand" size="lg" asChild>
