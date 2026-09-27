@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Bookmark, FilePlus2, Import, List, MessageSquare, Files } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { demoBookmarks, demoOutline } from "@/lib/demo-document";
 import type { PDFObject, SidebarTab } from "@/types/pdf";
+import type { PdfDocumentProxy } from "@/lib/pdf-loader";
 import { ThumbnailItem } from "./ThumbnailItem";
+import { usePdfDoc } from "./usePdfDocument";
 import type { EditorState } from "./useEditorState";
 
 const tabs: { id: SidebarTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -25,7 +28,75 @@ const summarise = (o: PDFObject) => {
   return "Freehand drawing";
 };
 
-export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
+export function ThumbnailSidebar({ editor, doc: propDoc }: { editor: EditorState; doc?: PdfDocumentProxy | null }) {
+  const contextDoc = usePdfDoc();
+  const doc = propDoc !== undefined ? propDoc : contextDoc;
+
+  // Drag and drop state for page sorting
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ pageId: string; position: "before" | "after" } | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, pageId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (!draggedId || draggedId === pageId) {
+      setDropTarget(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const isAfter = (e.clientX - rect.left) > rect.width / 2;
+    setDropTarget({ pageId, position: isAfter ? "after" : "before" });
+  };
+
+  const handleDragLeave = (e: React.DragEvent, pageId: string) => {
+    const related = e.relatedTarget as HTMLElement | null;
+    if (!e.currentTarget.contains(related)) {
+      setDropTarget((prev) => (prev?.pageId === pageId ? null : prev));
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetPageId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetPageId) {
+      setDraggedId(null);
+      setDropTarget(null);
+      return;
+    }
+
+    const pages = editor.document.pages;
+    const fromIndex = pages.findIndex((p) => p.id === draggedId);
+    const targetIndex = pages.findIndex((p) => p.id === targetPageId);
+    if (fromIndex < 0 || targetIndex < 0) {
+      setDraggedId(null);
+      setDropTarget(null);
+      return;
+    }
+
+    const isAfter = dropTarget?.position === "after";
+    let finalIndex = isAfter ? targetIndex + 1 : targetIndex;
+    if (fromIndex < finalIndex) {
+      finalIndex -= 1;
+    }
+
+    if (fromIndex !== finalIndex) {
+      editor.movePage(fromIndex, finalIndex);
+    }
+
+    setDraggedId(null);
+    setDropTarget(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDropTarget(null);
+  };
+
   return (
     <div className="flex h-full w-full flex-col bg-toolbar">
       <Tabs
@@ -58,11 +129,23 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
               <ThumbnailItem
                 key={page.id}
                 page={page}
+                doc={doc}
                 active={editor.activePage === page.index + 1}
-                onSelect={() => editor.setActivePage(page.index + 1)}
+                isDragging={draggedId === page.id}
+                dropPosition={dropTarget?.pageId === page.id ? dropTarget.position : null}
+                onSelect={() => {
+                  editor.setActivePage(page.index + 1);
+                  const el = document.getElementById(`pdf-page-${page.index + 1}`);
+                  el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }}
                 onRotate={(delta) => editor.rotatePage(page.id, delta)}
                 onDuplicate={() => editor.duplicatePage(page.id)}
                 onDelete={() => editor.deletePage(page.id)}
+                onDragStart={(e) => handleDragStart(e, page.id)}
+                onDragOver={(e) => handleDragOver(e, page.id)}
+                onDragLeave={(e) => handleDragLeave(e, page.id)}
+                onDrop={(e) => handleDrop(e, page.id)}
+                onDragEnd={handleDragEnd}
               />
             ))}
           </TabsContent>
@@ -130,7 +213,7 @@ export function ThumbnailSidebar({ editor }: { editor: EditorState }) {
           className="w-full justify-start gap-2"
           onClick={() => {
             editor.addPage();
-            toast("Blank page added at the end.");
+            toast.success("Added new blank page");
           }}
         >
           <FilePlus2 className="h-4 w-4" /> Add Page

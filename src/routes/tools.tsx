@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HomePage } from "@/pages/HomePage";
+import { ToolsPage } from "@/pages/ToolsPage";
 
-const title = "PDF Studio — Everything You Need to Work With PDFs";
+const title = "All PDF Tools — PDF Studio";
 const description =
-  "Edit, convert, organize, sign and manage your PDF documents online — quickly and securely.";
+  "Explore all PDF tools: edit text, convert, organize pages, sign, watermark, and secure documents.";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
       { title },
@@ -16,5 +16,5 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: HomePage,
+  component: ToolsPage,
 });

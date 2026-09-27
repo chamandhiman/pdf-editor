@@ -29,6 +29,8 @@ export type PDFObjectType =
   | "link"
   | "stamp";
 
+export type ListType = "none" | "bullet" | "numbered" | "check";
+
 export interface TextProps {
   value: string;
   fontFamily: string;
@@ -37,13 +39,16 @@ export interface TextProps {
   italic: boolean;
   underline: boolean;
   color: string;
-  align: "left" | "center" | "right";
+  align: "left" | "center" | "right" | "justify";
+  listType?: ListType | undefined;
+  listItems?: string[] | undefined;
 }
 
 export interface PDFObject {
   id: string;
   type: PDFObjectType;
   pageId: string;
+  pageNumber?: number | undefined;
   x: number;
   y: number;
   width: number;
@@ -51,7 +56,7 @@ export interface PDFObject {
   rotation: number;
   opacity: number;
   text?: TextProps;
-  image?: { src: string; alt: string };
+  image?: { src: string; alt: string; originalSrc?: string | undefined };
   signature?: { kind: "draw" | "type" | "upload"; src?: string; name?: string; font?: string };
   drawing?: { paths: string[]; stroke: string; thickness: number };
   shape?: { kind: ShapeKind; stroke: string; fill: string; thickness: number };
@@ -60,6 +65,8 @@ export interface PDFObject {
   link?: { url: string };
   stamp?: { label: string; color: string };
 }
+
+export type PageType = "pdf" | "blank";
 
 export interface PDFPage {
   id: string;
@@ -70,6 +77,19 @@ export interface PDFPage {
   height: number;
   template: number;
   objects: PDFObject[];
+  type?: PageType;
+  originalPageNumber?: number;
+}
+
+export interface TextStyleOverride {
+  fontFamily?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  color?: string;
+  align?: "left" | "center" | "right" | "justify";
+  bg?: string;
 }
 
 export interface PDFDocument {
@@ -79,6 +99,9 @@ export interface PDFDocument {
   orientation: "Portrait" | "Landscape";
   pages: PDFPage[];
   textOverrides: Record<string, string>;
+  textColorOverrides: Record<string, string>;
+  textBgOverrides: Record<string, string>;
+  textStyleOverrides: Record<string, TextStyleOverride>;
 }
 
 export type ViewMode = "single" | "continuous";

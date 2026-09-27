@@ -3,6 +3,7 @@ import { getPdfJs } from "@/lib/pdf-loader";
 import type { PDFPage } from "@/types/pdf";
 import { usePdfDoc } from "./usePdfDocument";
 import type { EditorState } from "./useEditorState";
+import { FloatingTextToolbar } from "./FloatingTextToolbar";
 
 const RENDER_SCALE = 2;
 
@@ -13,14 +14,246 @@ interface TextItem {
   top: number;
   fontSize: number;
   width: number;
-  fontFamily: string;
+  /** Clean detected font family name (e.g. "Montserrat", "Helvetica") or null */
+  detectedFontFamily: string | null;
+  /** CSS-safe font-family string suitable for HTML rendering */
+  htmlFontFamily: string;
   fontWeight: React.CSSProperties["fontWeight"];
   fontStyle: React.CSSProperties["fontStyle"];
   angle: number;
+  /**
+   * True when this item is a bullet/list marker (•, ▪, ▸, etc.).
+   * Bullet items are rendered non-editable and always use a stable font
+   * so the glyph can never be corrupted by a font-family override.
+   */
+  isBullet: boolean;
+  /**
+   * True when this text item starts with a bullet marker glyph / symbol.
+   * In this case, the bullet marker is extracted and rendered as a non-editable
+   * permanent "•" glyph, while only the subsequent text is editable.
+   */
+  hasBulletPrefix: boolean;
+  bulletChar: string;
+  textWithoutBullet: string;
 }
 
 interface Colors {
   text: string;
+  bg: string;
+}
+
+const loadedFonts = new Set<string>();
+
+/**
+ * Dynamically load Google Font for the detected font family if available.
+ */
+function ensureWebFont(family: string) {
+  if (!family || loadedFonts.has(family)) return;
+  loadedFonts.add(family);
+  try {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:ital,wght@0,300..900;1,300..900&display=swap`;
+    document.head.appendChild(link);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Strip PDF subset prefix (e.g. "ABCDEF+Montserrat-Bold" -> "Montserrat")
+ * and common style suffixes to isolate the pure family name.
+ */
+function cleanFontFamily(name: string | undefined): string | null {
+  if (!name) return null;
+  // 1. Remove PDF subset tag (e.g. "ABCDEF+Arial" -> "Arial")
+  let clean = name.replace(/^[A-Z]{6}\+/i, "").trim();
+
+  // 2. Remove style suffixes like -Bold, -Italic, _Bold, ,Bold, PSMT, MT
+  clean = clean
+    .replace(/[-_, ]*(bold|black|heavy|extrabold|semibold|demibold|demi|medium|regular|light|thin|italic|oblique|roman|mt|psmt)/gi, "")
+    .trim();
+
+  // 3. Remove leading/trailing symbols
+  clean = clean.replace(/^[-_,]+|[-_,]+$/g, "").trim();
+
+  // 4. If camelCase without spaces (e.g. "TimesNewRoman" or "OpenSans"), add spaces
+  if (/^[A-Z][a-z]+([A-Z][a-z]+)+$/.test(clean)) {
+    clean = clean.replace(/([a-z])([A-Z])/g, "$1 $2");
+  }
+
+  // 5. Replace underscores with spaces
+  clean = clean.replace(/_/g, " ").trim();
+
+  // 6. Check if invalid or generic
+  if (
+    !clean ||
+    clean.length < 2 ||
+    /^(sans-serif|serif|monospace|cursive|fantasy|system-ui)$/i.test(clean) ||
+    /^[a-z]_[a-z0-9]+/i.test(clean) ||
+    /^g_d\d+/i.test(clean) ||
+    /^f\d+$/i.test(clean) ||
+    /cidfont/i.test(clean)
+  ) {
+    return null;
+  }
+
+  return clean;
+}
+
+/**
+ * Resolve the best CSS font-family for HTML overlay rendering.
+ * Uses Arial as the default fallback when original is unavailable.
+ * Never uses Times New Roman as the default fallback.
+ */
+function resolveHtmlFont(
+  embeddedName: string | undefined,
+  fallbackName: string | undefined,
+  styleFamily: string | undefined,
+): { family: string; detectedName: string | null } {
+  const cleanedEmbedded = cleanFontFamily(embeddedName);
+  const cleanedFallback = cleanFontFamily(fallbackName);
+  const cleanedStyle = cleanFontFamily(styleFamily);
+  const detectedFamily = cleanedEmbedded || cleanedFallback || cleanedStyle;
+
+  if (detectedFamily) {
+    ensureWebFont(detectedFamily);
+    const hint = `${embeddedName ?? ""} ${fallbackName ?? ""} ${styleFamily ?? ""}`.toLowerCase();
+    const isMono = /courier|consolas|monaco|menlo|monospace|typewriter/i.test(hint);
+    if (isMono) {
+      return { family: `'${detectedFamily}', 'Courier New', Courier, monospace`, detectedName: detectedFamily };
+    }
+    return { family: `'${detectedFamily}', Arial, sans-serif`, detectedName: detectedFamily };
+  }
+
+  const hint = `${fallbackName ?? ""} ${styleFamily ?? ""}`.toLowerCase();
+  if (/mono/i.test(hint)) return { family: "'Courier New', Courier, monospace", detectedName: "Courier New" };
+
+  // Explicit user requirement: Use Arial as the fallback. Do NOT use Times New Roman as default fallback!
+  return { family: "Arial, sans-serif", detectedName: null };
+}
+
+
+function sampleColors(item: TextItem, canvas: HTMLCanvasElement): Colors {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return { text: "#000000", bg: "#ffffff" };
+
+  const pad = Math.max(2, item.fontSize * 0.15);
+  const x = Math.max(0, Math.floor((item.left - pad) * RENDER_SCALE));
+  const y = Math.max(0, Math.floor((item.top - pad) * RENDER_SCALE));
+  const w = Math.min(canvas.width - x, Math.ceil((item.width + pad * 2) * RENDER_SCALE));
+  const h = Math.min(canvas.height - y, Math.ceil((item.fontSize * 1.35 + pad * 2) * RENDER_SCALE));
+  if (w <= 0 || h <= 0) return { text: "#000000", bg: "#ffffff" };
+
+  const data = ctx.getImageData(x, y, w, h).data;
+  const toHex = (r: number, g: number, b: number) =>
+    "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+
+  // ── Step 1: Quantized histogram to find the dominant (background) color ──
+  // Any transparent or unpainted pixel (alpha < 128) represents the page paper (white).
+  const buckets = new Map<number, { count: number; r: number; g: number; b: number }>();
+  for (let i = 0; i < data.length; i += 16) {
+    const a = data[i + 3]!;
+    let r = data[i]!;
+    let g = data[i + 1]!;
+    let b = data[i + 2]!;
+    if (a < 128) {
+      r = 255;
+      g = 255;
+      b = 255;
+    }
+    // Quantise to 16-step buckets so very similar shades collapse together
+    const key = ((r & ~15) << 16) | ((g & ~15) << 8) | (b & ~15);
+    const entry = buckets.get(key);
+    if (entry) {
+      entry.count++;
+      entry.r += r;
+      entry.g += g;
+      entry.b += b;
+    } else {
+      buckets.set(key, { count: 1, r, g, b });
+    }
+  }
+
+  let top = { count: 0, r: 255, g: 255, b: 255 };
+  for (const entry of buckets.values()) {
+    if (entry.count > top.count) top = entry;
+  }
+  let bgR = Math.round(top.r / (top.count || 1));
+  let bgG = Math.round(top.g / (top.count || 1));
+  let bgB = Math.round(top.b / (top.count || 1));
+
+  // ── Step 2: Refine with a clean probe strip ABOVE the text bounding box ──
+  const probeStripH = Math.min(4, Math.max(1, Math.floor((item.fontSize * 0.3) * RENDER_SCALE)));
+  const probeY = Math.max(0, Math.floor((item.top - item.fontSize * 0.3 - 1) * RENDER_SCALE) - probeStripH);
+  const probeActualH = Math.min(probeStripH, probeY >= 0 ? canvas.height - probeY : 0);
+  if (probeActualH > 0 && w > 0) {
+    const strip = ctx.getImageData(x, probeY, w, probeActualH);
+    let sumR = 0, sumG = 0, sumB = 0, cnt = 0;
+    for (let i = 0; i < strip.data.length; i += 4) {
+      const a = strip.data[i + 3]!;
+      if (a >= 128) {
+        sumR += strip.data[i]!;
+        sumG += strip.data[i + 1]!;
+        sumB += strip.data[i + 2]!;
+        cnt++;
+      } else {
+        sumR += 255;
+        sumG += 255;
+        sumB += 255;
+        cnt++;
+      }
+    }
+    if (cnt > 0) {
+      const pr = Math.round(sumR / cnt);
+      const pg = Math.round(sumG / cnt);
+      const pb = Math.round(sumB / cnt);
+      if (
+        Math.abs(pr - bgR) < 50 &&
+        Math.abs(pg - bgG) < 50 &&
+        Math.abs(pb - bgB) < 50
+      ) {
+        bgR = pr;
+        bgG = pg;
+        bgB = pb;
+      }
+    }
+  }
+
+  // ── Step 3: Minimal clamping ──
+  // If sampled background is off-white or light grey (due to anti-aliasing against white), snap to pure white (#ffffff)
+  if (bgR >= 220 && bgG >= 220 && bgB >= 220) {
+    bgR = 255; bgG = 255; bgB = 255;
+  } else if (bgR <= 15 && bgG <= 15 && bgB <= 15) {
+    bgR = 0; bgG = 0; bgB = 0;
+  }
+
+  // ── Step 4: Text colour – pixel with maximum distance from background ─────
+  let maxDist = 0;
+  let textRGB = [0, 0, 0];
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3]!;
+    if (a < 128) continue;
+    const r = data[i]!;
+    const g = data[i + 1]!;
+    const b = data[i + 2]!;
+    const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+    if (dist > maxDist) {
+      maxDist = dist;
+      textRGB = [r, g, b];
+    }
+  }
+
+  // Fallback for very low contrast (e.g. blank box)
+  if (maxDist < 40) {
+    const lum = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
+    textRGB = lum > 128 ? [0, 0, 0] : [255, 255, 255];
+  }
+
+  return {
+    bg: toHex(bgR, bgG, bgB),
+    text: toHex(textRGB[0]!, textRGB[1]!, textRGB[2]!),
+  };
 }
 
 export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorState }) {
@@ -28,32 +261,73 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const fullCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const artworkCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [items, setItems] = useState<TextItem[]>([]);
-  const [scales, setScales] = useState<Record<number, number>>({});
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [colors, setColors] = useState<Record<number, Colors>>({});
-  const editable = editor.tool === "edit-text";
   const overrides = editor.document.textOverrides;
+  const styleOverrides = editor.document.textStyleOverrides;
 
+  // Text layer is interactive ONLY when "edit-text" tool is active,
+  // so regular clicking in "select" mode does NOT edit text by default.
+  const layerInteractive = editor.tool === "edit-text";
+
+  // Deactivate active text item when user clicks outside both the text item and floating toolbar/menus
   useEffect(() => {
     if (activeIdx === null) return;
-    const blurActiveText = (event: PointerEvent) => {
-      const active = document.activeElement;
-      if (!(active instanceof HTMLElement) || active.dataset["idx"] !== String(activeIdx)) return;
-      if (event.target instanceof Node && active.contains(event.target)) return;
-      active.blur();
-    };
-    document.addEventListener("pointerdown", blurActiveText, true);
-    return () => document.removeEventListener("pointerdown", blurActiveText, true);
-  }, [activeIdx]);
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
 
+      // Click is inside the active text element -> keep active
+      const activeSpan = layerRef.current?.querySelector<HTMLElement>(`[data-idx="${activeIdx}"]`);
+      if (activeSpan && activeSpan.contains(target)) return;
+
+      // Click is inside toolbar, dropdowns, popovers, or Radix menus -> keep active
+      if (
+        target.closest?.("[data-floating-toolbar]") ||
+        target.closest?.("[role='menu']") ||
+        target.closest?.("[role='dialog']") ||
+        target.closest?.("[data-radix-popper-content-wrapper]") ||
+        target.closest?.("[data-radix-collection-item]") ||
+        target.closest?.("[data-radix-menu-content]")
+      ) {
+        return;
+      }
+
+      // User clicked outside -> commit any unsaved text changes and deactivate
+      if (activeSpan) {
+        const key = keyFor(activeIdx);
+        const item = items.find((i) => i.idx === activeIdx);
+        if (item) {
+          const editTarget = activeSpan.querySelector<HTMLElement>("[contenteditable]") || activeSpan;
+          const val = editTarget.textContent ?? "";
+          const defaultText = item.hasBulletPrefix ? item.textWithoutBullet : item.str;
+          const curOverride = overrides[key];
+          const curStyle = styleOverrides?.[key];
+          const c = colors[item.idx] ?? { text: "#000000", bg: "transparent" };
+          const colorToSave = curStyle?.color ?? c.text;
+          if (val !== (curOverride ?? defaultText) || curStyle !== undefined) {
+            editor.setTextOverride(key, val, colorToSave);
+          }
+        }
+      }
+      setActiveIdx(null);
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+  }, [activeIdx, items, overrides, styleOverrides, colors, editor, page.index]);
+
+  // Render the PDF page and extract text items
   useEffect(() => {
-    if (!doc) return;
+    if (!doc || page.type === "blank") return;
+    const targetPageNumber = page.originalPageNumber ?? (page.index + 1);
+    if (targetPageNumber > doc.numPages) return;
+
     let cancelled = false;
     (async () => {
       const pdfjs = await getPdfJs();
-      const p = await doc.getPage(page.index + 1);
+      const p = await doc.getPage(targetPageNumber);
       const viewport = p.getViewport({ scale: RENDER_SCALE });
       const canvas = canvasRef.current;
       if (!canvas || cancelled) return;
@@ -69,46 +343,39 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
       const fullContext = fullCanvas.getContext("2d", { willReadFrequently: true });
       if (!fullContext || !ctx) return;
 
-      await p.render({ canvas: fullCanvas, canvasContext: fullContext, viewport }).promise;
+      fullContext.fillStyle = "#ffffff";
+      fullContext.fillRect(0, 0, width, height);
+
+      await p.render({ canvas: fullCanvas, canvasContext: fullContext, viewport, background: "rgb(255,255,255)" }).promise;
       if (cancelled) return;
       fullCanvasRef.current = fullCanvas;
 
-      const artworkCanvas = document.createElement("canvas");
-      artworkCanvas.width = width;
-      artworkCanvas.height = height;
-      const artworkContext = artworkCanvas.getContext("2d", { willReadFrequently: true });
-      if (!artworkContext) return;
-      const operatorList = await p.getOperatorList();
-      const textOperators = new Set([
-        pdfjs.OPS.showText,
-        pdfjs.OPS.showSpacedText,
-        pdfjs.OPS.nextLineShowText,
-      ]);
-      await p.render({
-        canvas: artworkCanvas,
-        canvasContext: artworkContext,
-        viewport,
-        operationsFilter: (index: number) => !textOperators.has(operatorList.fnArray[index] ?? -1),
-      }).promise;
-      if (cancelled) return;
-      artworkCanvasRef.current = artworkCanvas;
-      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(fullCanvas, 0, 0);
 
       const unit = p.getViewport({ scale: 1 });
       const content = await p.getTextContent();
       if (cancelled) return;
       const next: TextItem[] = [];
+      const scaleRatio = unit.width > 0 ? page.width / unit.width : 1;
       content.items.forEach((raw, i) => {
         const item = raw as {
           str?: string;
           transform?: number[];
           width?: number;
+          height?: number;
           fontName?: string;
         };
         if (!item.str || !item.str.trim() || !item.transform) return;
         const tx = pdfjs.Util.transform(unit.transform, item.transform);
-        const fontSize = Math.hypot(tx[2]!, tx[3]!);
+        const rawFontSize = (item.height && item.height > 0)
+          ? item.height
+          : (Math.hypot(tx[2]!, tx[3]!) || Math.hypot(tx[0]!, tx[1]!) || 16);
+        let fontSize = Math.round(rawFontSize * scaleRatio * 10) / 10;
+        if (Math.abs(fontSize - Math.round(fontSize)) < 0.15) {
+          fontSize = Math.round(fontSize);
+        }
         const angle = Math.atan2(tx[1]!, tx[0]!);
         const style = (content.styles as Record<string, { fontFamily?: string }>)[
           item.fontName ?? ""
@@ -118,26 +385,64 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           | undefined;
         if (item.fontName) {
           try {
-            embeddedFont = p.commonObjs.get(item.fontName) as typeof embeddedFont;
+            embeddedFont = (p.commonObjs.get(item.fontName) || (p.objs ? p.objs.get(item.fontName) : undefined)) as typeof embeddedFont;
           } catch {
             embeddedFont = undefined;
           }
         }
-        const fontIdentity = `${embeddedFont?.name ?? ""} ${item.fontName ?? ""} ${style?.fontFamily ?? ""}`;
+        const fontIdentity = `${embeddedFont?.name ?? ""} ${embeddedFont?.loadedName ?? ""} ${embeddedFont?.fallbackName ?? ""} ${item.fontName ?? ""} ${style?.fontFamily ?? ""}`;
+        const bold = !!(embeddedFont?.bold || /bold|black|heavy|semibold|demi/i.test(fontIdentity));
+        const italic = !!(embeddedFont?.italic || /italic|oblique/i.test(fontIdentity));
+
+        const resolved = resolveHtmlFont(
+          embeddedFont?.name || embeddedFont?.loadedName,
+          embeddedFont?.fallbackName,
+          style?.fontFamily,
+        );
+
+        // ── Bullet / list-marker detection ──────────────────────────────────
+        // Symbol, Wingdings, ZapfDingbats encode bullet glyphs as ASCII chars
+        // (e.g. 'F' or 'l') that display correctly in their own font but appear
+        // as wrong letters in any other CSS font. Normalise them to the standard
+        // Unicode bullet (U+2022) so they are font-agnostic.
+        const isSymbolLikeFont = /symbol|wingdings|zapfdingbats|webdings/i.test(fontIdentity);
+        let resolvedStr = item.str;
+        if (isSymbolLikeFont) {
+          // Common Symbol/Wingdings bullet glyph code-points → •
+          resolvedStr = resolvedStr.replace(/[Fl\xB7\xD7\u00B7\u25A0]/g, "\u2022");
+        }
+
+        // Case A: Standalone bullet glyph item
+        const BULLET_SOLO_RE = /^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]+\s*$/;
+        const isSoloBullet =
+          BULLET_SOLO_RE.test(resolvedStr.trim()) ||
+          (isSymbolLikeFont && resolvedStr.trim().length <= 2) ||
+          resolvedStr.trim() === "F" ||
+          resolvedStr.trim() === "l";
+
+        // Case B: Combined item starting with a bullet marker (e.g. "F Tailored...", "• 24/7...")
+        const BULLET_PREFIX_RE = /^([\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]|F(?=\s)|l(?=\s))\s+/;
+        const prefixMatch = !isSoloBullet ? resolvedStr.match(BULLET_PREFIX_RE) : null;
+        const hasBulletPrefix = !!prefixMatch;
+        const textWithoutBullet = prefixMatch ? resolvedStr.slice(prefixMatch[0].length) : resolvedStr;
+        // ────────────────────────────────────────────────────────────────────
+
         next.push({
           idx: i,
-          str: item.str,
-          left: tx[4]!,
-          top: tx[5]! - fontSize,
+          str: isSoloBullet ? "\u2022" : resolvedStr,
+          left: tx[4]! * scaleRatio,
+          top: (tx[5]! - fontSize) * scaleRatio,
           fontSize,
-          width: item.width ?? 0,
-          fontFamily:
-            embeddedFont?.loadedName ?? embeddedFont?.fallbackName ?? style?.fontFamily ?? "serif",
-          fontWeight:
-            embeddedFont?.bold || /bold|black|heavy|semibold|demi/i.test(fontIdentity) ? 700 : 400,
-          fontStyle:
-            embeddedFont?.italic || /italic|oblique/i.test(fontIdentity) ? "italic" : "normal",
+          width: (item.width ?? 0) * scaleRatio,
+          detectedFontFamily: resolved.detectedName,
+          htmlFontFamily: resolved.family,
+          fontWeight: bold ? 700 : 400,
+          fontStyle: italic ? "italic" : "normal",
           angle,
+          isBullet: isSoloBullet,
+          hasBulletPrefix,
+          bulletChar: "\u2022",
+          textWithoutBullet,
         });
       });
       setItems(next);
@@ -145,100 +450,44 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
     return () => {
       cancelled = true;
     };
-  }, [doc, page.index]);
+  }, [doc, page.index, page.width]);
 
-  // match each span's rendered width to the original glyph run
+  // Pre-cache all text and background colors from the rendered canvas once items are ready
   useLayoutEffect(() => {
-    const layer = layerRef.current;
-    if (!layer || items.length === 0) return;
-    const next: Record<number, number> = {};
+    const full = fullCanvasRef.current;
+    if (!full || items.length === 0) return;
+    const next: Record<number, Colors> = {};
     items.forEach((item) => {
-      const el = layer.querySelector<HTMLElement>(`[data-idx="${item.idx}"]`);
-      if (!el || !item.width) return;
-      const natural = el.getBoundingClientRect().width / (scales[item.idx] ?? 1);
-      if (natural > 0) next[item.idx] = item.width / natural;
+      next[item.idx] = sampleColors(item, full);
     });
-    setScales((prev) => {
-      const changed = items.some((i) => Math.abs((prev[i.idx] ?? 1) - (next[i.idx] ?? 1)) > 0.01);
-      return changed ? next : prev;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setColors(next);
   }, [items]);
 
-  // Keep the original PDF visible and replace only actively edited or saved text
-  // with the text-free artwork beneath it. This avoids exposing duplicate or
-  // poorly positioned accessibility text records elsewhere on the page.
+  // Keep canvas rendered with full document content; no white rectangle mask.
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const fullCanvas = fullCanvasRef.current;
-    const artworkCanvas = artworkCanvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !fullCanvas || !artworkCanvas || !ctx) return;
+    if (!canvas || !fullCanvas || !ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(fullCanvas, 0, 0);
+  }, [items]);
 
-    items.forEach((item) => {
-      const key = `${page.index}:${item.idx}`;
-      if (activeIdx !== item.idx && overrides[key] === undefined) return;
 
-      const runWidth = Math.max(item.width, item.fontSize);
-      const runHeight = item.fontSize * 1.45;
-      const sin = Math.abs(Math.sin(item.angle));
-      const cos = Math.abs(Math.cos(item.angle));
-      const boxWidth = runWidth * cos + runHeight * sin;
-      const boxHeight = runWidth * sin + runHeight * cos;
-      const pad = Math.max(2, item.fontSize * 0.14);
-      const x = Math.max(0, Math.floor((item.left - pad) * RENDER_SCALE));
-      const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2 - pad) * RENDER_SCALE));
-      const width = Math.min(
-        canvas.width - x,
-        Math.ceil((boxWidth + pad * 2) * RENDER_SCALE),
-      );
-      const height = Math.min(
-        canvas.height - y,
-        Math.ceil((boxHeight + pad * 2) * RENDER_SCALE),
-      );
-      if (width > 0 && height > 0) {
-        ctx.drawImage(artworkCanvas, x, y, width, height, x, y, width, height);
-      }
-    });
-  }, [activeIdx, items, overrides, page.index]);
+  const keyFor = (idx: number) => `${(page.originalPageNumber ?? (page.index + 1)) - 1}:${idx}`;
 
-  const sample = (item: TextItem): Colors => {
-    const canvas = fullCanvasRef.current;
-    const background = artworkCanvasRef.current;
-    const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    const backgroundContext = background?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !background || !ctx || !backgroundContext) return { text: "#000000" };
-    const x = Math.max(0, Math.floor(item.left * RENDER_SCALE));
-    const y = Math.max(0, Math.floor((item.top - item.fontSize * 0.2) * RENDER_SCALE));
-    const w = Math.min(canvas.width - x, Math.ceil((item.width || item.fontSize) * RENDER_SCALE));
-    const h = Math.min(canvas.height - y, Math.ceil(item.fontSize * 1.4 * RENDER_SCALE));
-    if (w <= 0 || h <= 0) return { text: "#000000" };
-    const data = ctx.getImageData(x, y, w, h).data;
-    const backgroundData = backgroundContext.getImageData(x, y, w, h).data;
-    let text = [0, 0, 0];
-    let greatestDifference = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i]!;
-      const g = data[i + 1]!;
-      const b = data[i + 2]!;
-      const difference =
-        Math.abs(r - backgroundData[i]!) +
-        Math.abs(g - backgroundData[i + 1]!) +
-        Math.abs(b - backgroundData[i + 2]!);
-      if (difference > greatestDifference) {
-        greatestDifference = difference;
-        text = [r, g, b];
-      }
-    }
-    const hex = (c: number[]) =>
-      "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
-    return { text: hex(text) };
-  };
-
-  const keyFor = (idx: number) => `${page.index}:${idx}`;
+  // Find active item for FloatingTextToolbar
+  const activeItem = activeIdx !== null ? items.find((i) => i.idx === activeIdx) : null;
+  const activeKey = activeItem ? keyFor(activeItem.idx) : null;
+  const activeStyle = activeKey ? styleOverrides?.[activeKey] ?? {} : {};
+  const activeColor = activeStyle.color ?? (activeItem ? colors[activeItem.idx]?.text : "#000000") ?? "#000000";
+  const activeFontFamily = activeStyle.fontFamily ?? (activeItem?.htmlFontFamily ?? "Arial, sans-serif");
+  const activeFontSize = activeStyle.fontSize ?? (activeItem?.fontSize ?? 16);
+  const activeBold = activeStyle.bold !== undefined ? activeStyle.bold : (activeItem ? activeItem.fontWeight === 700 || activeItem.fontWeight === "bold" : false);
+  const activeItalic = activeStyle.italic !== undefined ? activeStyle.italic : (activeItem ? activeItem.fontStyle === "italic" : false);
+  const activeUnderline = activeStyle.underline ?? false;
+  const activeAlign = activeStyle.align ?? "left";
 
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -249,56 +498,276 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         style={{
           width: page.width,
           height: page.height,
-          pointerEvents: editable ? "auto" : "none",
+          pointerEvents: layerInteractive ? "auto" : "none",
         }}
       >
+        {/* Floating Text Toolbar near active text item */}
+        {activeItem && activeKey && (
+          <FloatingTextToolbar
+            fontFamily={activeFontFamily}
+            fontSize={activeFontSize}
+            bold={activeBold}
+            italic={activeItalic}
+            underline={activeUnderline}
+            color={activeColor}
+            align={activeAlign}
+            detectedFont={activeItem.detectedFontFamily}
+            onChange={(updates) => {
+              const currentStr = overrides[activeKey] ?? (activeItem.hasBulletPrefix ? activeItem.textWithoutBullet : activeItem.str);
+              const currentTextEl = layerRef.current?.querySelector<HTMLElement>(`[data-idx="${activeItem.idx}"] [contenteditable], [data-idx="${activeItem.idx}"][contenteditable]`);
+              let liveStr = currentTextEl?.textContent || currentStr;
+              if (activeItem.hasBulletPrefix) {
+                liveStr = liveStr.replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "");
+              }
+              const targetColor = updates.color ?? activeColor;
+              editor.setTextOverride(activeKey, liveStr, targetColor);
+              // Merge ONLY the changed properties.
+              editor.setTextStyleOverride(activeKey, updates);
+            }}
+            position={{
+              top: activeItem.top > 48 ? activeItem.top - 44 : activeItem.top + activeFontSize + 8,
+              left: Math.max(8, Math.min(page.width - 440, activeItem.left)),
+            }}
+          />
+        )}
+
         {items.map((item) => {
           const key = keyFor(item.idx);
           const override = overrides[key];
-          const c = colors[item.idx] ?? sample(item);
-          const shown = activeIdx === item.idx || override !== undefined;
+          const style = styleOverrides?.[key] ?? {};
+          const c = colors[item.idx] ?? { text: "#000000", bg: "transparent" };
+          const isActive = activeIdx === item.idx;
+          // Bug 2 fix: also treat items as "shown" when they carry formatting overrides
+          // (fontFamily, bold, italic, etc.) even if the text content hasn't changed.
+          // This ensures the original PDF glyph is erased and the styled HTML version
+          // is rendered without requiring a text edit first.
+          const STYLE_KEYS_RENDER = ["fontFamily", "fontSize", "bold", "italic", "underline", "align"];
+          const hasFmtOverride = STYLE_KEYS_RENDER.some((k) => k in style);
+          const shown = isActive || override !== undefined || hasFmtOverride;
+
+          // Bug 1 fix: bullet items always use their original font so the glyph stays as •.
+          // Never apply a user-selected fontFamily override to bullet markers.
+          const curFontFamily = item.isBullet ? item.htmlFontFamily : (style.fontFamily ?? item.htmlFontFamily);
+          const curFontSize = style.fontSize ?? item.fontSize;
+          const curBold = style.bold !== undefined ? style.bold : (item.fontWeight === 700 || item.fontWeight === "bold");
+          const curItalic = style.italic !== undefined ? style.italic : (item.fontStyle === "italic");
+          const curUnderline = style.underline ?? false;
+          const curColor = style.color ?? c.text;
+          const curAlign = style.align ?? "left";
+
           return (
             <span key={item.idx} className="contents">
-              <span
-                data-idx={item.idx}
-                contentEditable={editable}
-                suppressContentEditableWarning
-                spellCheck={false}
-                onFocus={() => {
-                  setColors((prev) => (prev[item.idx] ? prev : { ...prev, [item.idx]: sample(item) }));
-                  setActiveIdx(item.idx);
-                }}
-                onBlur={(e) => {
-                  setActiveIdx(null);
-                  const value = e.currentTarget.textContent ?? "";
-                  if (value !== (override ?? item.str)) editor.setTextOverride(key, value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    e.currentTarget.blur();
-                  }
-                  e.stopPropagation();
-                }}
-                className="absolute cursor-text outline-none"
-                style={{
-                  left: item.left,
-                  top: item.top,
-                  fontSize: item.fontSize,
-                  fontFamily: item.fontFamily,
-                  fontWeight: item.fontWeight,
-                  fontStyle: item.fontStyle,
-                  lineHeight: 1.18,
-                  whiteSpace: "pre",
-                  transformOrigin: "0 0",
-                  transform: `rotate(${item.angle}rad) scaleX(${scales[item.idx] ?? 1})`,
-                  color: shown ? c.text : "transparent",
-                  background: "transparent",
-                  caretColor: shown ? c.text : "transparent",
-                }}
-              >
-                {override ?? item.str}
-              </span>
+              {item.isBullet ? (
+                // ── Standalone bullet marker span ──────────────────────────────
+                <span
+                  data-idx={item.idx}
+                  contentEditable={false}
+                  className="absolute outline-none select-none pointer-events-none font-sans"
+                  style={{
+                    left: item.left,
+                    top: item.top,
+                    fontSize: item.fontSize,
+                    fontFamily: "Arial, sans-serif",
+                    fontWeight: item.fontWeight as number,
+                    fontStyle: item.fontStyle as string,
+                    display: "inline-block",
+                    minWidth: `${Math.max(item.width, 16)}px`,
+                    lineHeight: 1,
+                    whiteSpace: "pre",
+                    transformOrigin: "0 0",
+                    transform: `rotate(${item.angle}rad)`,
+                    color: shown ? curColor : "transparent",
+                    backgroundColor: "transparent",
+                    background: "transparent",
+                    border: "none",
+                    boxShadow: "none",
+                    outline: "none",
+                    WebkitTextFillColor: shown ? curColor : "transparent",
+                    zIndex: shown ? 40 : 10,
+                  }}
+                >
+                  •
+                </span>
+              ) : item.hasBulletPrefix ? (
+                // ── Item starting with a bullet marker (e.g. "F Tailored...", "• 24/7...") ──
+                // The bullet marker "•" is rendered as non-editable, and only the text after it is editable.
+                <span
+                  data-idx={item.idx}
+                  className="absolute outline-none select-text inline-flex items-baseline"
+                  style={{
+                    left: item.left,
+                    top: item.top,
+                    fontSize: curFontSize,
+                    fontFamily: curFontFamily,
+                    fontWeight: curBold ? 700 : 400,
+                    fontStyle: curItalic ? "italic" : "normal",
+                    textDecoration: curUnderline ? "underline" : "none",
+                    textAlign: curAlign,
+                    display: "inline-flex",
+                    minWidth: `${Math.max(item.width, 16)}px`,
+                    lineHeight: 1,
+                    whiteSpace: "pre",
+                    transformOrigin: "0 0",
+                    transform: `rotate(${item.angle}rad)`,
+                    color: shown ? curColor : "transparent",
+                    backgroundColor: "transparent",
+                    background: "transparent",
+                    WebkitTapHighlightColor: "transparent",
+                    border: "none",
+                    boxShadow: "none",
+                    outline: "none",
+                    zIndex: shown ? 40 : 10,
+                  }}
+                >
+                  <span
+                    contentEditable={false}
+                    className="select-none pointer-events-none inline-block font-sans mr-2"
+                    style={{
+                      color: shown ? curColor : "transparent",
+                      WebkitTextFillColor: shown ? curColor : "transparent",
+                      backgroundColor: "transparent",
+                      background: "transparent",
+                    }}
+                  >
+                    •
+                  </span>
+                  <span
+                    contentEditable
+                    suppressContentEditableWarning
+                    spellCheck={false}
+                    onFocus={() => {
+                      setActiveIdx(item.idx);
+                    }}
+                    onBlur={(e) => {
+                      setActiveIdx(null);
+                      const rawValue = e.currentTarget.textContent ?? "";
+                      const value = rawValue.replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "");
+                      if (value !== (override ?? item.textWithoutBullet)) {
+                        editor.setTextOverride(key, value, curColor);
+                      }
+                    }}
+                    onInput={(e) => {
+                      const el = e.currentTarget;
+                      const hasHtml =
+                        el.childNodes.length > 1 ||
+                        (el.firstChild != null && el.firstChild.nodeType !== Node.TEXT_NODE);
+                      if (hasHtml) {
+                        const text = el.textContent ?? "";
+                        el.textContent = text;
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        if (el.firstChild) {
+                          range.setStart(el.firstChild, text.length);
+                        } else {
+                          range.setStart(el, 0);
+                        }
+                        range.collapse(true);
+                        sel?.removeAllRanges();
+                        sel?.addRange(range);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      }
+                      e.stopPropagation();
+                    }}
+                    className="outline-none select-text"
+                    style={{
+                      color: shown ? curColor : "transparent",
+                      backgroundColor: "transparent",
+                      background: "transparent",
+                      WebkitTapHighlightColor: "transparent",
+                      border: "none",
+                      boxShadow: "none",
+                      outline: "none",
+                      caretColor: shown ? curColor : "transparent",
+                      cursor: layerInteractive ? "text" : "default",
+                      WebkitTextFillColor: shown ? curColor : "transparent",
+                    }}
+                  >
+                    {(override ?? item.textWithoutBullet).replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "")}
+                  </span>
+                </span>
+              ) : (
+                // ── Regular editable text span ─────────────────────────────────
+                <span
+                  data-idx={item.idx}
+                  contentEditable
+                  suppressContentEditableWarning
+                  spellCheck={false}
+                  onFocus={() => {
+                    setActiveIdx(item.idx);
+                  }}
+                  onBlur={(e) => {
+                    setActiveIdx(null);
+                    const value = e.currentTarget.textContent ?? "";
+                    if (value !== (override ?? item.str)) {
+                      editor.setTextOverride(key, value, curColor);
+                    }
+                  }}
+                  onInput={(e) => {
+                    // Strip any browser-injected rich text formatting.
+                    // Keep only plain text so custom toolbar styles apply cleanly.
+                    const el = e.currentTarget;
+                    const hasHtml =
+                      el.childNodes.length > 1 ||
+                      (el.firstChild != null && el.firstChild.nodeType !== Node.TEXT_NODE);
+                    if (hasHtml) {
+                      const text = el.textContent ?? "";
+                      el.textContent = text;
+                      const range = document.createRange();
+                      const sel = window.getSelection();
+                      if (el.firstChild) {
+                        range.setStart(el.firstChild, text.length);
+                      } else {
+                        range.setStart(el, 0);
+                      }
+                      range.collapse(true);
+                      sel?.removeAllRanges();
+                      sel?.addRange(range);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                    e.stopPropagation();
+                  }}
+                  className="absolute outline-none select-text"
+                  style={{
+                    left: item.left,
+                    top: item.top,
+                    fontSize: curFontSize,
+                    fontFamily: curFontFamily,
+                    fontWeight: curBold ? 700 : 400,
+                    fontStyle: curItalic ? "italic" : "normal",
+                    textDecoration: curUnderline ? "underline" : "none",
+                    textAlign: curAlign,
+                    display: "inline-block",
+                    minWidth: `${Math.max(item.width, 16)}px`,
+                    lineHeight: 1,
+                    whiteSpace: "pre",
+                    transformOrigin: "0 0",
+                    transform: `rotate(${item.angle}rad)`,
+                    color: shown ? curColor : "transparent",
+                    backgroundColor: "transparent",
+                    background: "transparent",
+                    WebkitTapHighlightColor: "transparent",
+                    border: "none",
+                    boxShadow: "none",
+                    outline: "none",
+                    caretColor: shown ? curColor : "transparent",
+                    cursor: layerInteractive ? "text" : "default",
+                    WebkitTextFillColor: shown ? curColor : "transparent",
+                    zIndex: shown ? 40 : 10,
+                  }}
+                >
+                  {override ?? item.str}
+                </span>
+              )}
             </span>
           );
         })}

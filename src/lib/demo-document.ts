@@ -9,6 +9,9 @@ export const createDemoDocument = (fileName = "Sample-Document.pdf"): PDFDocumen
   pageSize: "A4",
   orientation: "Portrait",
   textOverrides: {},
+  textColorOverrides: {},
+  textBgOverrides: {},
+  textStyleOverrides: {},
   pages: Array.from({ length: 4 }, (_, i) => ({
     id: `page-${i + 1}`,
     index: i,

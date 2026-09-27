@@ -160,3 +160,47 @@
     color: var(--color-foreground);
   }
 }
+
+/* ── PDF text-layer contentEditable: kill every browser highlight / background ──
+ * Browsers (Chrome/Firefox/Safari) paint a grey or blue rectangle behind
+ * focused [contenteditable] elements and behind selected text.  These rules
+ * override every vendor-prefixed variant so the canvas shows through cleanly.
+ */
+[contenteditable],
+[contenteditable] *,
+[contenteditable]:focus,
+[contenteditable]:focus-visible,
+[contenteditable]:active {
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Remove the browser selection highlight colour inside PDF text spans.
+   The text colour itself is set via WebkitTextFillColor / color in JS. */
+[contenteditable]::selection {
+  background: rgba(100, 149, 237, 0.25) !important; /* subtle cornflower blue */
+  color: inherit !important;
+}
+[contenteditable]::-moz-selection {
+  background: rgba(100, 149, 237, 0.25) !important;
+  color: inherit !important;
+}
+
+/* ── Print Media: Hide application chrome when printing ── */
+@media print {
+  header,
+  nav,
+  aside,
+  [data-floating-toolbar],
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

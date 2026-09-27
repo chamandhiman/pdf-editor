@@ -15,12 +15,14 @@ interface Props {
 export function PdfPage({ page, active, onActivate, editor, children }: Props) {
   const template = page.template;
   const pdfDoc = usePdfDoc();
+  const isBlank = page.type === "blank";
+
   return (
     <div
       id={`pdf-page-${page.index + 1}`}
       onMouseDown={onActivate}
       className={cn(
-        "relative shrink-0 bg-page text-page-foreground shadow-page ring-1 ring-black/5 transition-shadow",
+        "relative shrink-0 bg-white text-page-foreground shadow-page ring-1 ring-black/5 transition-shadow",
         active && "ring-2 ring-brand/30",
       )}
       style={{
@@ -29,7 +31,9 @@ export function PdfPage({ page, active, onActivate, editor, children }: Props) {
         transform: page.rotation ? `rotate(${page.rotation}deg)` : undefined,
       }}
     >
-      {pdfDoc ? (
+      {isBlank ? (
+        <div className="absolute inset-0 bg-white" />
+      ) : pdfDoc ? (
         <PdfCanvasPage page={page} editor={editor} />
       ) : (
         <div className="h-full overflow-hidden px-[76px] py-[72px] font-serif text-[13.5px] leading-[1.75]">
@@ -40,7 +44,7 @@ export function PdfPage({ page, active, onActivate, editor, children }: Props) {
         </div>
       )}
       {children}
-      <span className="absolute -bottom-6 left-0 text-[11px] font-sans tabular-nums text-muted-foreground">
+      <span className="absolute -bottom-6 left-0 text-[11px] font-sans tabular-nums text-muted-foreground select-none">
         Page {page.index + 1}
       </span>
     </div>

@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createDemoDocument, PAGE_HEIGHT, PAGE_WIDTH } from "@/lib/demo-document";
 import type {
+  ListType,
   PDFDocument,
   PDFObject,
   PDFObjectType,
   ShapeKind,
   SidebarTab,
+  TextStyleOverride,
   ToolId,
   ViewMode,
 } from "@/types/pdf";
@@ -22,6 +24,96 @@ export interface ToolDefaults {
   highlightOpacity: number;
 }
 
+export type TextPresetKind =
+  | "text"
+  | "heading"
+  | "subheading"
+  | "paragraph"
+  | "bullet-list"
+  | "numbered-list"
+  | "checklist";
+
+export const TEXT_PRESETS: Record<
+  TextPresetKind,
+  {
+    label: string;
+    value: string;
+    listType: ListType;
+    listItems?: string[];
+    fontSize: number;
+    bold: boolean;
+    width: number;
+    height: number;
+  }
+> = {
+  text: {
+    label: "Add Text",
+    value: "Click to edit text",
+    listType: "none",
+    fontSize: 16,
+    bold: false,
+    width: 240,
+    height: 40,
+  },
+  heading: {
+    label: "Add Heading",
+    value: "Heading",
+    listType: "none",
+    fontSize: 28,
+    bold: true,
+    width: 280,
+    height: 48,
+  },
+  subheading: {
+    label: "Add Subheading",
+    value: "Subheading",
+    listType: "none",
+    fontSize: 20,
+    bold: true,
+    width: 240,
+    height: 40,
+  },
+  paragraph: {
+    label: "Add Paragraph",
+    value: "Start typing your paragraph text here. You can customize the font, size, and styling anytime.",
+    listType: "none",
+    fontSize: 14,
+    bold: false,
+    width: 380,
+    height: 84,
+  },
+  "bullet-list": {
+    label: "Add Bullet List",
+    value: "Smart lead targeting\nAutomated follow-ups\nPipeline analytics",
+    listType: "bullet",
+    listItems: ["Smart lead targeting", "Automated follow-ups", "Pipeline analytics"],
+    fontSize: 14,
+    bold: false,
+    width: 260,
+    height: 96,
+  },
+  "numbered-list": {
+    label: "Add Numbered List",
+    value: "First item\nSecond item\nThird item",
+    listType: "numbered",
+    listItems: ["First item", "Second item", "Third item"],
+    fontSize: 14,
+    bold: false,
+    width: 260,
+    height: 96,
+  },
+  checklist: {
+    label: "Add Checklist",
+    value: "Task 1\nTask 2\nTask 3",
+    listType: "check",
+    listItems: ["Task 1", "Task 2", "Task 3"],
+    fontSize: 14,
+    bold: false,
+    width: 260,
+    height: 96,
+  },
+};
+
 export function useEditorState(fileName?: string) {
   const [doc, setDoc] = useState<PDFDocument>(() => createDemoDocument(fileName));
   const past = useRef<PDFDocument[]>([]);
@@ -37,13 +129,15 @@ export function useEditorState(fileName?: string) {
   const [viewMode, setViewMode] = useState<ViewMode>("continuous");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [modal, setModal] = useState<null | "signature" | "image" | "link">(null);
+  const [modal, setModal] = useState<null | "signature" | "image" | "link" | "crop">(null);
   const [defaults, setDefaults] = useState<ToolDefaults>({
     stroke: "#2f5bd1",
     thickness: 3,
     highlightColor: "#ffd84d",
     highlightOpacity: 45,
   });
+  const [textPreset, setTextPreset] = useState<TextPresetKind>("text");
+  const [pendingImage, setPendingImage] = useState<{ src: string; alt: string } | null>(null);
 
   /* ----------------------------- history ----------------------------- */
   const commit = useCallback((updater: (prev: PDFDocument) => PDFDocument) => {
@@ -86,7 +180,10 @@ export function useEditorState(fileName?: string) {
   );
 
   const pageIdFor = useCallback(
-    (page?: number) => doc.pages[(page ?? activePage) - 1]?.id ?? doc.pages[0]!.id,
+    (page?: number) => {
+      const idx = (page !== undefined ? page : activePage) - 1;
+      return doc.pages[idx]?.id ?? doc.pages[0]!.id;
+    },
     [doc.pages, activePage],
   );
 
@@ -159,35 +256,139 @@ export function useEditorState(fileName?: string) {
   const duplicateObject = useCallback(
     (id: string) => {
       const source = allObjects.find((o) => o.id === id);
-      if (!source) return;
-      addObject({ ...source, x: source.x + 24, y: source.y + 24 });
+      if (!source) return null;
+      const copy: Omit<PDFObject, "id"> = {
+        type: source.type,
+        pageId: source.pageId,
+        pageNumber: source.pageNumber,
+        x: source.x + 20,
+        y: source.y + 20,
+        width: source.width,
+        height: source.height,
+        rotation: source.rotation,
+        opacity: source.opacity,
+        ...(source.text
+          ? {
+              text: {
+                ...source.text,
+                ...(source.text.listItems ? { listItems: [...source.text.listItems] } : {}),
+              },
+            }
+          : {}),
+        ...(source.shape ? { shape: { ...source.shape } } : {}),
+        ...(source.drawing
+          ? { drawing: { ...source.drawing, paths: [...source.drawing.paths] } }
+          : {}),
+        ...(source.image ? { image: { ...source.image } } : {}),
+        ...(source.highlight ? { highlight: { ...source.highlight } } : {}),
+        ...(source.note ? { note: { ...source.note } } : {}),
+        ...(source.link ? { link: { ...source.link } } : {}),
+        ...(source.stamp ? { stamp: { ...source.stamp } } : {}),
+        ...(source.signature ? { signature: { ...source.signature } } : {}),
+      };
+      const newId = addObject(copy);
+      setSelectedId(newId);
+      return newId;
     },
     [allObjects, addObject],
   );
 
+  const bringToFront = useCallback(
+    (id: string) => {
+      commit((prev) => ({
+        ...prev,
+        pages: prev.pages.map((p) => {
+          const idx = p.objects.findIndex((o) => o.id === id);
+          if (idx === -1 || idx === p.objects.length - 1) return p;
+          const obj = p.objects[idx]!;
+          const rest = p.objects.filter((o) => o.id !== id);
+          return { ...p, objects: [...rest, obj] };
+        }),
+      }));
+    },
+    [commit],
+  );
+
+  const bringForward = useCallback(
+    (id: string) => {
+      commit((prev) => ({
+        ...prev,
+        pages: prev.pages.map((p) => {
+          const idx = p.objects.findIndex((o) => o.id === id);
+          if (idx === -1 || idx === p.objects.length - 1) return p;
+          const next = [...p.objects];
+          const temp = next[idx]!;
+          next[idx] = next[idx + 1]!;
+          next[idx + 1] = temp;
+          return { ...p, objects: next };
+        }),
+      }));
+    },
+    [commit],
+  );
+
+  const sendBackward = useCallback(
+    (id: string) => {
+      commit((prev) => ({
+        ...prev,
+        pages: prev.pages.map((p) => {
+          const idx = p.objects.findIndex((o) => o.id === id);
+          if (idx <= 0) return p;
+          const next = [...p.objects];
+          const temp = next[idx]!;
+          next[idx] = next[idx - 1]!;
+          next[idx - 1] = temp;
+          return { ...p, objects: next };
+        }),
+      }));
+    },
+    [commit],
+  );
+
+  const sendToBack = useCallback(
+    (id: string) => {
+      commit((prev) => ({
+        ...prev,
+        pages: prev.pages.map((p) => {
+          const idx = p.objects.findIndex((o) => o.id === id);
+          if (idx <= 0) return p;
+          const obj = p.objects[idx]!;
+          const rest = p.objects.filter((o) => o.id !== id);
+          return { ...p, objects: [obj, ...rest] };
+        }),
+      }));
+    },
+    [commit],
+  );
+
   /* ------------------------- object factories ------------------------- */
   const addTextObject = useCallback(
-    (page: number, x: number, y: number) =>
-      addObject({
+    (page: number, x: number, y: number, presetKind: TextPresetKind = "text") => {
+      const preset = TEXT_PRESETS[presetKind] ?? TEXT_PRESETS.text;
+      return addObject({
         type: "text",
         pageId: pageIdFor(page),
+        pageNumber: page,
         x,
         y,
-        width: 240,
-        height: 40,
+        width: preset.width,
+        height: preset.height,
         rotation: 0,
         opacity: 100,
         text: {
-          value: "Click to edit text",
+          value: preset.value,
           fontFamily: "Inter",
-          fontSize: 16,
-          bold: false,
+          fontSize: preset.fontSize,
+          bold: preset.bold,
           italic: false,
           underline: false,
           color: "#1c2333",
           align: "left",
+          listType: preset.listType,
+          ...(preset.listItems ? { listItems: [...preset.listItems] } : {}),
         },
-      }),
+      });
+    },
     [addObject, pageIdFor],
   );
 
@@ -196,6 +397,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "highlight",
         pageId: pageIdFor(page),
+        pageNumber: page,
         ...rect,
         rotation: 0,
         opacity: defaults.highlightOpacity,
@@ -213,6 +415,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "drawing",
         pageId: pageIdFor(page),
+        pageNumber: page,
         ...rect,
         rotation: 0,
         opacity: 100,
@@ -230,6 +433,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "shape",
         pageId: pageIdFor(page),
+        pageNumber: page,
         ...rect,
         rotation: 0,
         opacity: 100,
@@ -248,6 +452,7 @@ export function useEditorState(fileName?: string) {
       const id = addObject({
         type: "note",
         pageId: pageIdFor(page),
+        pageNumber: page,
         x,
         y,
         width: 28,
@@ -267,6 +472,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "link",
         pageId: pageIdFor(page),
+        pageNumber: page,
         x: at?.x ?? 120,
         y: at?.y ?? 240,
         width: 220,
@@ -283,6 +489,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "signature",
         pageId: pageIdFor(page),
+        pageNumber: page,
         x: 120,
         y: 720,
         width: 240,
@@ -295,17 +502,24 @@ export function useEditorState(fileName?: string) {
   );
 
   const addImage = useCallback(
-    (page: number, src: string, alt: string) =>
+    (
+      page: number,
+      src: string,
+      alt: string,
+      at?: { x: number; y: number },
+      size?: { width: number; height: number },
+    ) =>
       addObject({
         type: "image",
         pageId: pageIdFor(page),
-        x: 150,
-        y: 300,
-        width: 260,
-        height: 170,
+        pageNumber: page,
+        x: at?.x ?? 150,
+        y: at?.y ?? 300,
+        width: size?.width ?? 260,
+        height: size?.height ?? 170,
         rotation: 0,
         opacity: 100,
-        image: { src, alt },
+        image: { src, alt, originalSrc: src },
       }),
     [addObject, pageIdFor],
   );
@@ -315,6 +529,7 @@ export function useEditorState(fileName?: string) {
       addObject({
         type: "stamp",
         pageId: pageIdFor(page),
+        pageNumber: page,
         x: 430,
         y: 180,
         width: 210,
@@ -331,23 +546,29 @@ export function useEditorState(fileName?: string) {
     pages.map((p, i) => ({ ...p, index: i, label: `Page ${i + 1}` }));
 
   const addPage = useCallback(() => {
-    commit((prev) => ({
-      ...prev,
-      pages: reindex([
-        ...prev.pages,
-        {
-          id: nextId("page"),
-          index: prev.pages.length,
-          label: "",
-          rotation: 0,
-          width: PAGE_WIDTH,
-          height: PAGE_HEIGHT,
-          template: -1,
-          objects: [],
-        },
-      ]),
-    }));
-  }, [commit]);
+    const newPageId = nextId("page");
+    commit((prev) => {
+      const refPage = prev.pages[prev.pages.length - 1] || prev.pages[0];
+      const width = refPage ? refPage.width : PAGE_WIDTH;
+      const height = refPage ? refPage.height : PAGE_HEIGHT;
+      const newPage: PDFPage = {
+        id: newPageId,
+        index: prev.pages.length,
+        label: `Page ${prev.pages.length + 1}`,
+        rotation: 0,
+        width,
+        height,
+        template: -1,
+        type: "blank",
+        objects: [],
+      };
+      return {
+        ...prev,
+        pages: reindex([...prev.pages, newPage]),
+      };
+    });
+    setActivePage(doc.pages.length + 1);
+  }, [commit, doc.pages.length]);
 
   const duplicatePage = useCallback(
     (id: string) => {
@@ -355,15 +576,18 @@ export function useEditorState(fileName?: string) {
         const i = prev.pages.findIndex((p) => p.id === id);
         if (i < 0) return prev;
         const source = prev.pages[i]!;
-        const clone = {
+        const clone: PDFPage = {
           ...source,
           id: nextId("page"),
+          type: source.type ?? (source.originalPageNumber ? "pdf" : "blank"),
+          originalPageNumber: source.originalPageNumber,
           objects: source.objects.map((o) => ({ ...o, id: nextId(o.type) })),
         };
         const pages = [...prev.pages];
         pages.splice(i + 1, 0, clone);
         return { ...prev, pages: reindex(pages) };
       });
+      setActivePage((prev) => prev + 1);
     },
     [commit],
   );
@@ -417,6 +641,9 @@ export function useEditorState(fileName?: string) {
         pageSize: "A4",
         orientation: "Portrait",
         textOverrides: {},
+        textColorOverrides: {},
+        textBgOverrides: {},
+        textStyleOverrides: {},
         pages: sizes.map((s, i) => ({
           id: `page-${i + 1}`,
           index: i,
@@ -425,6 +652,8 @@ export function useEditorState(fileName?: string) {
           width: s.width,
           height: s.height,
           template: -1,
+          type: "pdf" as const,
+          originalPageNumber: i + 1,
           objects: [],
         })),
       });
@@ -434,9 +663,63 @@ export function useEditorState(fileName?: string) {
     [],
   );
 
+  const setDocument = useCallback((restored: PDFDocument, overrideFileName?: string) => {
+    past.current = [];
+    future.current = [];
+    setDoc({
+      ...restored,
+      fileName: overrideFileName ?? restored.fileName,
+      textColorOverrides: restored.textColorOverrides ?? {},
+      textBgOverrides: restored.textBgOverrides ?? {},
+      textStyleOverrides: restored.textStyleOverrides ?? {},
+    });
+    setActivePage(1);
+    setHistoryTick((t) => t + 1);
+  }, []);
+
   const setTextOverride = useCallback(
-    (key: string, value: string) => {
-      commit((prev) => ({ ...prev, textOverrides: { ...prev.textOverrides, [key]: value } }));
+    (key: string, value: string, color?: string, bg?: string) => {
+      commit((prev) => ({
+        ...prev,
+        textOverrides: { ...prev.textOverrides, [key]: value },
+        textColorOverrides: color
+          ? { ...(prev.textColorOverrides ?? {}), [key]: color }
+          : (prev.textColorOverrides ?? {}),
+        textBgOverrides: bg
+          ? { ...(prev.textBgOverrides ?? {}), [key]: bg }
+          : (prev.textBgOverrides ?? {}),
+        textStyleOverrides: {
+          ...(prev.textStyleOverrides ?? {}),
+          [key]: {
+            ...(prev.textStyleOverrides?.[key] ?? {}),
+            ...(color ? { color } : {}),
+            ...(bg ? { bg } : {}),
+          },
+        },
+      }));
+    },
+    [commit],
+  );
+
+  const setTextStyleOverride = useCallback(
+    (key: string, style: Partial<TextStyleOverride>) => {
+      commit((prev) => {
+        const existing = prev.textStyleOverrides?.[key] ?? {};
+        const merged = { ...existing, ...style };
+        return {
+          ...prev,
+          textStyleOverrides: {
+            ...(prev.textStyleOverrides ?? {}),
+            [key]: merged,
+          },
+          textColorOverrides: merged.color
+            ? { ...(prev.textColorOverrides ?? {}), [key]: merged.color }
+            : (prev.textColorOverrides ?? {}),
+          textBgOverrides: merged.bg
+            ? { ...(prev.textBgOverrides ?? {}), [key]: merged.bg }
+            : (prev.textBgOverrides ?? {}),
+        };
+      });
     },
     [commit],
   );
@@ -508,6 +791,14 @@ export function useEditorState(fileName?: string) {
     updateSelectedText,
     deleteObject,
     duplicateObject,
+    bringToFront,
+    bringForward,
+    sendBackward,
+    sendToBack,
+    textPreset,
+    setTextPreset,
+    pendingImage,
+    setPendingImage,
     addTextObject,
     addHighlight,
     addDrawing,
@@ -523,7 +814,9 @@ export function useEditorState(fileName?: string) {
     rotatePage,
     movePage,
     setTextOverride,
+    setTextStyleOverride,
     setPdfPages,
+    setDocument,
     undo,
     redo,
     canUndo: past.current.length > 0,

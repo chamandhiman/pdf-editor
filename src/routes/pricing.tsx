@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HomePage } from "@/pages/HomePage";
+import { PricingPage } from "@/pages/PricingPage";
 
-const title = "PDF Studio — Everything You Need to Work With PDFs";
+const title = "Pricing Plans — PDF Studio";
 const description =
-  "Edit, convert, organize, sign and manage your PDF documents online — quickly and securely.";
+  "Simple, transparent pricing for PDF Studio. Free community plan and upcoming premium productivity tiers.";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title },
@@ -16,5 +16,5 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: HomePage,
+  component: PricingPage,
 });

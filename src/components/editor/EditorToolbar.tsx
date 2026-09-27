@@ -1,16 +1,23 @@
 import {
+  AlignLeft,
   ChevronDown,
   Circle,
   Hand,
+  Heading1,
+  Heading2,
   Highlighter,
   Image as ImageIcon,
   Link2,
+  List,
+  ListOrdered,
+  ListTodo,
   Minus,
   MousePointer2,
   MoveUpRight,
   Pentagon,
   PenLine,
   PenTool,
+  Shapes,
   Signature,
   Square,
   Stamp,
@@ -31,7 +38,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { stampPresets } from "@/lib/demo-document";
 import { cn } from "@/lib/utils";
 import type { ToolId } from "@/types/pdf";
-import type { EditorState } from "./useEditorState";
+import { TEXT_PRESETS, type EditorState, type TextPresetKind } from "./useEditorState";
 
 interface ToolDef {
   id: ToolId;
@@ -46,20 +53,45 @@ const pointerTools: ToolDef[] = [
   { id: "hand", label: "Hand", icon: Hand, hint: "Pan the document" },
 ];
 
-const textTools: ToolDef[] = [
-  { id: "add-text", label: "Add Text", icon: Type, showLabel: true, hint: "Click the page to place a text box" },
-  { id: "edit-text", label: "Edit Text", icon: PenLine, showLabel: true, hint: "Edit the document text" },
-];
-
-const lineTools: ToolDef[] = [
-  { id: "line", label: "Line", icon: Minus, hint: "Drag to draw a line" },
-  { id: "arrow", label: "Arrow", icon: MoveUpRight, hint: "Drag to draw an arrow" },
+const TEXT_PRESET_ITEMS: {
+  id: TextPresetKind;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  hint: string;
+}[] = [
+  { id: "text", label: "Add Text", icon: Type, hint: "Default text box (16px)" },
+  { id: "heading", label: "Add Heading", icon: Heading1, hint: "Large bold title (28px)" },
+  { id: "subheading", label: "Add Subheading", icon: Heading2, hint: "Section heading (20px)" },
+  { id: "paragraph", label: "Add Paragraph", icon: AlignLeft, hint: "Body paragraph (14px)" },
+  { id: "bullet-list", label: "Add Bullet List", icon: List, hint: "Bullet point list (•)" },
+  { id: "numbered-list", label: "Add Numbered List", icon: ListOrdered, hint: "Numbered step list (1. 2. 3.)" },
+  { id: "checklist", label: "Add Checklist", icon: ListTodo, hint: "Interactive checklist items (☐)" },
 ];
 
 const shapeTools: ToolDef[] = [
   { id: "rectangle", label: "Rectangle", icon: Square, hint: "Drag to draw a rectangle" },
   { id: "circle", label: "Circle", icon: Circle, hint: "Drag to draw an ellipse" },
   { id: "polygon", label: "Polygon", icon: Pentagon, hint: "Drag to draw a polygon" },
+  { id: "line", label: "Line", icon: Minus, hint: "Drag to draw a line" },
+  { id: "arrow", label: "Arrow", icon: MoveUpRight, hint: "Drag to draw an arrow" },
+];
+
+const shapeSections = [
+  {
+    label: "Shapes",
+    tools: [
+      { id: "rectangle", label: "Rectangle", icon: Square, hint: "Drag to draw a rectangle" },
+      { id: "circle", label: "Circle", icon: Circle, hint: "Drag to draw an ellipse" },
+      { id: "polygon", label: "Polygon", icon: Pentagon, hint: "Drag to draw a polygon" },
+    ] as ToolDef[],
+  },
+  {
+    label: "Lines",
+    tools: [
+      { id: "line", label: "Line", icon: Minus, hint: "Drag to draw a line" },
+      { id: "arrow", label: "Arrow", icon: MoveUpRight, hint: "Drag to draw an arrow" },
+    ] as ToolDef[],
+  },
 ];
 
 const markupTools: ToolDef[] = [
@@ -97,9 +129,23 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
     );
   };
 
-  const GroupMenu = ({ tools, label }: { tools: ToolDef[]; label: string }) => {
-    const activeTool = tools.find((t) => t.id === editor.tool) ?? tools[0]!;
-    const groupActive = tools.some((t) => t.id === editor.tool);
+  const GroupMenu = ({
+    tools,
+    label,
+    sections,
+    defaultIcon: DefaultIcon,
+  }: {
+    tools: ToolDef[];
+    label: string;
+    sections?: { label: string; tools: ToolDef[] }[];
+    defaultIcon?: React.ComponentType<{ className?: string }>;
+  }) => {
+    const activeTool = tools.find((t) => t.id === editor.tool);
+    const groupActive = !!activeTool;
+    const CurrentIcon = activeTool ? activeTool.icon : (DefaultIcon ?? tools[0]!.icon);
+    const currentLabel = activeTool ? activeTool.label : label;
+    const currentHint = activeTool ? activeTool.hint : `${label} options`;
+
     return (
       <div
         className={cn(
@@ -112,18 +158,20 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => editor.setTool(activeTool.id)}
+              aria-pressed={groupActive}
+              onClick={() => editor.setTool(activeTool ? activeTool.id : tools[0]!.id)}
               className={cn(
                 "h-8 gap-1.5 rounded-r-none px-2 text-muted-foreground hover:text-foreground",
-                groupActive && "text-brand hover:bg-brand-soft hover:text-brand",
+                groupActive && "bg-brand-soft text-brand hover:bg-brand-soft hover:text-brand",
               )}
             >
-              <activeTool.icon className="h-4 w-4" />
+              <CurrentIcon className="h-4 w-4" />
+              <span className="hidden text-xs font-medium xl:inline">{currentLabel}</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <span className="font-medium">{activeTool.label}</span>
-            <span className="ml-1.5 text-muted-foreground">{activeTool.hint}</span>
+            <span className="font-medium">{currentLabel}</span>
+            <span className="ml-1.5 text-muted-foreground">{currentHint}</span>
           </TooltipContent>
         </Tooltip>
         <DropdownMenu>
@@ -141,14 +189,122 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
+            {sections ? (
+              sections.map((sec, secIdx) => (
+                <div key={sec.label}>
+                  {secIdx > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {sec.label}
+                  </DropdownMenuLabel>
+                  {sec.tools.map((t) => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onSelect={() => editor.setTool(t.id)}
+                      className={cn("cursor-pointer", editor.tool === t.id && "bg-accent font-medium text-brand")}
+                    >
+                      <t.icon className="mr-2 h-4 w-4" /> {t.label}
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              ))
+            ) : (
+              tools.map((t) => (
+                <DropdownMenuItem
+                  key={t.id}
+                  onSelect={() => editor.setTool(t.id)}
+                  className={cn("cursor-pointer", editor.tool === t.id && "bg-accent font-medium text-brand")}
+                >
+                  <t.icon className="mr-2 h-4 w-4" /> {t.label}
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const AddTextToolGroup = () => {
+    const isAddTextActive = editor.tool === "add-text";
+    const currentPreset =
+      TEXT_PRESET_ITEMS.find((p) => p.id === editor.textPreset) ?? TEXT_PRESET_ITEMS[0]!;
+    const CurrentIcon = currentPreset.icon;
+
+    const handleSelectPreset = (presetId: TextPresetKind) => {
+      editor.setTextPreset(presetId);
+      editor.setTool("add-text");
+    };
+
+    return (
+      <div
+        className={cn(
+          "flex shrink-0 items-center rounded-md",
+          isAddTextActive && "bg-brand-soft text-brand",
+        )}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-pressed={isAddTextActive}
+              onClick={() => editor.setTool("add-text")}
+              className={cn(
+                "h-8 gap-1.5 rounded-r-none px-2 text-muted-foreground hover:text-foreground",
+                isAddTextActive && "bg-brand-soft text-brand hover:bg-brand-soft hover:text-brand",
+              )}
+            >
+              <CurrentIcon className="h-4 w-4" />
+              <span className="hidden text-xs font-medium xl:inline">{currentPreset.label}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span className="font-medium">{currentPreset.label}</span>
+            <span className="ml-1.5 text-muted-foreground">Click page to place, or choose preset from dropdown</span>
+          </TooltipContent>
+        </Tooltip>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Add Text options"
+              className={cn(
+                "h-8 w-5 rounded-l-none px-0 text-muted-foreground hover:text-foreground",
+                isAddTextActive && "text-brand hover:bg-brand-soft hover:text-brand",
+              )}
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              {label}
+              Add Text
             </DropdownMenuLabel>
-            {tools.map((t) => (
-              <DropdownMenuItem key={t.id} onSelect={() => editor.setTool(t.id)}>
-                <t.icon className="mr-2 h-4 w-4" /> {t.label}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuSeparator />
+            {TEXT_PRESET_ITEMS.map((item) => {
+              const ItemIcon = item.icon;
+              const isSelected = editor.textPreset === item.id;
+              return (
+                <DropdownMenuItem
+                  key={item.id}
+                  onSelect={() => handleSelectPreset(item.id)}
+                  className={cn("flex items-center justify-between cursor-pointer py-2", isSelected && "bg-accent/60 font-medium")}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ItemIcon className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <span className="text-xs leading-none">{item.label}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 leading-none">{item.hint}</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-mono ml-2">
+                    {TEXT_PRESETS[item.id].fontSize}px
+                  </span>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -162,9 +318,8 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
       ))}
 
       <Separator orientation="vertical" className="mx-1.5 h-6" />
-      {textTools.map((t) => (
-        <ToolButton key={t.id} tool={t} />
-      ))}
+      <AddTextToolGroup />
+      <ToolButton tool={{ id: "edit-text", label: "Edit Text", icon: PenLine, showLabel: true, hint: "Edit the document text" }} />
 
       <Separator orientation="vertical" className="mx-1.5 h-6" />
       <Tooltip>
@@ -188,8 +343,7 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
 
       <Separator orientation="vertical" className="mx-1.5 h-6" />
       <ToolButton tool={{ id: "draw", label: "Draw", icon: PenTool, hint: "Freehand drawing" }} />
-      <GroupMenu tools={lineTools} label="Lines" />
-      <GroupMenu tools={shapeTools} label="Shapes" />
+      <GroupMenu tools={shapeTools} label="Shapes" sections={shapeSections} defaultIcon={Shapes} />
 
       <Separator orientation="vertical" className="mx-1.5 h-6" />
       {markupTools.map((t) => (

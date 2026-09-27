@@ -1,22 +1,33 @@
 import {
   AlignCenter,
+  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
+  ChevronDown,
+  ChevronUp,
+  ChevronsDown,
+  ChevronsUp,
+  Crop,
   FileText,
   Highlighter,
   Image as ImageIcon,
+  ImagePlus,
   Italic,
   Link2,
+  Maximize2,
   PenTool,
+  RotateCw,
   Shapes,
   Signature,
   Stamp as StampIcon,
   StickyNote,
   Type,
   Underline,
+  Undo2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,6 +110,35 @@ export function PropertiesPanel({ editor }: { editor: EditorState }) {
                   onValueChange={(v) => editor.updateSelected({ rotation: v[0] ?? 0 })}
                   className="mt-2.5"
                 />
+                <div className="mt-2 flex items-center gap-1">
+                  {[0, 45, 90, 180, 270].map((deg) => (
+                    <button
+                      key={deg}
+                      type="button"
+                      onClick={() => editor.updateSelected({ rotation: deg })}
+                      className={cn(
+                        "flex-1 rounded border border-border px-1 py-0.5 text-[10px] font-medium transition-colors hover:border-brand",
+                        (selected.rotation || 0) === deg
+                          ? "bg-brand text-brand-foreground border-brand"
+                          : "bg-background text-muted-foreground",
+                      )}
+                    >
+                      {deg}°
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    title="Rotate 90° Clockwise"
+                    onClick={() =>
+                      editor.updateSelected({
+                        rotation: ((selected.rotation || 0) + 90) % 360,
+                      })
+                    }
+                    className="flex h-5 w-6 items-center justify-center rounded border border-border bg-background text-muted-foreground hover:border-brand hover:text-foreground transition-colors"
+                  >
+                    <RotateCw className="h-3 w-3" />
+                  </button>
+                </div>
               </Field>
             </Group>
 
@@ -118,6 +158,51 @@ export function PropertiesPanel({ editor }: { editor: EditorState }) {
                 value={selected.height}
                 onChange={(height) => editor.updateSelected({ height })}
               />
+            </Group>
+
+            <Group label="Layer Order">
+              <div className="col-span-2 grid grid-cols-2 gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs justify-start gap-1.5 px-2"
+                  onClick={() => editor.bringToFront(selected.id)}
+                  title="Bring to Front"
+                >
+                  <ChevronsUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">Bring to Front ↑</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs justify-start gap-1.5 px-2"
+                  onClick={() => editor.bringForward(selected.id)}
+                  title="Bring Forward"
+                >
+                  <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">Bring Forward ↑</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs justify-start gap-1.5 px-2"
+                  onClick={() => editor.sendBackward(selected.id)}
+                  title="Send Backward"
+                >
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">Send Backward ↓</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs justify-start gap-1.5 px-2"
+                  onClick={() => editor.sendToBack(selected.id)}
+                  title="Send to Back"
+                >
+                  <ChevronsDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">Send to Back ↓</span>
+                </Button>
+              </div>
             </Group>
 
             <div className="flex gap-2 pt-1">
@@ -231,7 +316,7 @@ function TypeSpecific({ object, editor }: { object: PDFObject; editor: EditorSta
               <Underline className="h-3.5 w-3.5" />
             </Toggle>
             <Separator orientation="vertical" className="mx-1 h-6" />
-            {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(
+            {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight], ["justify", AlignJustify]] as const).map(
               ([align, Icon]) => (
                 <Toggle
                   key={align}
@@ -257,6 +342,58 @@ function TypeSpecific({ object, editor }: { object: PDFObject; editor: EditorSta
           </Field>
         </Group>
       </>
+    );
+  }
+
+  if (object.type === "image" && object.image) {
+    const img = object.image;
+    return (
+      <Group label="Image Properties">
+        <div className="col-span-2 space-y-3">
+          <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-muted/40 flex items-center justify-center p-1.5">
+            <img
+              src={img.src}
+              alt={img.alt || "Selected"}
+              className="max-h-full max-w-full object-contain rounded"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs font-semibold text-brand border-brand/40 bg-brand/5 hover:bg-brand/10 hover:border-brand"
+              onClick={() => editor.setModal("crop")}
+            >
+              <Crop className="h-3.5 w-3.5" />
+              <span>Crop</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs font-medium"
+              onClick={() => editor.setModal("image")}
+            >
+              <ImagePlus className="h-3.5 w-3.5" />
+              <span>Replace</span>
+            </Button>
+          </div>
+          {img.originalSrc && img.originalSrc !== img.src && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-full text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted"
+              onClick={() => {
+                editor.updateSelected({
+                  image: { ...img, src: img.originalSrc! },
+                });
+                toast.success("Restored original uncropped image");
+              }}
+            >
+              <Undo2 className="mr-1.5 h-3 w-3" /> Reset to Original
+            </Button>
+          )}
+        </div>
+      </Group>
     );
   }
 
@@ -291,8 +428,61 @@ function TypeSpecific({ object, editor }: { object: PDFObject; editor: EditorSta
 
   if (object.type === "shape" && object.shape) {
     const s = object.shape;
+    const isLine = s.kind === "line" || s.kind === "arrow";
+    const currentPage = editor.document.pages.find((p) => p.id === object.pageId);
+    const pageWidth = currentPage?.width ?? 794;
+
     return (
-      <Group label="Shape">
+      <Group label={isLine ? "Line Controls" : "Shape"}>
+        {isLine && (
+          <div className="col-span-2 space-y-2">
+            <div className="grid grid-cols-2 gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs font-semibold text-brand border-brand/40 bg-brand/5 hover:bg-brand/10 hover:border-brand"
+                onClick={() => {
+                  editor.updateSelected({ x: 0, width: pageWidth });
+                  toast.success("Line expanded to 100% full width");
+                }}
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+                <span>100% Width</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs font-medium"
+                onClick={() => {
+                  editor.updateSelected({
+                    rotation: ((object.rotation || 0) + 90) % 360,
+                  });
+                }}
+              >
+                <RotateCw className="h-3.5 w-3.5" />
+                <span>Rotate 90°</span>
+              </Button>
+            </div>
+            <div className="flex items-center gap-1 pt-1">
+              <span className="text-[11px] text-muted-foreground mr-1">Rotate:</span>
+              {[0, 45, 90, 180, 270].map((deg) => (
+                <button
+                  key={deg}
+                  type="button"
+                  onClick={() => editor.updateSelected({ rotation: deg })}
+                  className={cn(
+                    "flex-1 rounded border border-border px-1 py-0.5 text-[11px] font-medium transition-colors hover:border-brand",
+                    (object.rotation || 0) === deg
+                      ? "bg-brand text-brand-foreground border-brand"
+                      : "bg-background text-muted-foreground",
+                  )}
+                >
+                  {deg}°
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <Field label="Stroke">
           <ColorInput value={s.stroke} onChange={(stroke) => editor.updateSelected({ shape: { ...s, stroke } })} />
         </Field>
@@ -301,22 +491,24 @@ function TypeSpecific({ object, editor }: { object: PDFObject; editor: EditorSta
           value={s.thickness}
           onChange={(thickness) => editor.updateSelected({ shape: { ...s, thickness } })}
         />
-        <Field label="Fill" full>
-          <div className="flex items-center gap-2">
-            <ColorInput
-              value={s.fill === "transparent" ? "#ffffff" : s.fill}
-              onChange={(fill) => editor.updateSelected({ shape: { ...s, fill } })}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 shrink-0 text-[11px]"
-              onClick={() => editor.updateSelected({ shape: { ...s, fill: "transparent" } })}
-            >
-              None
-            </Button>
-          </div>
-        </Field>
+        {!isLine && (
+          <Field label="Fill" full>
+            <div className="flex items-center gap-2">
+              <ColorInput
+                value={s.fill === "transparent" ? "#ffffff" : s.fill}
+                onChange={(fill) => editor.updateSelected({ shape: { ...s, fill } })}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0 text-[11px]"
+                onClick={() => editor.updateSelected({ shape: { ...s, fill: "transparent" } })}
+              >
+                None
+              </Button>
+            </div>
+          </Field>
+        )}
       </Group>
     );
   }
