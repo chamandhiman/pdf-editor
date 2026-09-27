@@ -312,7 +312,7 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
             <DropdownMenuTrigger asChild>
               <button className="ml-1 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} />
+                  <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
                   <AvatarFallback>
                     <User className="h-4 w-4" />
                   </AvatarFallback>

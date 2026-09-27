@@ -5,6 +5,7 @@ import type {
   PDFDocument,
   PDFObject,
   PDFObjectType,
+  PDFPage,
   ShapeKind,
   SidebarTab,
   TextStyleOverride,
@@ -580,7 +581,9 @@ export function useEditorState(fileName?: string) {
           ...source,
           id: nextId("page"),
           type: source.type ?? (source.originalPageNumber ? "pdf" : "blank"),
-          originalPageNumber: source.originalPageNumber,
+          ...(source.originalPageNumber !== undefined
+            ? { originalPageNumber: source.originalPageNumber }
+            : {}),
           objects: source.objects.map((o) => ({ ...o, id: nextId(o.type) })),
         };
         const pages = [...prev.pages];

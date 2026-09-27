@@ -346,7 +346,7 @@ export function SaasHeader({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2 px-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} />
+                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
                       <AvatarFallback className="text-[10px] bg-brand text-brand-foreground">
                         {(user.displayName ?? user.email ?? "U").slice(0, 2).toUpperCase()}
                       </AvatarFallback>

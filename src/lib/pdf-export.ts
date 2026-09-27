@@ -19,6 +19,7 @@ import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import { getUploadedPdf } from "@/lib/pdf-store";
 import { loadPdfDocument, getPdfJs } from "@/lib/pdf-loader";
 import type { PDFDocument as AppDocument, PDFObject } from "@/types/pdf";
+import { getOriginalFontMetric, calculateFontCompensation } from "@/lib/font-metrics";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -140,6 +141,7 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
         /** approximate run width in PDF points */
         pdfWidth: number;
         fontEnum: StandardFonts;
+        originalFontMetric: number;
         /** True if this is a bullet/list-marker item — skip export, leave glyph intact */
         isBullet: boolean;
         hasBulletPrefix: boolean;
@@ -153,13 +155,20 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
           str?: string;
           transform?: number[];
           width?: number;
+          height?: number;
           fontName?: string;
         };
         if (item.str?.trim() && item.transform) {
           // item.transform is the text matrix in raw PDF user-space coordinates
           // [a, b, c, d, e, f]  where (e,f) = position baseline
           const [a, b, c, d, e, f] = item.transform as number[];
-          const pdfFontSize = Math.hypot(c ?? 0, d ?? 0) || Math.hypot(a ?? 0, b ?? 0);
+          const rawFs = (item.height && item.height > 0)
+            ? item.height
+            : (Math.hypot(c ?? 0, d ?? 0) || Math.hypot(a ?? 0, b ?? 0) || 12);
+          let pdfFontSize = Math.round(rawFs * 10) / 10;
+          if (Math.abs(pdfFontSize - Math.round(pdfFontSize)) < 0.15) {
+            pdfFontSize = Math.round(pdfFontSize);
+          }
 
           const styleMap = content.styles as Record<string, { fontFamily?: string }>;
           const style = styleMap[item.fontName ?? ""] ?? {};
@@ -178,6 +187,7 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
             bold,
             italic,
           );
+          const origMetric = getOriginalFontMetric(embeddedFont, fontId);
 
           // Detect bullet markers — same logic as PdfCanvasPage so they match.
           const isSymbolLike = /symbol|wingdings|zapfdingbats|webdings/i.test(fontId);
@@ -201,6 +211,7 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
             pdfFontSize: pdfFontSize || 12,
             pdfWidth: (item.width ?? 0),
             fontEnum,
+            originalFontMetric: origMetric,
             isBullet,
             hasBulletPrefix,
             textWithoutBullet,
@@ -252,33 +263,31 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
         const fs = style?.fontSize ?? ri.pdfFontSize;
         const originalWidth = ri.pdfWidth > 0 ? ri.pdfWidth : font.widthOfTextAtSize(ri.str, fs);
         const newWidth = font.widthOfTextAtSize(newText, fs);
-        const eraseWidth = Math.max(originalWidth, newWidth) + fs * 0.5;
-        const pad = fs * 0.3;
 
         const hexColor = style?.color ?? appDoc.textColorOverrides?.[overrideKey] ?? "#000000";
-        let hexBg = style?.bg ?? appDoc.textBgOverrides?.[overrideKey] ?? "#ffffff";
-        if (hexBg === "#d1d5db" || hexBg === "#e5e7eb" || hexBg === "#cccccc") {
-          hexBg = "#ffffff";
-        }
         const [tr, tg, tb] = hexToRgb(hexColor);
-        const [br, bg, bb] = hexToRgb(hexBg);
 
-        const hasDescenders = /[gjpqyQ,;]/.test(ri.str);
-        const bottomPad = hasDescenders ? fs * 0.15 : 1;
-        const padX = Math.max(2, fs * 0.05);
+        // Erase original PDF text glyphs by painting over with the page background color.
+        // This is REQUIRED so the downloaded PDF does NOT render duplicate / ghost text
+        // (the original PDF vector text underneath the new replacement text).
+        const eraseBg = (style?.bg && style.bg !== "transparent")
+          ? style.bg
+          : (appDoc.textBgOverrides?.[overrideKey] || "#ffffff");
+        const [br, bg, bb] = hexToRgb(eraseBg);
 
-        // Erase the original glyph region with the background color
+        const padX = Math.max(1.5, fs * 0.08);
+        const bottomPad = fs * 0.35; // Fully covers descenders (g, y, p, q, j, commas)
+        const eraseHeight = fs * 1.38; // Fully covers ascenders, capitals, and descenders
+        const eraseWidth = Math.max(originalWidth, newWidth) + padX * 2;
+
         libPage.drawRectangle({
           x: ri.pdfX - padX,
           y: ri.pdfY - bottomPad,
-          width: eraseWidth + padX * 2,
-          height: fs * 1.05 + bottomPad,
+          width: eraseWidth,
+          height: eraseHeight,
           color: rgb(br, bg, bb),
           borderWidth: 0,
         });
-
-        // Suppress unused var warning
-        void pad;
 
         // Alignment adjustment
         let drawX = ri.pdfX;

@@ -248,7 +248,7 @@ export function DashboardPage() {
               <DropdownMenuTrigger asChild>
                 <button className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent">
                   <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarImage src={user.photoURL ?? undefined} />
+                    <AvatarImage src={user.photoURL ?? undefined} referrerPolicy="no-referrer" />
                     <AvatarFallback className="text-[11px]">
                       {(user.displayName?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
                     </AvatarFallback>

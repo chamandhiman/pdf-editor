@@ -1,10 +1,25 @@
 /**
- * Auth context — keeps track of the signed-in user.
- * Firebase / real OAuth can be wired in here later without touching the rest of the app.
- * For now the state is ephemeral (cleared on refresh) so we never fake a persistent session.
+ * Auth context — Firebase Google sign-in with persistent session.
+ *
+ * Uses onAuthStateChanged so the user stays logged in across refreshes.
+ * signInWithPopup opens the Google consent screen in a pop-up window.
  */
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  type User,
+} from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
 
 export interface AuthUser {
   uid: string;
@@ -15,45 +30,56 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  /** True while a sign-in attempt is in flight */
+  /** True while Firebase is restoring the previous session (initial load) */
+  loading: boolean;
+  /** True while a sign-in popup is open / in-flight */
   signingIn: boolean;
-  /** Call this to initiate Google sign-in (stub — wire Firebase here later) */
   signInWithGoogle: () => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function toAuthUser(u: User): AuthUser {
+  return {
+    uid: u.uid,
+    displayName: u.displayName,
+    email: u.email,
+    photoURL: u.photoURL,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true); // true until onAuthStateChanged fires once
   const [signingIn, setSigningIn] = useState(false);
+
+  // Listen for Firebase auth state changes (covers refresh / tab restore)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser ? toAuthUser(firebaseUser) : null);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
 
   const signInWithGoogle = useCallback(async () => {
     setSigningIn(true);
     try {
-      /**
-       * TODO: Replace this stub with real Firebase Google sign-in.
-       *
-       * import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-       * const result = await signInWithPopup(getAuth(), new GoogleAuthProvider());
-       * setUser({ uid: result.user.uid, displayName: result.user.displayName,
-       *           email: result.user.email, photoURL: result.user.photoURL });
-       */
-      // Simulate network latency so the loading state is visible
-      await new Promise((res) => setTimeout(res, 1200));
-      // Stub: never resolves to a real user — show error instead
-      throw new Error("Google sign-in is not configured yet. Connect Firebase to enable it.");
+      const result = await signInWithPopup(auth, googleProvider);
+      setUser(toAuthUser(result.user));
     } finally {
       setSigningIn(false);
     }
   }, []);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    await firebaseSignOut(auth);
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, signingIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signingIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

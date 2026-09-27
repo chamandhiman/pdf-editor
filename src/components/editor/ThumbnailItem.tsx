@@ -59,7 +59,7 @@ export function ThumbnailItem({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Check document identity to clean up old canvases/cache if PDF was replaced
-  const docFingerprint = doc ? (doc.fingerprint || (doc as unknown as { _fingerprint?: string })._fingerprint || "doc") : null;
+  const docFingerprint = doc ? (doc.fingerprints?.[0] ?? (doc as unknown as { _fingerprint?: string })._fingerprint ?? "doc") : null;
   if (docFingerprint && activeDocId && docFingerprint !== activeDocId) {
     thumbnailCache.clear();
   }
@@ -135,6 +135,7 @@ export function ThumbnailItem({
 
         renderTask = pdfPage.render({
           canvasContext: ctx,
+          canvas,
           viewport,
           background: "rgb(255,255,255)",
         });

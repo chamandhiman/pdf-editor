@@ -48,8 +48,13 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
     setError(null);
     try {
       await signInWithGoogle();
+      // Close the modal automatically on success
+      onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+      const msg = err instanceof Error ? err.message : "Sign-in failed. Please try again.";
+      // Filter Firebase popup-closed-by-user error — it's not an actual error
+      if ((err as { code?: string })?.code === "auth/popup-closed-by-user") return;
+      setError(msg);
     }
   };
 

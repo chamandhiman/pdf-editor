@@ -4,6 +4,7 @@ import type { PDFPage } from "@/types/pdf";
 import { usePdfDoc } from "./usePdfDocument";
 import type { EditorState } from "./useEditorState";
 import { FloatingTextToolbar } from "./FloatingTextToolbar";
+import { getOriginalFontMetric, calculateFontCompensation } from "@/lib/font-metrics";
 
 const RENDER_SCALE = 2;
 
@@ -12,6 +13,8 @@ interface TextItem {
   str: string;
   left: number;
   top: number;
+  baselineY: number;
+  originalFontMetric: number;
   fontSize: number;
   width: number;
   /** Clean detected font family name (e.g. "Montserrat", "Helvetica") or null */
@@ -183,48 +186,11 @@ function sampleColors(item: TextItem, canvas: HTMLCanvasElement): Colors {
   let bgG = Math.round(top.g / (top.count || 1));
   let bgB = Math.round(top.b / (top.count || 1));
 
-  // ── Step 2: Refine with a clean probe strip ABOVE the text bounding box ──
-  const probeStripH = Math.min(4, Math.max(1, Math.floor((item.fontSize * 0.3) * RENDER_SCALE)));
-  const probeY = Math.max(0, Math.floor((item.top - item.fontSize * 0.3 - 1) * RENDER_SCALE) - probeStripH);
-  const probeActualH = Math.min(probeStripH, probeY >= 0 ? canvas.height - probeY : 0);
-  if (probeActualH > 0 && w > 0) {
-    const strip = ctx.getImageData(x, probeY, w, probeActualH);
-    let sumR = 0, sumG = 0, sumB = 0, cnt = 0;
-    for (let i = 0; i < strip.data.length; i += 4) {
-      const a = strip.data[i + 3]!;
-      if (a >= 128) {
-        sumR += strip.data[i]!;
-        sumG += strip.data[i + 1]!;
-        sumB += strip.data[i + 2]!;
-        cnt++;
-      } else {
-        sumR += 255;
-        sumG += 255;
-        sumB += 255;
-        cnt++;
-      }
-    }
-    if (cnt > 0) {
-      const pr = Math.round(sumR / cnt);
-      const pg = Math.round(sumG / cnt);
-      const pb = Math.round(sumB / cnt);
-      if (
-        Math.abs(pr - bgR) < 50 &&
-        Math.abs(pg - bgG) < 50 &&
-        Math.abs(pb - bgB) < 50
-      ) {
-        bgR = pr;
-        bgG = pg;
-        bgB = pb;
-      }
-    }
-  }
-
-  // ── Step 3: Minimal clamping ──
-  // If sampled background is off-white or light grey (due to anti-aliasing against white), snap to pure white (#ffffff)
-  if (bgR >= 220 && bgG >= 220 && bgB >= 220) {
+  // ── Step 2: Minimal clamping ──
+  // If sampled background is nearly white, snap to pure white (#ffffff)
+  if (bgR >= 248 && bgG >= 248 && bgB >= 248) {
     bgR = 255; bgG = 255; bgB = 255;
-  } else if (bgR <= 15 && bgG <= 15 && bgB <= 15) {
+  } else if (bgR <= 8 && bgG <= 8 && bgB <= 8) {
     bgR = 0; bgG = 0; bgB = 0;
   }
 
@@ -294,7 +260,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         return;
       }
 
-      // User clicked outside -> commit any unsaved text changes and deactivate
+      // User clicked outside → always commit so override is locked in on first click-away.
+      // This ensures shown stays true on the very next render.
       if (activeSpan) {
         const key = keyFor(activeIdx);
         const item = items.find((i) => i.idx === activeIdx);
@@ -304,10 +271,13 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           const defaultText = item.hasBulletPrefix ? item.textWithoutBullet : item.str;
           const curOverride = overrides[key];
           const curStyle = styleOverrides?.[key];
-          const c = colors[item.idx] ?? { text: "#000000", bg: "transparent" };
-          const colorToSave = curStyle?.color ?? c.text;
-          if (val !== (curOverride ?? defaultText) || curStyle !== undefined) {
-            editor.setTextOverride(key, val, colorToSave);
+          // Use already-saved style color, then canvas-sampled color (which is
+          // stable — sampled once on items-load, not affected by erasing).
+          const c = colors[item.idx];
+          const colorToSave = curStyle?.color ?? (c?.text ?? "#000000");
+          const bgToSave = curStyle?.bg ?? (c?.bg ?? "#ffffff");
+          if (val !== (curOverride ?? defaultText) || curStyle !== undefined || curOverride === undefined) {
+            editor.setTextOverride(key, val !== "" ? val : defaultText, colorToSave, bgToSave);
           }
         }
       }
@@ -427,11 +397,16 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
         const textWithoutBullet = prefixMatch ? resolvedStr.slice(prefixMatch[0].length) : resolvedStr;
         // ────────────────────────────────────────────────────────────────────
 
+        const origMetric = getOriginalFontMetric(embeddedFont, resolved.detectedName);
+        const baselineY = tx[5]! * scaleRatio;
+
         next.push({
           idx: i,
           str: isSoloBullet ? "\u2022" : resolvedStr,
           left: tx[4]! * scaleRatio,
           top: (tx[5]! - fontSize) * scaleRatio,
+          baselineY,
+          originalFontMetric: origMetric,
           fontSize,
           width: (item.width ?? 0) * scaleRatio,
           detectedFontFamily: resolved.detectedName,
@@ -463,16 +438,58 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
     setColors(next);
   }, [items]);
 
-  // Keep canvas rendered with full document content; no white rectangle mask.
+  // Redraw the canvas and erase original PDF glyphs for items that are "shown"
+  // (active, text-overridden, or style-overridden) so the HTML overlay is the only
+  // visible text — prevents the duplicate/ghost text when editing.
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const fullCanvas = fullCanvasRef.current;
     const ctx = canvas?.getContext("2d", { willReadFrequently: true });
     if (!canvas || !fullCanvas || !ctx) return;
 
+    // Start from the full original render
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(fullCanvas, 0, 0);
-  }, [items]);
+
+    const fullCtx = fullCanvas.getContext("2d", { willReadFrequently: true });
+
+    // Erase the canvas glyph for every item that is rendered via HTML overlay
+    items.forEach((item) => {
+      const key = `${(page.originalPageNumber ?? (page.index + 1)) - 1}:${item.idx}`;
+      const hasOverride = overrides[key] !== undefined;
+      const hasStyleOverride =
+        styleOverrides?.[key] !== undefined &&
+        ["fontFamily", "fontSize", "bold", "italic", "underline", "align"].some(
+          (k) => k in (styleOverrides[key] ?? {}),
+        );
+      const isShown = activeIdx === item.idx || hasOverride || hasStyleOverride;
+      if (!isShown) return;
+
+      const padX = Math.max(2, item.fontSize * 0.1);
+      const padTop = item.fontSize * 0.12;
+      const padBottom = item.fontSize * 0.35; // Fully covers descenders (g, y, p, q, j)
+
+      const ex = Math.max(0, Math.floor((item.left - padX) * RENDER_SCALE));
+      const ey = Math.max(0, Math.floor((item.top - padTop) * RENDER_SCALE));
+      const ew = Math.min(
+        canvas.width - ex,
+        Math.ceil((item.width + padX * 2) * RENDER_SCALE),
+      );
+      const eh = Math.min(
+        canvas.height - ey,
+        Math.ceil((item.fontSize + padTop + padBottom) * RENDER_SCALE),
+      );
+      if (ew <= 0 || eh <= 0) return;
+
+      const fillColor = styleOverrides?.[key]?.bg || colors[item.idx]?.bg || "#ffffff";
+
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(ex, ey, ew, eh);
+      ctx.restore();
+    });
+  }, [items, activeIdx, overrides, styleOverrides, colors, page.originalPageNumber, page.index]);
 
 
   const keyFor = (idx: number) => `${(page.originalPageNumber ?? (page.index + 1)) - 1}:${idx}`;
@@ -520,7 +537,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                 liveStr = liveStr.replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "");
               }
               const targetColor = updates.color ?? activeColor;
-              editor.setTextOverride(activeKey, liveStr, targetColor);
+              const targetBg = updates.bg ?? (styleOverrides?.[activeKey]?.bg ?? colors[activeItem.idx]?.bg ?? "#ffffff");
+              editor.setTextOverride(activeKey, liveStr, targetColor, targetBg);
               // Merge ONLY the changed properties.
               editor.setTextStyleOverride(activeKey, updates);
             }}
@@ -548,7 +566,27 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
           // Bug 1 fix: bullet items always use their original font so the glyph stays as •.
           // Never apply a user-selected fontFamily override to bullet markers.
           const curFontFamily = item.isBullet ? item.htmlFontFamily : (style.fontFamily ?? item.htmlFontFamily);
-          const curFontSize = style.fontSize ?? item.fontSize;
+          const nominalFontSize = style.fontSize ?? item.fontSize;
+
+          // Check if original font is available and in use
+          const isOrigFontActive = Boolean(
+            item.detectedFontFamily &&
+            curFontFamily.toLowerCase().includes(item.detectedFontFamily.toLowerCase()) &&
+            loadedFonts.has(item.detectedFontFamily)
+          );
+
+          // Apply visual size compensation for fallback/substitute fonts
+          const compensation = calculateFontCompensation(
+            item.originalFontMetric ?? 0.718,
+            curFontFamily,
+            isOrigFontActive
+          );
+          const renderedFontSize = Math.round(nominalFontSize * compensation * 100) / 100;
+          // Use item.top for positioning — it is already correctly anchored to the PDF glyph.
+          // The baselineY-renderedFontSize approach shifts text upward when compensation ≠ 1.0,
+          // making the overlay appear larger/higher than the original.
+          const renderedTop = item.top;
+
           const curBold = style.bold !== undefined ? style.bold : (item.fontWeight === 700 || item.fontWeight === "bold");
           const curItalic = style.italic !== undefined ? style.italic : (item.fontStyle === "italic");
           const curUnderline = style.underline ?? false;
@@ -596,8 +634,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   className="absolute outline-none select-text inline-flex items-baseline"
                   style={{
                     left: item.left,
-                    top: item.top,
-                    fontSize: curFontSize,
+                    top: renderedTop,
+                    fontSize: renderedFontSize,
                     fontFamily: curFontFamily,
                     fontWeight: curBold ? 700 : 400,
                     fontStyle: curItalic ? "italic" : "normal",
@@ -642,9 +680,11 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                       setActiveIdx(null);
                       const rawValue = e.currentTarget.textContent ?? "";
                       const value = rawValue.replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "");
-                      if (value !== (override ?? item.textWithoutBullet)) {
-                        editor.setTextOverride(key, value, curColor);
-                      }
+                      // Always save — even if unchanged — so override is set and
+                      // shown stays true after this first click-away.
+                      const savedColor = styleOverrides?.[key]?.color ?? colors[item.idx]?.text ?? "#000000";
+                      const savedBg = styleOverrides?.[key]?.bg ?? colors[item.idx]?.bg ?? "#ffffff";
+                      editor.setTextOverride(key, value !== "" ? value : (override ?? item.textWithoutBullet), savedColor, savedBg);
                     }}
                     onInput={(e) => {
                       const el = e.currentTarget;
@@ -703,9 +743,11 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   onBlur={(e) => {
                     setActiveIdx(null);
                     const value = e.currentTarget.textContent ?? "";
-                    if (value !== (override ?? item.str)) {
-                      editor.setTextOverride(key, value, curColor);
-                    }
+                    const defaultText = item.str;
+                    // Always save so shown stays true after the very first click-away.
+                    const savedColor = styleOverrides?.[key]?.color ?? colors[item.idx]?.text ?? "#000000";
+                    const savedBg = styleOverrides?.[key]?.bg ?? colors[item.idx]?.bg ?? "#ffffff";
+                    editor.setTextOverride(key, value !== "" ? value : (override ?? defaultText), savedColor, savedBg);
                   }}
                   onInput={(e) => {
                     // Strip any browser-injected rich text formatting.
@@ -739,8 +781,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                   className="absolute outline-none select-text"
                   style={{
                     left: item.left,
-                    top: item.top,
-                    fontSize: curFontSize,
+                    top: renderedTop,
+                    fontSize: renderedFontSize,
                     fontFamily: curFontFamily,
                     fontWeight: curBold ? 700 : 400,
                     fontStyle: curItalic ? "italic" : "normal",
