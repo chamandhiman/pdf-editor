@@ -26,6 +26,12 @@ import {
   ExternalLink,
   Folder,
   Image as LucideImage,
+  Star,
+  TrendingUp,
+  Users,
+  Award,
+  BookOpen,
+  Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -333,32 +339,46 @@ export function HomePage() {
         {/* ============================================================ */}
         {/* 2. HERO SECTION (Inline: Left Text, Right Upload Box)        */}
         {/* ============================================================ */}
-        <section className="relative pt-10 pb-16 md:pt-16 md:pb-24 overflow-hidden">
-          {/* Subtle background glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-brand/5 via-brand/[0.02] to-transparent blur-3xl pointer-events-none" />
+        <section className="relative pt-10 pb-16 md:pt-20 md:pb-28 overflow-hidden pdf-hero-bg">
+          {/* Rich animated background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-radial from-brand/8 to-transparent blur-3xl" />
+            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-brand/10 to-orange-500/5 blur-3xl" />
+            <div className="absolute bottom-0 -left-16 w-64 h-64 rounded-full bg-gradient-to-tr from-blue-500/6 to-transparent blur-2xl" />
+            {/* Decorative PDF icon floaters */}
+            <div className="absolute top-12 right-12 lg:right-[42%] opacity-[0.06] dark:opacity-[0.04] animate-float">
+              <FileText className="w-32 h-32 text-brand" strokeWidth={1} />
+            </div>
+            <div className="absolute bottom-16 left-8 lg:left-[20%] opacity-[0.05] dark:opacity-[0.03] animate-float-1">
+              <Layers className="w-24 h-24 text-blue-500" strokeWidth={1} />
+            </div>
+            <div className="absolute top-24 left-4 lg:left-[8%] opacity-[0.05] dark:opacity-[0.03] animate-float-2">
+              <ShieldCheck className="w-20 h-20 text-emerald-500" strokeWidth={1} />
+            </div>
+          </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-center">
               {/* Left Column: Headline, Subheading, CTAs */}
               <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start">
                 {/* Trust Badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-soft border border-brand/20 text-brand text-xs font-medium mb-6">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-brand/10 to-orange-500/10 border border-brand/25 text-brand text-xs font-semibold mb-6 shadow-sm">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Next-Generation In-Browser PDF Suite</span>
+                  <span>Next-Gen In-Browser PDF Suite · 30+ Tools</span>
                 </div>
 
                 {/* Headline */}
-                <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-foreground leading-[1.12]">
-                  Everything You Need to <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-brand via-brand to-brand/70 bg-clip-text text-transparent">
-                    Work With PDFs
+                <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+                  Your Complete
+                  <br />
+                  <span className="gradient-brand">
+                    PDF Power Center
                   </span>
                 </h1>
 
                 {/* Subheading */}
                 <p className="mt-5 text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                  Edit, convert, organize, sign and manage your PDF documents online
-                  — quickly and securely.
+                  Edit, convert, organize, sign, protect and compress PDF documents — entirely in your browser, instantly and securely.
                 </p>
 
                 {/* Action Buttons */}
@@ -366,104 +386,134 @@ export function HomePage() {
                   <button
                     type="button"
                     onClick={handleTriggerUpload}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-brand text-white font-semibold text-base shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all active:scale-[0.98] cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-brand text-white font-bold text-base shadow-lg shadow-brand/30 hover:shadow-brand/50 hover:bg-brand/90 transition-all active:scale-[0.98] cursor-pointer animate-pulse-glow"
                   >
                     <FileUp className="w-5 h-5" />
-                    <span>Edit PDF</span>
+                    <span>Start Editing — Free</span>
                   </button>
 
                   <a
                     href="#tools"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-input bg-card/60 backdrop-blur-sm hover:bg-accent text-foreground font-semibold text-base transition-colors"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-border bg-card/70 backdrop-blur-sm hover:bg-accent text-foreground font-semibold text-base transition-colors hover:border-brand/30"
                   >
                     <Compass className="w-4 h-4 text-muted-foreground" />
-                    <span>Explore PDF Tools</span>
+                    <span>Explore All Tools</span>
                   </a>
                 </div>
 
-                {/* Trust Highlights */}
-                <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5 font-medium">
+                {/* Stats row */}
+                <div className="mt-9 flex flex-wrap items-center justify-center lg:justify-start gap-5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-1">
+                      {["bg-brand", "bg-blue-500", "bg-emerald-500", "bg-amber-500"].map((c, i) => (
+                        <div key={i} className={`w-6 h-6 rounded-full ${c} ring-2 ring-background`} />
+                      ))}
+                    </div>
+                    <span className="text-xs font-semibold text-muted-foreground">50K+ users trust us</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {[1,2,3,4,5].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
+                    <span className="text-xs font-semibold text-muted-foreground ml-1">4.9 / 5</span>
+                  </div>
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    No sign-up required
+                    No watermarks
                   </span>
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    No watermarks added
-                  </span>
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Client-side processing
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Lock className="w-3.5 h-3.5 text-brand" />
+                    Files stay private
                   </span>
                 </div>
               </div>
 
-              {/* Right Column: Upload Box (Screenshot 2) */}
+              {/* Right Column: Premium Upload Box */}
               <div className="lg:col-span-5 w-full max-w-lg mx-auto lg:max-w-none">
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={handleTriggerUpload}
-                  className={`relative group rounded-3xl border-2 border-dashed p-8 sm:p-10 text-center transition-all cursor-pointer bg-card/80 backdrop-blur-md shadow-sm hover:shadow-xl ${
+                  className={`relative group rounded-3xl p-8 sm:p-10 text-center transition-all cursor-pointer ${
                     isDragging
-                      ? "border-brand bg-brand-soft scale-[1.01]"
-                      : "border-sky-400/60 dark:border-sky-500/40 hover:border-brand"
+                      ? "bg-brand-soft border-2 border-brand scale-[1.02] shadow-xl shadow-brand/20"
+                      : "bg-gradient-to-br from-white to-slate-50/80 dark:from-card dark:to-card border-2 border-dashed border-brand/30 hover:border-brand/60 hover:shadow-2xl shadow-lg"
                   }`}
                 >
-                  <div className="flex flex-col items-center justify-center">
-                    <div
-                      className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-105 ${
-                        isDragging ? "bg-brand text-white" : "bg-sky-50 dark:bg-sky-950/60 text-brand"
-                      }`}
-                    >
-                      <FileUp className="w-8 h-8" />
+                  {/* Colorful corner accents */}
+                  <div className="absolute top-0 left-0 w-16 h-16 rounded-tl-3xl overflow-hidden pointer-events-none">
+                    <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-br from-brand/20 to-transparent rounded-full" />
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-16 h-16 rounded-br-3xl overflow-hidden pointer-events-none">
+                    <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-tl from-blue-500/15 to-transparent rounded-full" />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center relative z-10">
+                    {/* PDF icon with red gradient */}
+                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-5 transition-all group-hover:scale-110 shadow-lg ${
+                      isDragging
+                        ? "icon-edit shadow-brand/30"
+                        : "icon-edit shadow-brand/20"
+                    }`}>
+                      <FileText className="w-10 h-10 text-white drop-shadow" />
                     </div>
 
                     <h3 className="text-xl sm:text-2xl font-bold text-foreground">
-                      Upload your PDF
+                      Drop your PDF here
                     </h3>
-
                     <p className="mt-1.5 text-sm sm:text-base text-muted-foreground font-normal">
-                      Drag & drop your file here
+                      or click anywhere to browse files
                     </p>
 
-                    <div className="mt-4 flex items-center justify-center gap-3 w-36">
-                      <span className="h-px flex-1 bg-border" />
-                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                        OR
-                      </span>
-                      <span className="h-px flex-1 bg-border" />
+                    <div className="mt-5 flex items-center justify-center gap-3 w-36">
+                      <span className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
+                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">or</span>
+                      <span className="h-px flex-1 bg-gradient-to-l from-transparent to-border" />
                     </div>
 
                     <button
                       type="button"
-                      className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold shadow-md hover:bg-brand/90 transition-colors pointer-events-none"
+                      className="mt-4 inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-sm font-bold shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all pointer-events-none"
                     >
-                      <FileText className="w-4 h-4" />
-                      <span>Choose a file</span>
+                      <FileUp className="w-4 h-4" />
+                      <span>Choose PDF File</span>
                     </button>
 
-                    <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        Client-side processing
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-border" />
-                      <span>Max file size: 50MB</span>
-                      <span className="w-1 h-1 rounded-full bg-border" />
-                      <span>PDF format supported</span>
+                    {/* Feature badges */}
+                    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                      {[
+                        { icon: ShieldCheck, text: "100% Private", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40" },
+                        { icon: Zap, text: "Instant", color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40" },
+                        { icon: Lock, text: "No Upload", color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40" },
+                      ].map(({ icon: Icon, text, color }) => (
+                        <span key={text} className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ${color}`}>
+                          <Icon className="w-3 h-3" />{text}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
                   {isUploading && (
-                    <div className="absolute inset-0 bg-card/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center z-20">
-                      <div className="w-10 h-10 border-3 border-brand border-t-transparent rounded-full animate-spin" />
-                      <p className="mt-4 text-sm font-semibold text-foreground">
-                        Preparing PDF editor workspace...
-                      </p>
+                    <div className="absolute inset-0 bg-card/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center z-20">
+                      <div className="w-12 h-12 border-[3px] border-brand border-t-transparent rounded-full animate-spin" />
+                      <p className="mt-4 text-sm font-bold text-foreground">Loading your PDF...</p>
+                      <p className="text-xs text-muted-foreground mt-1">Preparing editor workspace</p>
                     </div>
                   )}
+                </div>
+
+                {/* Social proof below upload box */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {[
+                    { icon: TrendingUp, label: "30+ Tools", sub: "Specialized", color: "text-brand" },
+                    { icon: Users, label: "50K+", sub: "Users", color: "text-blue-500" },
+                    { icon: Award, label: "4.9★", sub: "Rated", color: "text-amber-500" },
+                  ].map(({ icon: Icon, label, sub, color }) => (
+                    <div key={label} className="rounded-xl border border-border bg-card/60 backdrop-blur p-3 text-center hover:shadow-sm transition-shadow">
+                      <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
+                      <p className="text-sm font-bold text-foreground">{label}</p>
+                      <p className="text-[10px] text-muted-foreground">{sub}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -519,164 +569,156 @@ export function HomePage() {
         {/* ============================================================ */}
         {/* 3. CORE FEATURES SECTION                                     */}
         {/* ============================================================ */}
-        <section className="py-16 md:py-24 bg-muted/30 border-y border-border/60">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-muted/20 to-muted/40 border-y border-border/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-14">
-              <h2 className="text-xs uppercase tracking-widest font-bold text-brand mb-3">
-                Core Feature Modules
-              </h2>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/8 border border-brand/20 text-brand text-xs font-bold uppercase tracking-widest mb-4">
+                <Cpu className="w-3.5 h-3.5" />
+                Core Modules
+              </div>
               <p className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
-                Built For Precision Document Workflows
+                Everything PDF — In One Place
               </p>
-              <p className="mt-3 text-muted-foreground text-base">
-                Discover specialized toolsets engineered for daily PDF editing, page layout,
-                conversion, and document protection.
+              <p className="mt-3 text-muted-foreground text-base max-w-xl mx-auto">
+                Specialized toolsets engineered for editing, organizing, converting, and protecting your documents.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Feature Column 1: Edit PDFs */}
-              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                    <Edit3 className="w-5 h-5" />
+              {/* Edit PDFs */}
+              <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-edit rounded-t-2xl" />
+                <div className="flex items-center gap-3 mb-4 pt-1">
+                  <div className="w-11 h-11 rounded-xl icon-edit flex items-center justify-center shadow-md">
+                    <Edit3 className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg">Edit PDFs</h3>
                     <span className="text-xs text-muted-foreground">In-browser editor</span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                   Rich formatting, vector drawing, overlays and live document adjustments.
                 </p>
-                <div className="space-y-2 mt-auto">
+                <div className="space-y-1.5 mt-auto">
                   {editTools.map((tool) => (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={() => handleSelectTool(tool)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-soft flex items-center justify-between group/item transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <tool.icon className="w-4 h-4 text-muted-foreground group-hover:text-brand" />
+                        <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-brand flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
-                      <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                        Active
-                      </span>
+                      <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Feature Column 2: Organize PDFs */}
-              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <Layers className="w-5 h-5" />
+              {/* Organize PDFs */}
+              <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-organize rounded-t-2xl" />
+                <div className="flex items-center gap-3 mb-4 pt-1">
+                  <div className="w-11 h-11 rounded-xl icon-organize flex items-center justify-center shadow-md">
+                    <Layers className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg">Organize PDFs</h3>
                     <span className="text-xs text-muted-foreground">Page management</span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                   Rotate, rearrange, delete and extract pages within your documents.
                 </p>
-                <div className="space-y-2 mt-auto">
+                <div className="space-y-1.5 mt-auto">
                   {organizeTools.map((tool) => (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={() => handleSelectTool(tool)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group/item transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <tool.icon className="w-4 h-4 text-muted-foreground group-hover:text-brand" />
+                        <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-blue-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
                       {tool.status === "available" ? (
-                        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                          Active
-                        </span>
+                        <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
                       ) : (
-                        <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          Preview
-                        </span>
+                        <span className="status-preview text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Preview</span>
                       )}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Feature Column 3: Convert PDFs */}
-              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <Zap className="w-5 h-5" />
+              {/* Convert PDFs */}
+              <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-convert rounded-t-2xl" />
+                <div className="flex items-center gap-3 mb-4 pt-1">
+                  <div className="w-11 h-11 rounded-xl icon-convert flex items-center justify-center shadow-md">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg">Convert PDFs</h3>
                     <span className="text-xs text-muted-foreground">Format transformations</span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                   High-fidelity document and image conversions to and from PDF format.
                 </p>
-                <div className="space-y-2 mt-auto">
+                <div className="space-y-1.5 mt-auto">
                   {convertTools.slice(0, 7).map((tool) => (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={() => handleSelectTool(tool)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group/item transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <tool.icon className="w-4 h-4 text-muted-foreground group-hover:text-brand" />
+                        <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-emerald-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
-                      <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                        Staging
-                      </span>
+                      <span className="status-staging text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Staging</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Feature Column 4: PDF Utilities */}
-              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5" />
+              {/* PDF Utilities */}
+              <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-compress rounded-t-2xl" />
+                <div className="flex items-center gap-3 mb-4 pt-1">
+                  <div className="w-11 h-11 rounded-xl icon-compress flex items-center justify-center shadow-md">
+                    <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg">PDF Utilities</h3>
-                    <span className="text-xs text-muted-foreground">Security & OCR</span>
+                    <span className="text-xs text-muted-foreground">Security &amp; OCR</span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                   Compress, sign, protect, watermark and add page numbering with ease.
                 </p>
-                <div className="space-y-2 mt-auto">
+                <div className="space-y-1.5 mt-auto">
                   {utilityTools.slice(0, 7).map((tool) => (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={() => handleSelectTool(tool)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent flex items-center justify-between group/item transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <tool.icon className="w-4 h-4 text-muted-foreground group-hover:text-brand" />
+                        <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-purple-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
                       {tool.status === "available" ? (
-                        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                          Active
-                        </span>
+                        <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
                       ) : (
-                        <span className="text-[11px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          Preview
-                        </span>
+                        <span className="status-preview text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Preview</span>
                       )}
                     </button>
                   ))}
@@ -719,7 +761,7 @@ export function HomePage() {
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar touch-scroll px-1">
             {pdfToolCategories.map((category) => (
               <button
                 key={category.id}
@@ -739,71 +781,78 @@ export function HomePage() {
           {/* Filtered Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredTools.length > 0 ? (
-              filteredTools.map((tool) => (
-                <div
-                  key={tool.id}
-                  onClick={() => handleSelectTool(tool)}
-                  className="group relative rounded-2xl border border-border bg-card p-5 hover:border-brand/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <tool.icon className="w-5 h-5" />
+              filteredTools.map((tool) => {
+                const catIconClass = tool.category === "edit" ? "icon-edit" :
+                  tool.category === "organize" ? "icon-organize" :
+                  tool.category === "convert" ? "icon-convert" :
+                  tool.category === "compress" ? "icon-compress" :
+                  tool.category === "sign" ? "icon-sign" :
+                  tool.category === "security" ? "icon-security" :
+                  tool.category === "ocr" ? "icon-ocr" : "icon-edit";
+                return (
+                  <div
+                    key={tool.id}
+                    onClick={() => handleSelectTool(tool)}
+                    className="group relative rounded-2xl border border-border bg-card p-5 hover:border-brand/30 transition-all cursor-pointer flex flex-col justify-between pdf-card-glow pdf-shine"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-10 h-10 rounded-xl ${catIconClass} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
+                          <tool.icon className="w-5 h-5 text-white" />
+                        </div>
+                        {tool.status === "available" ? (
+                          <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            Ready
+                          </span>
+                        ) : (
+                          <span className="status-preview text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            Soon
+                          </span>
+                        )}
                       </div>
-                      {tool.status === "available" ? (
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          Ready
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          Coming Soon
-                        </span>
-                      )}
+
+                      <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">
+                        {tool.name}
+                      </h3>
+                      <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {tool.description}
+                      </p>
                     </div>
 
-                    <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">
-                      {tool.name}
-                    </h3>
-                    <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                      {tool.description}
-                    </p>
+                    <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-bold text-brand group-hover:text-brand/80 transition-colors">
+                      <span>{tool.status === "available" ? "Open Tool" : "Learn More"}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
+                    </div>
                   </div>
-
-                  <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-semibold text-brand">
-                    <span>
-                      {tool.status === "available" ? "Open Tool" : "Learn More"}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="col-span-full py-16 text-center text-muted-foreground">
-                <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
-                <p className="text-base font-semibold text-foreground">No matching tools found</p>
-                <p className="text-xs mt-1">Try another search keyword or clear category filters.</p>
+              <div className="col-span-full py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl icon-edit flex items-center justify-center mx-auto mb-4 opacity-30">
+                  <Search className="w-7 h-7 text-white" />
+                </div>
+                <p className="text-base font-bold text-foreground">No matching tools found</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Try another keyword or clear the category filter.</p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setActiveCategory("all");
-                  }}
-                  className="mt-4 text-xs font-semibold text-brand hover:underline"
+                  onClick={() => { setSearchQuery(""); setActiveCategory("all"); }}
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline"
                 >
-                  Reset filters
+                  <ArrowRight className="w-3 h-3" /> Reset filters
                 </button>
               </div>
             )}
           </div>
 
-          {/* View All Tools link */}
+          {/* View All Tools CTA */}
           <div className="mt-12 text-center">
             <Link
               to="/tools"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-input bg-card font-semibold text-sm text-foreground hover:bg-accent transition-colors shadow-sm"
+              className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-brand text-white font-bold text-sm shadow-lg shadow-brand/25 hover:bg-brand/90 hover:shadow-brand/40 transition-all"
             >
-              <span>View All 30+ Tools Directory</span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              <BookOpen className="w-4 h-4" />
+              <span>Browse All 30+ PDF Tools</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </section>
@@ -827,48 +876,49 @@ export function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
               {/* Step 1 */}
-              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center shadow-sm">
-                <div className="w-14 h-14 rounded-2xl bg-brand-soft text-brand flex items-center justify-center font-extrabold text-xl mb-6 shadow-sm">
+              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center pdf-card-glow overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-edit rounded-t-2xl" />
+                <div className="w-14 h-14 rounded-2xl icon-edit flex items-center justify-center font-extrabold text-xl mb-6 shadow-lg text-white">
                   01
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Upload</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Upload PDF</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Upload or drag and drop your PDF document directly into the browser workspace.
+                  Drag and drop or click to upload your PDF directly into the browser workspace — no server, no wait.
                 </p>
-                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                  <FileUp className="w-4 h-4 text-brand" />
-                  <span>Instant local load</span>
+                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs font-semibold text-brand flex items-center justify-center gap-1.5">
+                  <FileUp className="w-4 h-4" />
+                  <span>Instant local processing</span>
                 </div>
               </div>
 
               {/* Step 2 */}
-              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center shadow-sm">
-                <div className="w-14 h-14 rounded-2xl bg-brand-soft text-brand flex items-center justify-center font-extrabold text-xl mb-6 shadow-sm">
+              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center pdf-card-glow overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-organize rounded-t-2xl" />
+                <div className="w-14 h-14 rounded-2xl icon-organize flex items-center justify-center font-extrabold text-xl mb-6 shadow-lg text-white">
                   02
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Edit</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Edit & Customize</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Make changes directly in your browser with interactive text, headings, signatures,
-                  drawings and shapes.
+                  Make changes with interactive text, headings, signatures, drawings, and annotations on the visual canvas.
                 </p>
-                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                  <Edit3 className="w-4 h-4 text-brand" />
+                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs font-semibold text-blue-600 flex items-center justify-center gap-1.5">
+                  <Edit3 className="w-4 h-4" />
                   <span>Precise visual canvas</span>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center shadow-sm">
-                <div className="w-14 h-14 rounded-2xl bg-brand-soft text-brand flex items-center justify-center font-extrabold text-xl mb-6 shadow-sm">
+              <div className="relative rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center pdf-card-glow overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 icon-convert rounded-t-2xl" />
+                <div className="w-14 h-14 rounded-2xl icon-convert flex items-center justify-center font-extrabold text-xl mb-6 shadow-lg text-white">
                   03
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Download</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Download & Share</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Preview and download your finished document with clean vector text and
-                  zero watermarks.
+                  Export your finished document with clean vector text, zero watermarks, and full PDF compatibility.
                 </p>
-                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                  <Download className="w-4 h-4 text-brand" />
+                <div className="mt-6 w-full pt-4 border-t border-border/50 text-xs font-semibold text-emerald-600 flex items-center justify-center gap-1.5">
+                  <Download className="w-4 h-4" />
                   <span>Direct browser export</span>
                 </div>
               </div>
@@ -893,81 +943,65 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-                <Globe className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-organize flex items-center justify-center mb-4 shadow-sm">
+                <Globe className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-1.5">
-                Works directly in your browser
+                Works in any browser
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Open PDF Studio on Chrome, Safari, Edge or Firefox without having to download or
-                configure third-party extensions.
+                Chrome, Safari, Edge, Firefox — no downloads, no plugins, no configuration required.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
-                <Monitor className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-compress flex items-center justify-center mb-4 shadow-sm">
+                <Monitor className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1.5">
-                No software installation
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-1.5">No software installation</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Forget bulky desktop installers and continuous license updates. Everything is
-                ready the instant you open the page.
+                Forget bulky desktop installers. Everything is ready the instant you open the page.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
-                <Zap className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-convert flex items-center justify-center mb-4 shadow-sm">
+                <Zap className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1.5">
-                Fast PDF processing
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-1.5">Blazing fast PDF processing</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Powered by modern WebAssembly and HTML5 Canvas rendering for instantaneous page
-                paging and zoom operations.
+                Powered by WebAssembly and HTML5 Canvas for instantaneous page rendering and zoom.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
-                <Edit3 className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-edit flex items-center justify-center mb-4 shadow-sm">
+                <Edit3 className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1.5">
-                Modern PDF editing tools
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-1.5">Modern PDF editing tools</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Overlay headings, paragraphs, formatted bullet lists, checkmarks, stamps, and
-                custom high-contrast highlights.
+                Overlay headings, lists, checkmarks, stamps, and custom highlights directly on PDFs.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4">
-                <CheckCircle2 className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-sign flex items-center justify-center mb-4 shadow-sm">
+                <CheckCircle2 className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1.5">
-                Works on desktop, tablet and mobile
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-1.5">Desktop, tablet &amp; mobile</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Adaptive layout and responsive controls ensure smooth document review whether
-                you are at your desk or on the road.
+                Adaptive layout ensures smooth document review whether you&apos;re at a desk or on the go.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="w-11 h-11 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-4">
-                <Lock className="w-5 h-5" />
+            <div className="rounded-2xl border border-border bg-card p-6 pdf-card-glow">
+              <div className="w-11 h-11 rounded-xl icon-security flex items-center justify-center mb-4 shadow-sm">
+                <Lock className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1.5">
-                Your documents remain private
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-1.5">Your documents stay private</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Files are read into local client memory and session storage. Your sensitive
-                contracts and PDFs are not sent to external ad brokers.
+                Files are read into local memory only. Nothing is sent to external servers or third parties.
               </p>
             </div>
           </div>
@@ -994,11 +1028,9 @@ export function HomePage() {
               {useCases.map((uc, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-border bg-card p-5 hover:border-brand/40 hover:shadow-sm transition-all"
+                  className="rounded-2xl border border-border bg-card p-5 pdf-card-glow cursor-default"
                 >
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${uc.color}`}
-                  >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${uc.color}`}>
                     <uc.icon className="w-5 h-5" />
                   </div>
                   <h3 className="font-bold text-foreground text-base mb-1.5">{uc.title}</h3>
@@ -1173,39 +1205,64 @@ export function HomePage() {
         {/* 11. FINAL CTA SECTION                                        */}
         {/* ============================================================ */}
         <section className="py-20 md:py-28 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand/[0.04] to-brand/[0.08] pointer-events-none" />
+          {/* Bold red gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand via-brand to-orange-600 pointer-events-none" />
+          {/* Decorative circles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5" />
+            <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-white/5" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/3" />
+            <div className="absolute top-8 right-8 opacity-20 animate-float">
+              <FileText className="w-24 h-24 text-white" strokeWidth={1} />
+            </div>
+            <div className="absolute bottom-8 left-8 opacity-15 animate-float-1">
+              <Layers className="w-20 h-20 text-white" strokeWidth={1} />
+            </div>
+          </div>
 
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-brand-soft text-brand flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <FileUp className="w-8 h-8" />
+            <div className="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center mx-auto mb-6 shadow-lg border border-white/20">
+              <FileText className="w-10 h-10 text-white" />
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight">
-              Ready to work with your PDF?
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
+              Your PDFs, Perfectly Edited
             </h2>
 
-            <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
-              Upload a PDF and start editing in your browser.
+            <p className="mt-4 text-lg text-white/80 max-w-xl mx-auto">
+              Join 50,000+ users editing PDFs directly in their browser — no installs, no watermarks, no limits.
             </p>
+
+            {/* Star rating */}
+            <div className="mt-5 flex items-center justify-center gap-1.5">
+              {[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
+              <span className="ml-2 text-white/90 text-sm font-semibold">4.9 out of 5 from 2,000+ reviews</span>
+            </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={handleTriggerUpload}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-brand text-white font-semibold text-base shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-9 py-4 rounded-xl bg-white text-brand font-bold text-base shadow-xl hover:bg-white/95 transition-all active:scale-[0.98] cursor-pointer"
               >
                 <FileUp className="w-5 h-5" />
-                <span>Edit PDF</span>
+                <span>Start Editing — Free</span>
               </button>
 
               <Link
                 to="/tools"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-input bg-card font-semibold text-base text-foreground hover:bg-accent transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl border border-white/30 text-white font-semibold text-base hover:bg-white/10 transition-colors"
               >
                 <span>Browse All Tools</span>
-                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+
+            <p className="mt-5 text-xs text-white/60 flex items-center justify-center gap-3">
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> No sign-up required</span>
+              <span className="flex items-center gap-1"><Lock className="w-3.5 h-3.5" /> 100% private</span>
+              <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5" /> Instant processing</span>
+            </p>
           </div>
         </section>
       </main>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileUp, Files, Loader2, SlidersHorizontal } from "lucide-react";
+import { FileUp, Files, Loader2, SlidersHorizontal, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -143,14 +143,15 @@ export function EditorPage({ fileName }: { fileName?: string }) {
         </div>
 
         {/* Mobile bottom bar */}
-        <div className="flex h-11 items-center justify-between gap-2 border-t border-border bg-toolbar px-3 lg:hidden">
+        <div className="flex min-h-[48px] h-auto shrink-0 items-center justify-between gap-1 border-t border-border bg-toolbar px-2 py-1 pb-safe lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-                <Files className="h-4 w-4" /> Pages
+              <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-muted-foreground">
+                <Files className="h-3.5 w-3.5" />
+                <span className="hidden xs:inline">Pages</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[260px] p-0">
+            <SheetContent side="left" className="w-[85vw] max-w-[280px] p-0">
               <SheetHeader className="border-b border-border p-3">
                 <SheetTitle className="text-sm">Pages</SheetTitle>
               </SheetHeader>
@@ -160,17 +161,43 @@ export function EditorPage({ fileName }: { fileName?: string }) {
             </SheetContent>
           </Sheet>
 
-          <span className="text-[12px] tabular-nums text-muted-foreground">
-            {editor.activePage} / {editor.document.pages.length}
+          {/* Mobile Zoom Controls */}
+          <div className="flex items-center gap-1 rounded-md border border-border/60 bg-background/50 px-1 py-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground"
+              aria-label="Zoom out"
+              onClick={editor.zoomOut}
+            >
+              <Minus className="h-3 w-3" />
+            </Button>
+            <span className="min-w-[36px] text-center text-[11px] font-medium tabular-nums text-foreground">
+              {editor.zoom}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground"
+              aria-label="Zoom in"
+              onClick={editor.zoomIn}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+
+          <span className="text-[11px] tabular-nums text-muted-foreground">
+            {editor.activePage}/{editor.document.pages.length}
           </span>
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-                <SlidersHorizontal className="h-4 w-4" /> Properties
+              <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-muted-foreground">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span className="hidden xs:inline">Properties</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[288px] p-0">
+            <SheetContent side="right" className="w-[85vw] max-w-[300px] p-0">
               <SheetHeader className="border-b border-border p-3">
                 <SheetTitle className="text-sm">Properties</SheetTitle>
               </SheetHeader>

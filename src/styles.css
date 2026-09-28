@@ -5,17 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * PDF Studio — Premium Design System
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
+ * Brand:  oklch(0.55 0.24 22)  →  vibrant PDF-red  #E5383B
+ * Accent: oklch(0.72 0.175 65) →  warm amber
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Semantic tokens are mapped to Tailwind utilities via @theme inline.
+ * :root = light mode, .dark = dark mode — ALL values in oklch().
  */
 
 @theme inline {
@@ -27,6 +23,8 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-soft: var(--brand-accent-soft);
   --color-toolbar: var(--toolbar);
   --shadow-page: 0 1px 2px oklch(0.2 0.02 260 / 0.08), 0 12px 28px oklch(0.2 0.02 260 / 0.12);
   --shadow-panel: 0 1px 2px oklch(0.2 0.02 260 / 0.06);
@@ -73,99 +71,107 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --canvas: oklch(0.938 0.004 255);
+  --radius: 0.625rem;
+  --canvas: oklch(0.945 0.005 250);
   --page: oklch(1 0 0);
-  --page-foreground: oklch(0.26 0.02 260);
-  --brand: oklch(0.51 0.11 235);
-  --brand-foreground: oklch(0.99 0.002 250);
-  --brand-soft: oklch(0.955 0.017 235);
-  --toolbar: oklch(0.995 0.001 250);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --page-foreground: oklch(0.22 0.025 260);
+  /* PDF Red brand */
+  --brand: oklch(0.55 0.24 22);
+  --brand-foreground: oklch(0.99 0.005 50);
+  --brand-soft: oklch(0.965 0.025 22);
+  /* Warm amber accent */
+  --brand-accent: oklch(0.72 0.175 65);
+  --brand-accent-soft: oklch(0.97 0.03 65);
+  --toolbar: oklch(0.99 0.002 250);
+  --background: oklch(0.99 0.003 250);
+  --foreground: oklch(0.12 0.04 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.12 0.04 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.12 0.04 265);
+  --primary: oklch(0.55 0.24 22);
+  --primary-foreground: oklch(0.99 0.005 50);
+  --secondary: oklch(0.965 0.008 250);
+  --secondary-foreground: oklch(0.22 0.04 265);
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.52 0.04 258);
+  --accent: oklch(0.965 0.008 250);
+  --accent-foreground: oklch(0.22 0.04 265);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.92 0.012 256);
+  --input: oklch(0.92 0.012 256);
+  --ring: oklch(0.55 0.24 22);
+  --chart-1: oklch(0.55 0.24 22);
+  --chart-2: oklch(0.72 0.175 65);
+  --chart-3: oklch(0.55 0.18 162);
+  --chart-4: oklch(0.62 0.19 295);
+  --chart-5: oklch(0.65 0.22 245);
+  --sidebar: oklch(0.98 0.003 250);
+  --sidebar-foreground: oklch(0.12 0.04 265);
+  --sidebar-primary: oklch(0.55 0.24 22);
+  --sidebar-primary-foreground: oklch(0.99 0.005 50);
+  --sidebar-accent: oklch(0.96 0.008 250);
+  --sidebar-accent-foreground: oklch(0.22 0.04 265);
+  --sidebar-border: oklch(0.92 0.012 256);
+  --sidebar-ring: oklch(0.55 0.24 22);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --canvas: oklch(0.18 0.03 260);
+  --page: oklch(0.24 0.025 260);
+  --page-foreground: oklch(0.92 0.01 250);
+  --brand: oklch(0.62 0.245 22);
+  --brand-foreground: oklch(0.99 0.005 50);
+  --brand-soft: oklch(0.22 0.06 22);
+  --brand-accent: oklch(0.75 0.18 65);
+  --brand-accent-soft: oklch(0.22 0.06 65);
+  --toolbar: oklch(0.19 0.03 260);
+  --background: oklch(0.13 0.04 265);
+  --foreground: oklch(0.98 0.003 248);
+  --card: oklch(0.19 0.035 265);
+  --card-foreground: oklch(0.98 0.003 248);
+  --popover: oklch(0.19 0.035 265);
+  --popover-foreground: oklch(0.98 0.003 248);
+  --primary: oklch(0.62 0.245 22);
+  --primary-foreground: oklch(0.99 0.005 50);
+  --secondary: oklch(0.27 0.04 262);
+  --secondary-foreground: oklch(0.98 0.003 248);
+  --muted: oklch(0.27 0.04 262);
+  --muted-foreground: oklch(0.68 0.038 257);
+  --accent: oklch(0.27 0.04 262);
+  --accent-foreground: oklch(0.98 0.003 248);
+  --destructive: oklch(0.68 0.21 22);
+  --destructive-foreground: oklch(0.98 0.003 248);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.62 0.245 22);
+  --chart-1: oklch(0.62 0.245 22);
+  --chart-2: oklch(0.75 0.18 65);
+  --chart-3: oklch(0.60 0.19 162);
+  --chart-4: oklch(0.65 0.21 295);
+  --chart-5: oklch(0.68 0.23 245);
+  --sidebar: oklch(0.19 0.035 265);
+  --sidebar-foreground: oklch(0.98 0.003 248);
+  --sidebar-primary: oklch(0.62 0.245 22);
+  --sidebar-primary-foreground: oklch(0.99 0.005 50);
+  --sidebar-accent: oklch(0.27 0.04 262);
+  --sidebar-accent-foreground: oklch(0.98 0.003 248);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-ring: oklch(0.62 0.245 22);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
-
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
 }
 
-/* ── PDF text-layer contentEditable: kill every browser highlight / background ──
- * Browsers (Chrome/Firefox/Safari) paint a grey or blue rectangle behind
- * focused [contenteditable] elements and behind selected text.  These rules
- * override every vendor-prefixed variant so the canvas shows through cleanly.
- */
+/* ── PDF text-layer contentEditable ── */
 [contenteditable],
 [contenteditable] *,
 [contenteditable]:focus,
@@ -177,30 +183,178 @@
   box-shadow: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
-
-/* Remove the browser selection highlight colour inside PDF text spans.
-   The text colour itself is set via WebkitTextFillColor / color in JS. */
 [contenteditable]::selection {
-  background: rgba(100, 149, 237, 0.25) !important; /* subtle cornflower blue */
+  background: rgba(229, 56, 59, 0.18) !important;
   color: inherit !important;
 }
 [contenteditable]::-moz-selection {
-  background: rgba(100, 149, 237, 0.25) !important;
+  background: rgba(229, 56, 59, 0.18) !important;
   color: inherit !important;
 }
 
-/* ── Print Media: Hide application chrome when printing ── */
+/* ── Print ── */
 @media print {
-  header,
-  nav,
-  aside,
-  [data-floating-toolbar],
-  .no-print {
+  header, nav, aside, [data-floating-toolbar], .no-print {
     display: none !important;
   }
+  body { background: #ffffff !important; color: #000000 !important; }
+}
 
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
+/* ── Mobile Touch & Scroll ── */
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+body { overflow-x: hidden; min-height: 100vh; min-height: 100dvh; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.touch-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+
+.pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem)); }
+.pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem)); }
+.pl-safe { padding-left: max(0.5rem, env(safe-area-inset-left, 0.5rem)); }
+.pr-safe { padding-right: max(0.5rem, env(safe-area-inset-right, 0.5rem)); }
+
+/* ─────────────────────────────────────────────
+   PREMIUM PDF VISUAL DESIGN UTILITIES
+   ───────────────────────────────────────────── */
+
+/* Hero ambient background glow */
+.pdf-hero-bg {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -15%, oklch(0.55 0.24 22 / 0.11), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 90% 10%, oklch(0.72 0.175 65 / 0.08), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 5% 35%, oklch(0.55 0.18 250 / 0.07), transparent 55%);
+}
+
+/* Card hover lift + glow */
+.pdf-card-glow {
+  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.18s ease;
+}
+.pdf-card-glow:hover {
+  box-shadow:
+    0 0 0 1.5px oklch(0.55 0.24 22 / 0.25),
+    0 8px 32px oklch(0.55 0.24 22 / 0.1),
+    0 2px 6px oklch(0.2 0.02 260 / 0.06);
+  transform: translateY(-3px);
+}
+
+/* Shine sweep on hover */
+.pdf-shine {
+  position: relative;
+  overflow: hidden;
+}
+.pdf-shine::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, oklch(1 0 0 / 0.13) 50%, transparent 65%);
+  transform: translateX(-110%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.pdf-shine:hover::before { transform: translateX(110%); }
+
+/* Floating animation */
+@keyframes float-pdf {
+  0%, 100% { transform: translateY(0px) rotate(-0.5deg); }
+  50%       { transform: translateY(-10px) rotate(0.5deg); }
+}
+.animate-float   { animation: float-pdf 5s ease-in-out infinite; }
+.animate-float-1 { animation: float-pdf 5s ease-in-out 1s infinite; }
+.animate-float-2 { animation: float-pdf 5s ease-in-out 2.2s infinite; }
+
+/* Pulse glow (used on CTAs) */
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.55 0.24 22 / 0.45); }
+  60%       { box-shadow: 0 0 0 10px oklch(0.55 0.24 22 / 0); }
+}
+.animate-pulse-glow { animation: pulse-red 2.8s ease-in-out infinite; }
+
+/* Gradient text */
+.gradient-brand {
+  background: linear-gradient(135deg, #e5383b 0%, #ff6b35 60%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Category icon backgrounds — vivid per-category */
+.icon-edit     { background: linear-gradient(135deg, #ff6b6b 0%, #e5383b 100%); }
+.icon-organize { background: linear-gradient(135deg, #4facfe 0%, #2563eb 100%); }
+.icon-convert  { background: linear-gradient(135deg, #43e97b 0%, #16a34a 100%); }
+.icon-compress { background: linear-gradient(135deg, #c084fc 0%, #7c3aed 100%); }
+.icon-sign     { background: linear-gradient(135deg, #fda085 0%, #f97316 100%); }
+.icon-security { background: linear-gradient(135deg, #5ee7df 0%, #0891b2 100%); }
+.icon-ocr      { background: linear-gradient(135deg, #6ee7b7 0%, #0d9488 100%); }
+.icon-image    { background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%); }
+
+/* Status badges */
+.status-active {
+  background: oklch(0.96 0.055 155);
+  color: oklch(0.33 0.18 155);
+  border: 1px solid oklch(0.80 0.1 155);
+  font-weight: 600;
+}
+.status-preview {
+  background: oklch(0.97 0.008 250);
+  color: oklch(0.52 0.04 258);
+  border: 1px solid oklch(0.88 0.015 256);
+}
+.status-staging {
+  background: oklch(0.97 0.04 65);
+  color: oklch(0.4 0.16 65);
+  border: 1px solid oklch(0.85 0.09 65);
+}
+
+/* "Live" dot indicator */
+.live-dot::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 5px;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* PDF Page shadow (editor) */
+.pdf-page-shadow {
+  box-shadow:
+    0 0 0 1px oklch(0.75 0.02 260 / 0.15),
+    0 2px 8px oklch(0.2 0.02 260 / 0.06),
+    0 16px 48px oklch(0.2 0.02 260 / 0.14);
+}
+
+/* Glass card */
+.glass-card {
+  background: oklch(1 0 0 / 0.75);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid oklch(1 0 0 / 0.55);
+}
+.dark .glass-card {
+  background: oklch(0.22 0.03 265 / 0.7);
+  border: 1px solid oklch(1 0 0 / 0.1);
+}
+
+/* Gradient border (used on premium cards) */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, oklch(0.55 0.24 22 / 0.5), oklch(0.72 0.175 65 / 0.4), oklch(0.55 0.18 250 / 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

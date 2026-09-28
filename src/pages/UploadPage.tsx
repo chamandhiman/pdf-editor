@@ -1,14 +1,19 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  FileText,
   FileUp,
+  Folder,
+  Image as LucideImage,
   Lock,
   Menu,
   PenTool,
   ShieldCheck,
   Signature,
+  Sparkles,
   SquareStack,
   Type,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +49,7 @@ export function UploadPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-brand selection:text-white">
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-5">
           <div className="flex items-center gap-2">
@@ -98,18 +103,19 @@ export function UploadPage() {
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-16 sm:py-20">
         <section className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-[12px] text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-brand" />
-            Private by default — files never leave your session
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/10 px-3.5 py-1 text-xs font-semibold text-brand">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Zero-Cloud Leak Privacy · Files Stay In Your Browser
           </span>
-          <h1 className="mt-6 text-[42px] font-semibold leading-[1.08] tracking-[-0.02em] sm:text-[54px]">
-            Edit PDFs. Simply.
+          <h1 className="mt-6 text-4xl sm:text-5xl font-extrabold tracking-tight">
+            The Complete <span className="bg-gradient-to-r from-brand via-brand to-orange-500 bg-clip-text text-transparent">PDF Center</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-[15.5px] leading-relaxed text-muted-foreground">
-            Edit, annotate, sign and manage your PDF documents from one powerful workspace.
+          <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
+            Edit text in-place, annotate, sign, merge, and convert your PDF documents with professional speed.
           </p>
         </section>
 
+        {/* Upload Dropzone */}
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -128,28 +134,51 @@ export function UploadPage() {
             if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
           }}
           className={cn(
-            "mt-12 cursor-pointer rounded-xl border border-dashed border-border bg-secondary/40 px-6 py-14 text-center transition-all",
-            "hover:border-brand/60 hover:bg-brand-soft/50",
-            dragging && "border-brand bg-brand-soft shadow-panel",
+            "mt-10 cursor-pointer rounded-3xl border-2 border-dashed border-border bg-card/60 p-8 sm:p-14 text-center transition-all relative overflow-hidden",
+            "hover:border-brand hover:bg-brand-soft/30 hover:shadow-xl pdf-card-glow",
+            dragging && "border-brand bg-brand-soft/60 shadow-2xl scale-[1.01]",
           )}
         >
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-background shadow-panel">
-            <FileUp className={cn("h-6 w-6 text-muted-foreground", dragging && "text-brand")} />
+          {/* Subtle decorative glow */}
+          <div className="absolute top-0 right-1/4 w-48 h-48 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Floating file icons */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="-rotate-12 transform rounded-xl p-2.5 bg-background shadow-md border border-border text-brand">
+              <LucideImage className="w-6 h-6 stroke-[2]" />
+            </div>
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-brand to-orange-600 shadow-xl shadow-brand/30 text-white transform -translate-y-2">
+              <FileText className="w-8 h-8 stroke-[2.2]" />
+            </div>
+            <div className="rotate-12 transform rounded-xl p-2.5 bg-background shadow-md border border-border text-brand">
+              <Folder className="w-6 h-6 stroke-[2]" />
+            </div>
           </div>
-          <h2 className="mt-5 text-[19px] font-semibold tracking-tight">Drop your PDF here</h2>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">or click to browse</p>
+
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Drop your PDF here
+          </h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            or choose a file from your device
+          </p>
+
           <Button
             variant="brand"
             size="xl"
-            className="mt-6"
+            className="mt-6 px-8 py-3 text-base font-semibold shadow-lg shadow-brand/30 pdf-shine hover:shadow-brand/50"
             onClick={(e) => {
               e.stopPropagation();
               inputRef.current?.click();
             }}
           >
-            Choose PDF
+            <FileUp className="w-5 h-5 mr-2" />
+            Select PDF File
           </Button>
-          <p className="mt-4 text-[12.5px] text-muted-foreground">PDF files up to 100 MB</p>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Supports PDF files up to 100 MB · Instant in-browser processing
+          </p>
+
           <input
             ref={inputRef}
             type="file"
@@ -157,28 +186,53 @@ export function UploadPage() {
             className="hidden"
             onChange={(e) => void openFile(e.target.files?.[0])}
           />
-          {error && <p className="mt-3 text-[12.5px] text-destructive">{error}</p>}
+          {error && <p className="mt-3 text-xs text-destructive font-medium">{error}</p>}
         </div>
 
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-[12.5px] text-muted-foreground">
-          <Lock className="h-3.5 w-3.5" />
-          Your files stay private and secure.
+        <p className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Lock className="h-3.5 w-3.5 text-emerald-600" />
+          End-to-end local sandbox — files are never uploaded to remote servers without consent.
         </p>
 
-        <section id="tools" className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Feature Cards with Module Theme Gradients */}
+        <section id="tools" className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Type, title: "Edit text", text: "Change words, fonts and layout in place." },
-            { icon: Signature, title: "Sign", text: "Draw, type or upload a signature." },
-            { icon: PenTool, title: "Annotate", text: "Highlight, comment and mark up pages." },
-            { icon: SquareStack, title: "Organise", text: "Reorder, rotate, merge and split pages." },
+            {
+              icon: Type,
+              title: "Edit text",
+              text: "Modify original text with automatic font matching.",
+              colorClass: "icon-edit",
+            },
+            {
+              icon: Signature,
+              title: "Sign & Fill",
+              text: "Draw, type, or place verifiable electronic signatures.",
+              colorClass: "icon-sign",
+            },
+            {
+              icon: PenTool,
+              title: "Annotate",
+              text: "Highlighter, pens, sticky notes, and vector shapes.",
+              colorClass: "icon-compress",
+            },
+            {
+              icon: SquareStack,
+              title: "Organize",
+              text: "Rearrange, rotate, merge, split, and extract pages.",
+              colorClass: "icon-organize",
+            },
           ].map((f) => (
             <div
               key={f.title}
-              className="rounded-lg border border-border bg-card p-4 shadow-panel transition-colors hover:border-brand/40"
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-brand/40 hover:shadow-md pdf-card-glow flex flex-col justify-between"
             >
-              <f.icon className="h-4.5 w-4.5 text-brand" />
-              <h3 className="mt-3 text-[14px] font-semibold">{f.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{f.text}</p>
+              <div>
+                <div className={`w-10 h-10 rounded-xl ${f.colorClass} flex items-center justify-center shadow-md mb-4`}>
+                  <f.icon className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-foreground">{f.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{f.text}</p>
+              </div>
             </div>
           ))}
         </section>

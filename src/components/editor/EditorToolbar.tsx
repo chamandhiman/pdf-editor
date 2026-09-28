@@ -312,7 +312,7 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
   };
 
   return (
-    <div className="flex h-12 shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-background px-3">
+    <div className="flex h-12 shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-background px-2 sm:px-3 no-scrollbar touch-scroll">
       {pointerTools.map((t) => (
         <ToolButton key={t.id} tool={t} />
       ))}

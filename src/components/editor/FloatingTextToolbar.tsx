@@ -352,8 +352,15 @@ export function FloatingTextToolbar(props: FloatingTextToolbarProps) {
       data-floating-toolbar="true"
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
-      style={{ position: "absolute", top: Math.max(8, position.top), left: Math.max(8, position.left), zIndex: 9999 }}
-      className="flex items-center gap-0.5 rounded-lg border border-border bg-card/95 px-1 py-1 shadow-xl backdrop-blur-md select-none animate-in fade-in zoom-in-95 duration-100"
+      style={{
+        position: "absolute",
+        top: Math.max(8, position.top),
+        left: typeof window !== "undefined"
+          ? Math.max(8, Math.min(window.innerWidth - 320, position.left))
+          : Math.max(8, position.left),
+        zIndex: 9999,
+      }}
+      className="flex max-w-[calc(100vw-16px)] items-center gap-0.5 overflow-x-auto no-scrollbar touch-scroll rounded-lg border border-border bg-card/95 px-1 py-1 shadow-xl backdrop-blur-md select-none animate-in fade-in zoom-in-95 duration-100"
     >
       {/* Font Family */}
       <CustomDropdown

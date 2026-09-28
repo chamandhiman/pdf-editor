@@ -14,8 +14,14 @@ import {
   Trash2,
   User,
   FileText,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,8 +95,8 @@ function DocCard({
   return (
     <div
       className={cn(
-        "group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-panel",
-        "transition-all hover:border-brand/40 hover:shadow-md",
+        "group relative flex cursor-pointer flex-col rounded-2xl border border-border bg-card p-4 shadow-sm",
+        "transition-all hover:border-brand/40 hover:shadow-lg pdf-card-glow overflow-hidden",
       )}
       onClick={() => onOpen(doc)}
       role="button"
@@ -99,19 +105,32 @@ function DocCard({
         if (e.key === "Enter" || e.key === " ") onOpen(doc);
       }}
     >
-      {/* PDF icon preview */}
-      <div className="flex h-28 items-center justify-center rounded-lg border border-border bg-secondary/40">
-        <FileText className="h-10 w-10 text-brand/60" />
+      {/* Red accent strip at the top */}
+      <div className="absolute top-0 left-0 right-0 h-1 icon-edit" />
+
+      {/* PDF paper preview */}
+      <div className="relative flex h-32 items-center justify-center rounded-xl border border-border/80 bg-gradient-to-b from-muted/30 to-muted/70 overflow-hidden shadow-inner group-hover:bg-brand-soft/20 transition-colors">
+        {/* PDF red badge in corner */}
+        <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-gradient-to-r from-red-600 to-rose-600 text-[10px] font-extrabold text-white shadow-sm tracking-wider">
+          PDF
+        </div>
+
+        {/* Paper sheet effect */}
+        <div className="w-16 h-20 bg-background rounded-md shadow-md border border-border/60 flex flex-col items-center justify-center p-2 group-hover:scale-105 transition-transform">
+          <FileText className="h-7 w-7 text-brand mb-1.5" />
+          <div className="w-8 h-1 bg-muted-foreground/30 rounded-full mb-1" />
+          <div className="w-6 h-1 bg-muted-foreground/20 rounded-full" />
+        </div>
       </div>
 
-      <div className="min-w-0">
-        <p className="truncate text-[13.5px] font-medium" title={doc.fileName}>
+      <div className="mt-3 min-w-0">
+        <p className="truncate text-sm font-bold text-foreground group-hover:text-brand transition-colors" title={doc.fileName}>
           {doc.fileName}
         </p>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">
-          {doc.pages ? `${doc.pages} pages · ` : ""}
-          {formatDate(doc.openedAt)}
-        </p>
+        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{doc.pages ? `${doc.pages} pages` : "PDF Document"}</span>
+          <span>{formatDate(doc.openedAt)}</span>
+        </div>
       </div>
 
       {/* Ellipsis menu */}
@@ -120,7 +139,7 @@ function DocCard({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+            className="absolute right-2 top-2 h-7 w-7 rounded-lg bg-background/80 backdrop-blur opacity-0 transition-opacity group-hover:opacity-100 shadow-sm"
             aria-label="Document options"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -134,7 +153,7 @@ function DocCard({
             }}
           >
             <FolderOpen className="mr-2 h-3.5 w-3.5" />
-            Open
+            Open in Editor
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -156,6 +175,7 @@ export function DashboardPage() {
   const { user, signOut } = useAuth();
   const [signInOpen, setSignInOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [docs, setDocs] = useState<RecentDoc[]>(() => getRecentDocs());
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -285,25 +305,110 @@ export function DashboardPage() {
       {/* ── Main content ────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-6">
-          <div>
-            <h1 className="text-[16px] font-semibold">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3 sm:px-6 pt-safe">
+          <div className="flex items-center gap-2">
+            {/* Mobile Sidebar Trigger */}
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" aria-label="Open navigation">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[80vw] max-w-[260px] p-0 flex flex-col bg-sidebar">
+                <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
+                  <BrandMark />
+                  <span className="text-[14px] font-semibold tracking-tight">PDF Studio</span>
+                </div>
+                <div className="px-3 pt-4">
+                  <Button
+                    variant="brand"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      inputRef.current?.click();
+                    }}
+                  >
+                    <FileUp className="h-4 w-4" />
+                    Upload PDF
+                  </Button>
+                </div>
+                <nav className="mt-4 flex flex-col gap-0.5 px-2">
+                  {NAV_ITEMS.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveNav(item.id);
+                        setMobileNavOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors",
+                        activeNav === item.id
+                          ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+
+                <div className="mt-auto border-t border-sidebar-border p-3">
+                  {user ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Avatar className="h-7 w-7 shrink-0">
+                          <AvatarImage src={user.photoURL ?? undefined} referrerPolicy="no-referrer" />
+                          <AvatarFallback className="text-[11px]">
+                            {(user.displayName?.[0] ?? user.email?.[0] ?? "U").toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate text-xs font-medium">{user.displayName ?? user.email}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={signOut}>
+                        <LogOut className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        setSignInOpen(true);
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Link to="/" className="flex items-center gap-1.5 lg:hidden">
+              <BrandMark />
+            </Link>
+
+            <h1 className="text-[15px] sm:text-[16px] font-semibold">
               {NAV_ITEMS.find((n) => n.id === activeNav)?.label ?? "Dashboard"}
             </h1>
           </div>
+
           <div className="flex items-center gap-2">
             {/* Mobile upload */}
             <Button
               variant="brand"
               size="sm"
-              className="gap-1.5 lg:hidden"
+              className="h-8 gap-1.5 text-xs lg:hidden"
               onClick={() => inputRef.current?.click()}
             >
-              <FileUp className="h-4 w-4" />
+              <FileUp className="h-3.5 w-3.5" />
               Upload
             </Button>
             {!user && (
-              <Button variant="outline" size="sm" onClick={() => setSignInOpen(true)}>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSignInOpen(true)}>
                 Sign In
               </Button>
             )}
@@ -311,60 +416,55 @@ export function DashboardPage() {
         </header>
 
         {/* Scrollable body */}
-        <main className="flex-1 overflow-y-auto px-6 py-6">
+        <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 pb-safe touch-scroll">
           {/* Quick access row */}
-          <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 icon: FileUp,
                 label: "Upload PDF",
                 sub: "Open any PDF file",
                 action: () => inputRef.current?.click(),
-                accent: true,
+                colorClass: "icon-edit",
               },
               {
                 icon: FileText,
                 label: "Blank document",
                 sub: "Start from scratch",
                 action: () => inputRef.current?.click(),
-                accent: false,
+                colorClass: "icon-organize",
               },
               {
                 icon: Star,
                 label: "Templates",
                 sub: "Browse templates",
                 action: () => setActiveNav("templates"),
-                accent: false,
+                colorClass: "icon-convert",
               },
               {
                 icon: Settings,
                 label: "Settings",
                 sub: "Preferences",
                 action: () => setActiveNav("settings"),
-                accent: false,
+                colorClass: "icon-compress",
               },
             ].map((card) => (
               <button
                 key={card.label}
                 onClick={card.action}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-md",
-                  card.accent
-                    ? "border-brand/30 bg-brand-soft/60 hover:border-brand/60"
-                    : "border-border bg-card hover:border-brand/30 shadow-panel",
-                )}
+                className="group flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 text-left transition-all hover:border-brand/40 hover:shadow-md pdf-card-glow cursor-pointer"
               >
                 <div
                   className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                    card.accent ? "bg-brand text-brand-foreground" : "bg-secondary",
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md text-white group-hover:scale-105 transition-transform",
+                    card.colorClass,
                   )}
                 >
-                  <card.icon className={cn("h-4 w-4", !card.accent && "text-muted-foreground")} />
+                  <card.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[13.5px] font-medium">{card.label}</p>
-                  <p className="text-[12px] text-muted-foreground">{card.sub}</p>
+                  <p className="text-sm font-bold text-foreground group-hover:text-brand transition-colors">{card.label}</p>
+                  <p className="text-xs text-muted-foreground">{card.sub}</p>
                 </div>
               </button>
             ))}

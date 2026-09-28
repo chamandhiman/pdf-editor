@@ -137,65 +137,67 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-toolbar px-3">
-      {/* Logo + dashboard link */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <BrandMark />
-            <span className="hidden text-sm font-semibold tracking-tight sm:inline">PDF Studio</span>
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent>Back to Dashboard</TooltipContent>
-      </Tooltip>
+    <header className="flex h-14 shrink-0 items-center justify-between gap-1 sm:gap-2 border-b border-border bg-toolbar px-2 sm:px-3 pt-safe">
+      <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+        {/* Logo + dashboard link */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link to="/dashboard" className="flex items-center gap-1.5 shrink-0">
+              <BrandMark />
+              <span className="hidden text-sm font-semibold tracking-tight sm:inline">PDF Studio</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>Back to Dashboard</TooltipContent>
+        </Tooltip>
 
-      <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
+        <Separator orientation="vertical" className="mx-0.5 hidden h-5 sm:block" />
 
-      {/* File menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="max-w-[220px] gap-1.5 font-medium">
-            <span className="truncate">{editor.document.fileName}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuItem onSelect={onReplaceClick}>
-            <FolderOpen className="mr-2 h-3.5 w-3.5" />
-            Replace PDF…
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleRename}>
-            <FilePenLine className="mr-2 h-3.5 w-3.5" />
-            Rename…
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleMakeCopy}>
-            <Copy className="mr-2 h-3.5 w-3.5" />
-            Make a copy
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleVersionHistory}>
-            <History className="mr-2 h-3.5 w-3.5" />
-            Version history
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleDocInfo}>
-            <Info className="mr-2 h-3.5 w-3.5" />
-            Document properties
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        {/* File menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="max-w-[100px] xs:max-w-[140px] sm:max-w-[180px] md:max-w-[220px] gap-1 px-1.5 sm:px-2 font-medium">
+              <span className="truncate text-xs sm:text-sm">{editor.document.fileName}</span>
+              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuItem onSelect={onReplaceClick}>
+              <FolderOpen className="mr-2 h-3.5 w-3.5" />
+              Replace PDF…
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleRename}>
+              <FilePenLine className="mr-2 h-3.5 w-3.5" />
+              Rename…
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleMakeCopy}>
+              <Copy className="mr-2 h-3.5 w-3.5" />
+              Make a copy
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleVersionHistory}>
+              <History className="mr-2 h-3.5 w-3.5" />
+              Version history
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleDocInfo}>
+              <Info className="mr-2 h-3.5 w-3.5" />
+              Document properties
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Undo/Redo */}
-      <div className="mx-auto flex items-center gap-1">
-        <IconAction label="Undo" onClick={editor.undo} disabled={!editor.canUndo}>
-          <Undo2 className="h-4 w-4" />
+      <div className="flex items-center gap-0.5 sm:gap-1">
+        <IconAction label="Undo" onClick={editor.undo} disabled={!editor.canUndo} className="h-8 w-8">
+          <Undo2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </IconAction>
-        <IconAction label="Redo" onClick={editor.redo} disabled={!editor.canRedo}>
-          <Redo2 className="h-4 w-4" />
+        <IconAction label="Redo" onClick={editor.redo} disabled={!editor.canRedo} className="h-8 w-8">
+          <Redo2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </IconAction>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 shrink-0">
         {/* Panel toggles */}
         <IconAction
           label="Toggle pages panel"
@@ -252,16 +254,16 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
             <Button
               variant="brand"
               size="sm"
-              className="gap-1.5"
+              className="h-8 sm:h-9 gap-1 sm:gap-1.5 px-2 sm:px-3 text-xs"
               disabled={downloading || printing}
             >
               {downloading || printing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
               )}
-              <span className="hidden sm:inline">
-                {downloading ? "Exporting…" : printing ? "Preparing…" : "Download"}
+              <span className="hidden xs:inline">
+                {downloading ? "Exporting…" : printing ? "Preparing…" : "Export"}
               </span>
               <ChevronDown className="h-3 w-3 opacity-70" />
             </Button>

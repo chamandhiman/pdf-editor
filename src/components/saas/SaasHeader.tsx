@@ -103,17 +103,18 @@ export function SaasHeader({
         onChange={handleFileChange}
       />
 
-      <header className="sticky top-0 z-30 w-full border-b border-border/80 bg-background/90 backdrop-blur-md transition-all">
+      <header className="sticky top-0 z-30 w-full border-b border-border/60 bg-background/95 backdrop-blur-md shadow-sm">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand */}
           <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
             <BrandMark />
             <div className="flex flex-col">
-              <span className="text-[17px] font-bold tracking-tight text-foreground">
-                PDF Studio
+              <span className="text-[17px] font-extrabold tracking-tight">
+                <span className="text-brand">PDF</span>
+                <span className="text-foreground"> Studio</span>
               </span>
-              <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:inline-block">
-                Professional PDF SaaS
+              <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block">
+                PDF Power Center
               </span>
             </div>
           </Link>
@@ -145,8 +146,8 @@ export function SaasHeader({
                           onClick={() => handleToolClick(tool)}
                           className="flex items-center gap-2.5 rounded-lg px-2 py-2 cursor-pointer"
                         >
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand">
-                            <tool.icon className="h-3.5 w-3.5" />
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md icon-edit">
+                            <tool.icon className="h-3.5 w-3.5 text-white" />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold text-foreground">{tool.name}</span>
@@ -171,8 +172,8 @@ export function SaasHeader({
                           onClick={() => handleToolClick(tool)}
                           className="flex items-center gap-2.5 rounded-lg px-2 py-2 cursor-pointer"
                         >
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
-                            <tool.icon className="h-3.5 w-3.5" />
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md icon-organize">
+                            <tool.icon className="h-3.5 w-3.5 text-white" />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold text-foreground">{tool.name}</span>
@@ -197,8 +198,8 @@ export function SaasHeader({
                           onClick={() => handleToolClick(tool)}
                           className="flex items-center gap-2.5 rounded-lg px-2 py-2 cursor-pointer"
                         >
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
-                            <tool.icon className="h-3.5 w-3.5" />
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md icon-compress">
+                            <tool.icon className="h-3.5 w-3.5 text-white" />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold text-foreground">{tool.name}</span>
@@ -388,10 +389,10 @@ export function SaasHeader({
               variant="brand"
               size="sm"
               onClick={handlePrimaryCta}
-              className="gap-1.5 shadow-sm text-xs font-semibold px-4"
+              className="gap-1.5 shadow-md shadow-brand/20 text-xs font-bold px-4 bg-brand hover:bg-brand/90 hover:shadow-brand/30 transition-all"
             >
               <FileUp className="h-3.5 w-3.5" />
-              <span>Edit PDF</span>
+              <span>Edit PDF Free</span>
             </Button>
 
             {/* Mobile Menu Trigger */}
@@ -491,7 +492,37 @@ export function SaasHeader({
                     </div>
                   </div>
 
-                  {!user && (
+                  {user ? (
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <div className="flex items-center gap-3 px-1">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} />
+                          <AvatarFallback className="text-xs bg-brand text-brand-foreground font-semibold">
+                            {(user.displayName ?? user.email ?? "U").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-semibold text-foreground truncate">
+                            {user.displayName ?? "User"}
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          signOut();
+                        }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  ) : (
                     <div className="border-t border-border pt-4">
                       <Button
                         variant="outline"

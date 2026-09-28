@@ -114,7 +114,7 @@ export function ToolsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+            <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 no-scrollbar touch-scroll px-1">
               {pdfToolCategories.map((category) => (
                 <button
                   key={category.id}
@@ -134,57 +134,69 @@ export function ToolsPage() {
 
           {/* Tools Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {filteredTools.map((tool) => (
-              <div
-                key={tool.id}
-                onClick={() => handleSelectTool(tool)}
-                className="group rounded-2xl border border-border bg-card p-5 hover:border-brand/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-brand-soft text-brand flex items-center justify-center group-hover:scale-105 transition-transform">
-                      <tool.icon className="w-5 h-5" />
+            {filteredTools.map((tool) => {
+              const catIconClass = tool.category === "edit" ? "icon-edit" :
+                tool.category === "organize" ? "icon-organize" :
+                tool.category === "convert" ? "icon-convert" :
+                tool.category === "compress" ? "icon-compress" :
+                tool.category === "sign" ? "icon-sign" :
+                tool.category === "security" ? "icon-security" :
+                tool.category === "ocr" ? "icon-ocr" : "icon-edit";
+              return (
+                <div
+                  key={tool.id}
+                  onClick={() => handleSelectTool(tool)}
+                  className="group rounded-2xl border border-border bg-card p-5 hover:border-brand/30 transition-all cursor-pointer flex flex-col justify-between pdf-card-glow pdf-shine"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-11 h-11 rounded-xl ${catIconClass} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
+                        <tool.icon className="w-5 h-5 text-white" />
+                      </div>
+                      {tool.status === "available" ? (
+                        <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          Ready
+                        </span>
+                      ) : (
+                        <span className="status-preview text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          Soon
+                        </span>
+                      )}
                     </div>
-                    {tool.status === "available" ? (
-                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Available
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Preview
-                      </span>
-                    )}
+                    <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">
+                      {tool.name}
+                    </h3>
+                    <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {tool.description}
+                    </p>
                   </div>
 
-                  <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">
-                    {tool.name}
-                  </h3>
-                  <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {tool.description}
-                  </p>
+                  <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-bold text-brand group-hover:text-brand/80 transition-colors">
+                    <span>{tool.status === "available" ? "Open Tool" : "Coming Soon"}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
+                  </div>
                 </div>
-
-                <div className="mt-6 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-semibold text-brand">
-                  <span>{tool.status === "available" ? "Open Tool" : "View Details"}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Quick upload footer banner */}
-          <div className="mt-16 rounded-3xl border border-border bg-card p-8 md:p-12 text-center max-w-3xl mx-auto shadow-sm">
-            <h2 className="text-2xl font-bold text-foreground">Need to edit a document right away?</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Open our primary PDF editor to add text, headings, sign documents, and customize pages.
+          <div className="mt-16 rounded-3xl bg-gradient-to-br from-brand to-orange-600 p-8 md:p-12 text-center max-w-3xl mx-auto shadow-xl shadow-brand/20 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white relative z-10">Ready to edit a PDF right now?</h2>
+            <p className="mt-2 text-sm text-white/80 relative z-10">
+              Upload any PDF and start editing text, adding signatures, annotations, and more — free, instantly.
             </p>
             <button
               type="button"
               onClick={handleTriggerUpload}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand text-white font-semibold text-sm shadow hover:bg-brand/90 transition-colors cursor-pointer"
+              className="mt-6 inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-brand font-bold text-sm shadow-lg hover:bg-white/95 transition-all active:scale-[0.98] cursor-pointer relative z-10"
             >
               <FileUp className="w-4 h-4" />
-              <span>Launch Editor with PDF</span>
+              <span>Open PDF Editor — Free</span>
             </button>
           </div>
         </div>
