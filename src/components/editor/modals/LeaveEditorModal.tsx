@@ -34,10 +34,12 @@ export function LeaveEditorModal({
             <AlertTriangle className="h-6 w-6" />
           </div>
           <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
-            Move back to home page?
+            Exit Editor?
           </DialogTitle>
           <DialogDescription className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            You will lose any unsaved edits, added text, signatures, or changes you made. Sign in to save your files safely to your cloud account, or leave without saving.
+            {user
+              ? "You will lose any unsaved edits, added text, signatures, or changes you made. Save your document safely to the cloud before leaving, or leave without saving."
+              : "You will lose any unsaved edits, added text, signatures, or changes you made. Sign in to save your files safely to your cloud account, or leave without saving."}
           </DialogDescription>
         </DialogHeader>
 

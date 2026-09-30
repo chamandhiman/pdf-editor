@@ -22,6 +22,7 @@ import {
   AlertCircle,
   ExternalLink,
   Check,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,12 @@ import { SignInModal } from "@/components/editor/modals/SignInModal";
 import { SupportModal } from "@/components/SupportModal";
 import { useAuth } from "@/lib/auth-context";
 import { setUploadedPdf } from "@/lib/pdf-store";
-import { saveActiveDocument, getOfflineCloudDoc } from "@/lib/pdf-storage";
+import {
+  saveActiveDocument,
+  getOfflineCloudDoc,
+  getOfflineCloudDocs,
+  loadActiveDocument,
+} from "@/lib/pdf-storage";
 import { createBlankPdfDocument } from "@/lib/pdf-create";
 import {
   getRecentDocs,
@@ -393,6 +399,9 @@ export function DashboardPage() {
     const toastId = toast.loading(`Opening ${doc.name}…`);
     try {
       let buffer: ArrayBuffer | null = null;
+      let editorState = doc.editorState;
+
+      // 1. Try remote fetch if HTTP URL
       if (doc.fileUrl && !doc.fileUrl.startsWith("indexeddb://")) {
         try {
           const response = await fetch(doc.fileUrl);
@@ -404,10 +413,51 @@ export function DashboardPage() {
         }
       }
 
+      // 2. Check offline store by exact doc.id
       if (!buffer) {
         const offline = await getOfflineCloudDoc(doc.id);
         if (offline?.bytes) {
           buffer = offline.bytes;
+          if (offline.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
+            editorState = offline.editorState;
+          }
+        }
+      }
+
+      // 3. Check offline store by sanitized recent id
+      if (!buffer) {
+        const sanitizedId = `recent_${doc.name.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+        const offlineRecent = await getOfflineCloudDoc(sanitizedId);
+        if (offlineRecent?.bytes) {
+          buffer = offlineRecent.bytes;
+          if (offlineRecent.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
+            editorState = offlineRecent.editorState;
+          }
+        }
+      }
+
+      // 4. Check all offline saved docs by name match
+      if (!buffer) {
+        const allOffline = await getOfflineCloudDocs();
+        const match = allOffline.find(
+          (o) => o.id === doc.id || o.name.toLowerCase() === doc.name.toLowerCase()
+        );
+        if (match?.bytes) {
+          buffer = match.bytes;
+          if (match.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
+            editorState = match.editorState;
+          }
+        }
+      }
+
+      // 5. Check active document session
+      if (!buffer) {
+        const active = await loadActiveDocument();
+        if (active?.bytes && active.fileName.toLowerCase() === doc.name.toLowerCase()) {
+          buffer = active.bytes;
+          if (active.docState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
+            editorState = active.docState;
+          }
         }
       }
 
@@ -415,9 +465,9 @@ export function DashboardPage() {
         throw new Error("Could not retrieve document file.");
       }
 
-      setUploadedPdf(buffer, doc.name);
-      if (doc.editorState) {
-        await saveActiveDocument(doc.name, buffer, doc.editorState);
+      setUploadedPdf(buffer, doc.name, editorState);
+      if (editorState) {
+        await saveActiveDocument(doc.name, buffer, editorState);
       }
 
       toast.success("Document loaded from cloud", { id: toastId });
@@ -442,9 +492,65 @@ export function DashboardPage() {
     }
   };
 
-  const openLocalDoc = (_doc: RecentDoc) => {
-    // For local guest history without stored bytes, prompt file selection
-    inputRef.current?.click();
+  const openLocalDoc = async (doc: RecentDoc) => {
+    const toastId = toast.loading(`Opening ${doc.fileName}…`);
+    try {
+      // 1. If user is logged in, check if document is in cloudDocs
+      const matchingCloud = cloudDocs.find(
+        (c) => c.name.toLowerCase() === doc.fileName.toLowerCase() || c.id === doc.id
+      );
+      if (matchingCloud) {
+        toast.dismiss(toastId);
+        await handleOpenCloudDoc(matchingCloud);
+        return;
+      }
+
+      // 2. Look up in offline saved docs by sanitized recent id or doc id
+      const sanitizedId = `recent_${doc.fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+      let offlineMatch = await getOfflineCloudDoc(sanitizedId);
+      if (!offlineMatch) {
+        offlineMatch = await getOfflineCloudDoc(doc.id);
+      }
+      if (!offlineMatch) {
+        const allOffline = await getOfflineCloudDocs();
+        offlineMatch =
+          allOffline.find(
+            (o) =>
+              o.name.toLowerCase() === doc.fileName.toLowerCase() ||
+              o.id === doc.id ||
+              o.id === sanitizedId
+          ) ?? null;
+      }
+
+      if (offlineMatch?.bytes && offlineMatch.bytes.byteLength > 0) {
+        setUploadedPdf(offlineMatch.bytes, offlineMatch.name, offlineMatch.editorState);
+        await saveActiveDocument(offlineMatch.name, offlineMatch.bytes, offlineMatch.editorState);
+        toast.success(`Opened "${offlineMatch.name}"`, { id: toastId });
+        navigate({ to: "/editor", search: { file: offlineMatch.name } });
+        return;
+      }
+
+      // 3. Look up in active document session
+      const active = await loadActiveDocument();
+      if (
+        active?.bytes &&
+        active.bytes.byteLength > 0 &&
+        active.fileName.toLowerCase() === doc.fileName.toLowerCase()
+      ) {
+        setUploadedPdf(active.bytes, active.fileName, active.docState);
+        toast.success(`Opened "${active.fileName}"`, { id: toastId });
+        navigate({ to: "/editor", search: { file: active.fileName } });
+        return;
+      }
+
+      // 4. Fallback only if bytes were cleared from browser storage
+      toast.dismiss(toastId);
+      toast.info(`Please re-select "${doc.fileName}" to continue editing.`);
+      inputRef.current?.click();
+    } catch (err) {
+      console.error("[dashboard] Failed to open local doc:", err);
+      toast.error(`Could not open "${doc.fileName}".`, { id: toastId });
+    }
   };
 
   const removeLocalDoc = (id: string) => {
@@ -459,12 +565,14 @@ export function DashboardPage() {
         { icon: Clock, label: "Recent", id: "recent" },
         { icon: Star, label: "Templates", id: "templates" },
         { icon: Settings, label: "Settings", id: "settings" },
+        { icon: Home, label: "Go to Home", id: "home" },
       ]
     : [
         { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
         { icon: Clock, label: "Recent", id: "recent" },
         { icon: Star, label: "Templates", id: "templates" },
         { icon: Settings, label: "Settings", id: "settings" },
+        { icon: Home, label: "Go to Home", id: "home" },
       ];
 
   return (
@@ -508,7 +616,9 @@ export function DashboardPage() {
             <button
               key={item.id}
               onClick={() => {
-                if (item.id === "templates") {
+                if (item.id === "home") {
+                  navigate({ to: "/" });
+                } else if (item.id === "templates") {
                   navigate({ to: "/templates" });
                 } else {
                   setActiveNav(item.id);
@@ -586,6 +696,11 @@ export function DashboardPage() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-48">
+                <DropdownMenuItem onSelect={() => navigate({ to: "/" })}>
+                  <Home className="mr-2 h-3.5 w-3.5" />
+                  Exit Dashboard (Home)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={signOut}>
                   <LogOut className="mr-2 h-3.5 w-3.5" />
                   Sign out
@@ -653,11 +768,17 @@ export function DashboardPage() {
                     <button
                       key={item.id}
                       onClick={() => {
-                        setActiveNav(item.id);
+                        if (item.id === "home") {
+                          navigate({ to: "/" });
+                        } else if (item.id === "templates") {
+                          navigate({ to: "/templates" });
+                        } else {
+                          setActiveNav(item.id);
+                        }
                         setMobileNavOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors",
+                        "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors cursor-pointer",
                         activeNav === item.id
                           ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                           : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -713,6 +834,15 @@ export function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              onClick={() => navigate({ to: "/" })}
+            >
+              <Home className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Go to Home</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

@@ -35,7 +35,7 @@ import type { PlanId } from "@/lib/pricing-plans";
 export function EditorPage({ fileName }: { fileName?: string }) {
   const navigate = useNavigate();
   const editor = useEditorState(fileName);
-  const { status, pdf, errorMessage, reload } = usePdfUpload();
+  const { status, pdf, errorMessage, reload } = usePdfUpload(fileName);
   const setPdfPages = editor.setPdfPages;
   const setDocument = editor.setDocument;
 

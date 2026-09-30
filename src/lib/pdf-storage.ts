@@ -67,7 +67,9 @@ export async function saveActiveDocument(
 ): Promise<void> {
   try {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+
+    // 1. Persist to active document session
+    await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);
 
@@ -83,6 +85,43 @@ export async function saveActiveDocument(
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
+
+    // 2. Also persist a named copy to SAVED_DOCS_STORE so it can be restored from history/recent documents
+    const sanitizedId = `recent_${fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+    const nowIso = new Date().toISOString();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
+      const store = tx.objectStore(SAVED_DOCS_STORE);
+
+      const savedDoc: OfflineCloudDoc = {
+        id: sanitizedId,
+        userId: "local",
+        name: fileName,
+        bytes: bytes.slice(0),
+        savedAt: nowIso,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        planId: "free",
+        pageCount: docState?.pages?.length || 1,
+        thumbnailUrl: null,
+        editorState: docState || {
+          id: "doc-1",
+          fileName,
+          pageSize: "A4",
+          orientation: "Portrait",
+          pages: [],
+          textOverrides: {},
+          textColorOverrides: {},
+          textBgOverrides: {},
+          textStyleOverrides: {},
+        },
+      };
+
+      const req = store.put(savedDoc);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
   } catch (err) {
     console.warn("[pdf-storage] Failed to save active document to IndexedDB:", err);
   }
@@ -94,26 +133,49 @@ export async function saveActiveDocument(
 export async function saveDocumentState(docState: PDFDocument): Promise<void> {
   try {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+
+    const existing = await new Promise<StoredDocument | undefined>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);
 
       const getReq = store.get(ACTIVE_KEY);
       getReq.onsuccess = () => {
-        const existing = getReq.result as StoredDocument | undefined;
-        if (!existing) {
-          resolve();
+        const current = getReq.result as StoredDocument | undefined;
+        if (!current) {
+          resolve(undefined);
           return;
         }
 
-        existing.docState = docState;
-        existing.savedAt = Date.now();
-        const putReq = store.put(existing);
-        putReq.onsuccess = () => resolve();
+        current.docState = docState;
+        current.savedAt = Date.now();
+        const putReq = store.put(current);
+        putReq.onsuccess = () => resolve(current);
         putReq.onerror = () => reject(putReq.error);
       };
       getReq.onerror = () => reject(getReq.error);
     });
+
+    if (existing && existing.fileName) {
+      const sanitizedId = `recent_${existing.fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
+        const store = tx.objectStore(SAVED_DOCS_STORE);
+        const getReq = store.get(sanitizedId);
+        getReq.onsuccess = () => {
+          const item = getReq.result as OfflineCloudDoc | undefined;
+          if (item) {
+            item.editorState = docState;
+            item.updatedAt = new Date().toISOString();
+            const putReq = store.put(item);
+            putReq.onsuccess = () => resolve();
+            putReq.onerror = () => reject(putReq.error);
+          } else {
+            resolve();
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      });
+    }
   } catch (err) {
     console.warn("[pdf-storage] Failed to save document state to IndexedDB:", err);
   }

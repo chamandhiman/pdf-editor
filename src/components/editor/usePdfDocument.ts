@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { loadPdfDocument, type PdfDocumentProxy } from "@/lib/pdf-loader";
 import { getUploadedPdf, setUploadedPdf } from "@/lib/pdf-store";
-import { loadActiveDocument } from "@/lib/pdf-storage";
+import { loadActiveDocument, getOfflineCloudDocs } from "@/lib/pdf-storage";
 import type { PDFDocument } from "@/types/pdf";
 
 export interface LoadedPdf {
@@ -33,7 +33,7 @@ function describeLoadFailure(error: unknown): string {
   return `The PDF could not be read (${raw}).`;
 }
 
-export function usePdfUpload() {
+export function usePdfUpload(targetFileName?: string) {
   const [status, setStatus] = useState<Status>("loading");
   const [pdf, setPdf] = useState<LoadedPdf | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -56,15 +56,66 @@ export function usePdfUpload() {
     (async () => {
       try {
         let upload = getUploadedPdf();
-        let storedDocState: PDFDocument | undefined;
+        let storedDocState: PDFDocument | undefined = upload?.docState;
 
-        // If in-memory upload is null (e.g. after browser refresh), restore from IndexedDB
+        // If targetFileName is requested and either in-memory is missing or has a different file
+        if (
+          targetFileName &&
+          (!upload || upload.fileName.toLowerCase() !== targetFileName.toLowerCase())
+        ) {
+          // Check active document first
+          const active = await loadActiveDocument();
+          if (
+            active &&
+            active.bytes &&
+            active.bytes.byteLength > 0 &&
+            active.fileName.toLowerCase() === targetFileName.toLowerCase()
+          ) {
+            setUploadedPdf(active.bytes, active.fileName, active.docState);
+            upload = { bytes: active.bytes, fileName: active.fileName, docState: active.docState };
+            storedDocState = active.docState;
+          } else {
+            // Check offline saved docs
+            const allSaved = await getOfflineCloudDocs();
+            const match = allSaved.find(
+              (d) =>
+                d.name.toLowerCase() === targetFileName.toLowerCase() ||
+                d.id === targetFileName ||
+                d.id === `recent_${targetFileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`
+            );
+            if (match && match.bytes && match.bytes.byteLength > 0) {
+              setUploadedPdf(match.bytes, match.name, match.editorState);
+              upload = { bytes: match.bytes, fileName: match.name, docState: match.editorState };
+              storedDocState = match.editorState;
+            }
+          }
+        }
+
+        // If in-memory upload is null (e.g. after fresh browser reload), restore from active IndexedDB
         if (!upload) {
           const stored = await loadActiveDocument();
           if (stored && stored.bytes && stored.bytes.byteLength > 0) {
-            setUploadedPdf(stored.bytes, stored.fileName);
-            upload = { bytes: stored.bytes, fileName: stored.fileName };
+            setUploadedPdf(stored.bytes, stored.fileName, stored.docState);
+            upload = { bytes: stored.bytes, fileName: stored.fileName, docState: stored.docState };
             storedDocState = stored.docState;
+          }
+        }
+
+        // As a secondary fallback on browser reload, restore the most recent saved document
+        if (!upload) {
+          const allSaved = await getOfflineCloudDocs();
+          if (allSaved.length > 0) {
+            const sorted = [...allSaved].sort(
+              (a, b) =>
+                new Date(b.updatedAt || b.savedAt).getTime() -
+                new Date(a.updatedAt || a.savedAt).getTime()
+            );
+            const latest = sorted[0];
+            if (latest?.bytes && latest.bytes.byteLength > 0) {
+              setUploadedPdf(latest.bytes, latest.name, latest.editorState);
+              upload = { bytes: latest.bytes, fileName: latest.name, docState: latest.editorState };
+              storedDocState = latest.editorState;
+            }
           }
         }
 
@@ -96,7 +147,8 @@ export function usePdfUpload() {
       cancelledRef.current = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadTick]);
+  }, [reloadTick, targetFileName]);
 
   return { status, pdf, errorMessage, reload };
 }
+
