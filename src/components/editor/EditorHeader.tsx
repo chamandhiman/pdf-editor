@@ -6,17 +6,17 @@ import {
   FilePenLine,
   FolderOpen,
   History,
+  Cloud,
+  Check,
   Info,
   LayoutDashboard,
   Loader2,
   LogOut,
-  MoreHorizontal,
   PanelLeft,
   PanelRight,
   Printer,
   Redo2,
   Save,
-  Share2,
   Undo2,
   User,
 } from "lucide-react";
@@ -36,20 +36,31 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { BrandMark } from "@/components/BrandMark";
 import { useAuth } from "@/lib/auth-context";
 import { downloadEditedPdf, printEditedPdf } from "@/lib/pdf-download";
+import { cn } from "@/lib/utils";
 import type { EditorState } from "./useEditorState";
 
 interface EditorHeaderProps {
   editor: EditorState;
   onReplaceClick: () => void;
   onSignInRequired: () => void;
+  onSaveClick: () => void;
+  onLeaveClick?: () => void;
+  isSaving?: boolean;
+  isSaved?: boolean;
 }
 
-export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: EditorHeaderProps) {
+export function EditorHeader({
+  editor,
+  onReplaceClick,
+  onSignInRequired,
+  onSaveClick,
+  onLeaveClick,
+  isSaving = false,
+  isSaved = false,
+}: EditorHeaderProps) {
   const { user, signOut } = useAuth();
   const [downloading, setDownloading] = useState(false);
   const [printing, setPrinting] = useState(false);
-
-  const soon = (label: string) => toast(`${label} is coming in the next pass.`);
 
   const handleDownload = async () => {
     if (downloading) return;
@@ -127,28 +138,59 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
     toast.info(`Current version: v1.0 • History actions: ${editor.historyTick}`);
   };
 
-  const handleSave = () => {
-    if (!user) {
-      onSignInRequired();
-      return;
-    }
-    // TODO: wire to Firestore / Storage
-    toast("Cloud save is coming soon. Sign in to be notified.");
-  };
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-1 sm:gap-2 border-b border-border bg-toolbar px-2 sm:px-3 pt-safe">
       <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-        {/* Logo + dashboard link */}
+        {/* Logo: Back to Home for guests, or Dashboard for authenticated users */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link to="/dashboard" className="flex items-center gap-1.5 shrink-0">
-              <BrandMark />
-              <span className="hidden text-sm font-semibold tracking-tight sm:inline">PDF Studio</span>
-            </Link>
+            {onLeaveClick ? (
+              <button
+                type="button"
+                onClick={onLeaveClick}
+                className="flex items-center gap-1.5 shrink-0 hover:opacity-85 transition-opacity cursor-pointer text-left"
+              >
+                <BrandMark />
+                <div className="hidden sm:flex flex-col leading-none text-left">
+                  <span className="text-xs font-black tracking-tight text-foreground">
+                    PDF <span className="text-brand">Studio</span>
+                  </span>
+                  <span className="text-[9px] font-medium text-muted-foreground mt-0.5">
+                    by webtoolocean
+                  </span>
+                </div>
+              </button>
+            ) : (
+              <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-1.5 shrink-0">
+                <BrandMark />
+                <div className="hidden sm:flex flex-col leading-none text-left">
+                  <span className="text-xs font-black tracking-tight text-foreground">
+                    PDF <span className="text-brand">Studio</span>
+                  </span>
+                  <span className="text-[9px] font-medium text-muted-foreground mt-0.5">
+                    by webtoolocean
+                  </span>
+                </div>
+              </Link>
+            )}
           </TooltipTrigger>
-          <TooltipContent>Back to Dashboard</TooltipContent>
+          <TooltipContent>Back to Home</TooltipContent>
         </Tooltip>
+
+        {/* Dashboard button with icon + label on logo's right side */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+          style={{ borderRadius: "4px" }}
+          asChild
+        >
+          <Link to="/dashboard">
+            <LayoutDashboard className="h-3.5 w-3.5 text-brand" />
+            <span className="hidden sm:inline">Dashboard</span>
+          </Link>
+        </Button>
 
         <Separator orientation="vertical" className="mx-0.5 hidden h-5 sm:block" />
 
@@ -161,6 +203,11 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuItem onSelect={onSaveClick} className="gap-2 font-medium">
+              <Cloud className="mr-1 h-3.5 w-3.5 text-brand" />
+              Save to Cloud…
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onReplaceClick}>
               <FolderOpen className="mr-2 h-3.5 w-3.5" />
               Replace PDF…
@@ -216,36 +263,29 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
 
         <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
 
-        {/* Dashboard nav button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="hidden md:inline-flex" asChild>
-              <Link to="/dashboard">
-                <LayoutDashboard className="h-4 w-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Dashboard</TooltipContent>
-        </Tooltip>
-
-        {/* Save */}
+        {/* Save button */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="hidden gap-1.5 md:inline-flex"
-          onClick={handleSave}
+          className={cn(
+            "gap-1.5 px-2.5 h-8 sm:h-9 text-xs font-semibold border-border/80 hover:bg-muted transition-all",
+            isSaved && "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15"
+          )}
+          onClick={onSaveClick}
+          disabled={isSaving}
+          title={user ? "Save document to cloud" : "Sign in to save document"}
+          style={{ borderRadius: "4px" }}
         >
-          <Save className="h-4 w-4" /> Save
-        </Button>
-
-        {/* Share */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden gap-1.5 lg:inline-flex"
-          onClick={() => soon("Share")}
-        >
-          <Share2 className="h-4 w-4" /> Share
+          {isSaving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
+          ) : isSaved ? (
+            <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <Cloud className="h-3.5 w-3.5 text-brand" />
+          )}
+          <span>
+            {isSaving ? "Saving…" : isSaved ? "Saved" : "Save"}
+          </span>
         </Button>
 
         {/* Download / Print Dropdown */}
@@ -254,16 +294,17 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
             <Button
               variant="brand"
               size="sm"
-              className="h-8 sm:h-9 gap-1 sm:gap-1.5 px-2 sm:px-3 text-xs"
+              className="h-8 sm:h-9 gap-1.5 px-2.5 sm:px-3 text-xs font-semibold"
               disabled={downloading || printing}
+              style={{ borderRadius: "4px" }}
             >
               {downloading || printing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              <span className="hidden xs:inline">
-                {downloading ? "Exporting…" : printing ? "Preparing…" : "Export"}
+              <span>
+                {downloading ? "Downloading…" : printing ? "Preparing…" : "Download"}
               </span>
               <ChevronDown className="h-3 w-3 opacity-70" />
             </Button>
@@ -276,34 +317,6 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
             <DropdownMenuItem onSelect={handlePrint} className="cursor-pointer gap-2">
               <Printer className="h-4 w-4 text-muted-foreground" />
               <span>Print PDF</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* More menu - Secondary document actions ONLY */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="More actions">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onSelect={handleMakeCopy} className="cursor-pointer gap-2">
-              <Copy className="h-4 w-4 text-muted-foreground" />
-              <span>Make a copy</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleRename} className="cursor-pointer gap-2">
-              <FilePenLine className="h-4 w-4 text-muted-foreground" />
-              <span>Rename…</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleVersionHistory} className="cursor-pointer gap-2">
-              <History className="h-4 w-4 text-muted-foreground" />
-              <span>Version history</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={handleDocInfo} className="cursor-pointer gap-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <span>Document info</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -327,7 +340,14 @@ export function EditorHeader({ editor, onReplaceClick, onSignInRequired }: Edito
                 <p className="text-[12px] text-muted-foreground">{user.email}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={signOut}>
+              <DropdownMenuItem asChild>
+                <Link to="/dashboard" className="cursor-pointer gap-2 flex items-center">
+                  <LayoutDashboard className="mr-2 h-3.5 w-3.5" />
+                  Dashboard
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={signOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-3.5 w-3.5" />
                 Sign out
               </DropdownMenuItem>

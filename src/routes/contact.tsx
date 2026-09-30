@@ -1,20 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContactPage } from "@/pages/ContactPage";
+import { createSeoHead } from "@/lib/seo";
+import { contactFaq } from "@/lib/faq-data";
 
-const title = "Contact — PDF Studio";
-const description =
-  "Contact PDF Studio support team for product inquiries, feature requests, or enterprise licensing.";
+export { contactFaq } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    createSeoHead({
+      title: "Contact Support & Inquiries — WebToolOcean PDF Studio",
+      description:
+        "Get in touch with the WebToolOcean PDF Studio team for questions, feature requests, partnership inquiries, or technical support.",
+      path: "/contact",
+      keywords: ["contact pdf studio", "pdf support", "webtoolocean help", "enterprise pdf inquiries"],
+      faqItems: contactFaq,
+      applicationName: "WebToolOcean PDF Help & Support",
+    }),
   component: ContactPage,
 });
+

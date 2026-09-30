@@ -5,8 +5,9 @@
 import type { PDFDocument } from "@/types/pdf";
 
 const DB_NAME = "pdf_studio_storage";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "active_document";
+const SAVED_DOCS_STORE = "saved_documents";
 const ACTIVE_KEY = "current_session_doc";
 
 export interface StoredDocument {
@@ -15,6 +16,21 @@ export interface StoredDocument {
   bytes: ArrayBuffer;
   savedAt: number;
   docState?: PDFDocument;
+}
+
+export interface OfflineCloudDoc {
+  id: string;
+  userId: string;
+  name: string;
+  bytes: ArrayBuffer;
+  savedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+  planId: string;
+  pageCount: number;
+  thumbnailUrl?: string | null;
+  editorState: PDFDocument;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -30,6 +46,9 @@ function openDB(): Promise<IDBDatabase> {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(SAVED_DOCS_STORE)) {
+        db.createObjectStore(SAVED_DOCS_STORE, { keyPath: "id" });
       }
     };
 
@@ -139,5 +158,86 @@ export async function clearActiveDocument(): Promise<void> {
     });
   } catch (err) {
     console.warn("[pdf-storage] Failed to clear active document from IndexedDB:", err);
+  }
+}
+
+/**
+ * Save a cloud document to IndexedDB for resilience and instant access.
+ */
+export async function saveOfflineCloudDoc(doc: OfflineCloudDoc): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
+      const store = tx.objectStore(SAVED_DOCS_STORE);
+      const req = store.put(doc);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("[pdf-storage] Failed to save offline cloud doc:", err);
+  }
+}
+
+/**
+ * Retrieve all saved cloud documents for a specific user from IndexedDB.
+ */
+export async function getOfflineCloudDocs(userId?: string): Promise<OfflineCloudDoc[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVED_DOCS_STORE, "readonly");
+      const store = tx.objectStore(SAVED_DOCS_STORE);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const all = (req.result as OfflineCloudDoc[]) || [];
+        if (!userId) {
+          resolve(all);
+        } else {
+          resolve(all.filter((d) => d.userId === userId));
+        }
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("[pdf-storage] Failed to get offline cloud docs:", err);
+    return [];
+  }
+}
+
+/**
+ * Retrieve a specific saved cloud document by ID from IndexedDB.
+ */
+export async function getOfflineCloudDoc(id: string): Promise<OfflineCloudDoc | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVED_DOCS_STORE, "readonly");
+      const store = tx.objectStore(SAVED_DOCS_STORE);
+      const req = store.get(id);
+      req.onsuccess = () => resolve((req.result as OfflineCloudDoc) || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("[pdf-storage] Failed to get offline cloud doc:", err);
+    return null;
+  }
+}
+
+/**
+ * Delete a saved cloud document from IndexedDB by ID.
+ */
+export async function deleteOfflineCloudDoc(id: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
+      const store = tx.objectStore(SAVED_DOCS_STORE);
+      const req = store.delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("[pdf-storage] Failed to delete offline cloud doc:", err);
   }
 }

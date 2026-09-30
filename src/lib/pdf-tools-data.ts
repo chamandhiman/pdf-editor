@@ -54,80 +54,40 @@ export type PdfTool = PDFToolDef;
 
 export const TOOL_CATEGORIES: { id: ToolCategory; name: string }[] = [
   { id: "all", name: "All Tools" },
-  { id: "edit", name: "Edit" },
-  { id: "convert", name: "Convert" },
+  { id: "edit", name: "Edit & Sign" },
   { id: "organize", name: "Organize" },
   { id: "compress", name: "Compress" },
-  { id: "sign", name: "Sign" },
-  { id: "security", name: "Security" },
-  { id: "ocr", name: "OCR" },
-  { id: "image", name: "Image / PDF" },
+  { id: "convert", name: "Convert" },
+  { id: "security", name: "Security & OCR" },
 ];
 
 export const pdfToolCategories = TOOL_CATEGORIES;
 
 export function getToolsByCategory(category: ToolCategory): PDFToolDef[] {
   if (category === "all") return ALL_PDF_TOOLS;
+  if (category === "edit") {
+    return ALL_PDF_TOOLS.filter((t) => t.category === "edit" || t.category === "sign");
+  }
+  if (category === "convert") {
+    return ALL_PDF_TOOLS.filter((t) => t.category === "convert" || t.category === "image");
+  }
+  if (category === "security") {
+    return ALL_PDF_TOOLS.filter((t) => t.category === "security" || t.category === "ocr");
+  }
   return ALL_PDF_TOOLS.filter((t) => t.category === category);
 }
 
 export const ALL_PDF_TOOLS: PDFToolDef[] = [
-  // ── Edit Tools (Integrated in Editor) ──────────────────────────────
+  // ── Edit Tool (Full In-Browser Editor) ──────────────────────────────
   {
-    id: "edit-text",
-    name: "Edit PDF Text",
+    id: "edit-pdf",
+    name: "Edit PDF",
     category: "edit",
-    description: "Modify existing text in your PDF directly without altering layout or fonts.",
+    description: "Edit text, insert images, add shapes, annotate, and organize PDF documents directly in your browser.",
     icon: Type,
     status: "available",
     badge: "Available Now",
     popular: true,
-  },
-  {
-    id: "add-text",
-    name: "Add Text & Headings",
-    category: "edit",
-    description: "Insert new headings, paragraphs, and customized typography onto any page.",
-    icon: Heading,
-    status: "available",
-    badge: "Available Now",
-    popular: true,
-  },
-  {
-    id: "insert-image",
-    name: "Insert Images",
-    category: "edit",
-    description: "Place company logos, diagrams, and photos onto pages with full drag & resize.",
-    icon: ImageIcon,
-    status: "available",
-    badge: "Available Now",
-  },
-  {
-    id: "shapes-drawing",
-    name: "Shapes & Freehand",
-    category: "edit",
-    description: "Draw arrows, rectangles, circles, lines, and freehand markup on your PDF.",
-    icon: Shapes,
-    status: "available",
-    badge: "Available Now",
-  },
-  {
-    id: "highlight-text",
-    name: "Highlight PDF",
-    category: "edit",
-    description: "Emphasize key passages with colored translucent highlighter stripes.",
-    icon: Highlighter,
-    status: "available",
-    badge: "Available Now",
-  },
-  {
-    id: "annotate-notes",
-    name: "Annotate & Comments",
-    category: "edit",
-    description: "Attach sticky comment pins with author notes for collaborative reviews.",
-    icon: StickyNote,
-    status: "available",
-    badge: "Available Now",
   },
 
   // ── Sign Tools (Integrated in Editor) ──────────────────────────────
@@ -178,6 +138,8 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: ArrowUpDown,
     status: "available",
     badge: "Available Now",
+    slug: "reorder-pages",
+    popular: true,
   },
   {
     id: "merge-pdf",
@@ -185,9 +147,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "organize",
     description: "Combine multiple PDF files into a single unified document in desired order.",
     icon: Files,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
     popular: true,
+    slug: "merge-pdf",
   },
   {
     id: "split-pdf",
@@ -195,8 +158,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "organize",
     description: "Separate specific page ranges or extract individual pages into separate files.",
     icon: Split,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    popular: true,
+    slug: "split-pdf",
   },
   {
     id: "extract-pages",
@@ -215,8 +180,9 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "convert",
     description: "Convert PDF documents to editable Microsoft Word DOCX files with preserved layout.",
     icon: FileCode,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "pdf-to-word",
     popular: true,
   },
   {
@@ -225,8 +191,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "convert",
     description: "Extract tables and tabular data from PDF into editable XLSX spreadsheets.",
     icon: FileSpreadsheet,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "pdf-to-excel",
+    popular: true,
   },
   {
     id: "pdf-to-ppt",
@@ -290,8 +258,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "image",
     description: "Combine JPG photos and scans into a single neatly paginated PDF book.",
     icon: FileImage,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "jpg-to-pdf",
+    popular: true,
   },
   {
     id: "png-to-pdf",
@@ -308,20 +278,23 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     id: "compress-pdf",
     name: "Compress PDF",
     category: "compress",
-    description: "Reduce PDF file size significantly while maintaining crisp visual quality.",
+    description: "Reduce PDF file size significantly while maintaining crisp, professional visual quality.",
     icon: FileArchive,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "compress-pdf",
     popular: true,
   },
   {
     id: "ocr-pdf",
     name: "OCR PDF",
     category: "ocr",
-    description: "Optical Character Recognition to convert scanned document images into searchable text.",
+    description: "Convert scanned document images into searchable, selectable, and editable text with neural OCR.",
     icon: ScanText,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "ocr-pdf",
+    popular: true,
   },
   {
     id: "protect-pdf",
@@ -329,8 +302,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "security",
     description: "Encrypt your PDF with standard 256-bit AES password encryption.",
     icon: Shield,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "protect-pdf",
+    popular: true,
   },
   {
     id: "unlock-pdf",
@@ -338,8 +313,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "security",
     description: "Remove security passwords and restrictions from your personal PDF files.",
     icon: Unlock,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "unlock-pdf",
+    popular: true,
   },
   {
     id: "page-numbers",

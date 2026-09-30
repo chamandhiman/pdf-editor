@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck, Heart, FileCheck2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { SupportModal } from "@/components/SupportModal";
 
 import type { PDFToolDef } from "@/lib/pdf-tools-data";
 
@@ -9,17 +11,25 @@ interface SaasFooterProps {
 }
 
 export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
+  const [supportOpen, setSupportOpen] = useState(false);
+
   return (
-    <footer className="border-t border-border bg-card/60 text-card-foreground">
+    <>
+      <footer className="border-t border-border bg-card/60 text-card-foreground">
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5 lg:gap-12">
           {/* Brand Info */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2">
               <BrandMark />
-              <span className="text-base font-bold tracking-tight text-foreground">
-                PDF Studio
-              </span>
+              <div className="flex flex-col leading-none text-left">
+                <span className="text-base font-black tracking-tight text-foreground">
+                  PDF <span className="text-brand">Studio</span>
+                </span>
+                <span className="text-[10px] font-medium tracking-normal text-muted-foreground mt-0.5">
+                  by webtoolocean
+                </span>
+              </div>
             </Link>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               Everything you need to work with PDFs. Edit, convert, organize, sign and manage
@@ -47,17 +57,37 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/protect" className="text-muted-foreground hover:text-foreground">
+                  Protect PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/unlock-pdf" className="text-muted-foreground hover:text-foreground">
+                  Unlock PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/merge-pdf" className="text-muted-foreground hover:text-foreground">
                   Merge PDF
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/split-pdf" className="text-muted-foreground hover:text-foreground">
                   Split PDF
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/remove-pages" className="text-muted-foreground hover:text-foreground">
+                  Remove Pages
+                </Link>
+              </li>
+              <li>
+                <Link to="/reorder-pages" className="text-muted-foreground hover:text-foreground">
+                  Reorder Pages
+                </Link>
+              </li>
+              <li>
+                <Link to="/compress-pdf" className="text-muted-foreground hover:text-foreground">
                   Compress PDF
                 </Link>
               </li>
@@ -71,13 +101,18 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/ocr-pdf" className="text-muted-foreground hover:text-foreground">
                   OCR PDF
                 </Link>
               </li>
               <li>
+                <Link to="/templates" className="text-muted-foreground hover:text-foreground">
+                  PDF Templates
+                </Link>
+              </li>
+              <li>
                 <Link to="/tools" className="font-semibold text-brand hover:underline">
-                  All PDF Tools (30+)
+                  All PDF Tools
                 </Link>
               </li>
             </ul>
@@ -154,6 +189,16 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </Link>
               </li>
               <li>
+                <button
+                  type="button"
+                  onClick={() => setSupportOpen(true)}
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer text-xs"
+                >
+                  <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500/20" />
+                  Support PDF Studio
+                </button>
+              </li>
+              <li>
                 <a href="#why-pdf-studio" className="text-muted-foreground hover:text-foreground">
                   Why PDF Studio
                 </a>
@@ -194,11 +239,22 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} PDF Studio. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            <span>Built for modern, private document workflows</span>
-          </p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setSupportOpen(true)}
+              className="flex items-center gap-1.5 text-rose-500 hover:text-rose-600 transition-colors cursor-pointer font-medium"
+            >
+              <Heart className="h-3.5 w-3.5 fill-rose-500/20" />
+              <span>❤️ Support PDF Studio</span>
+            </button>
+            <span className="hidden sm:inline text-muted-foreground/40">•</span>
+            <span className="hidden sm:inline">Built for modern, private document workflows</span>
+          </div>
         </div>
       </div>
     </footer>
+    <SupportModal open={supportOpen} onOpenChange={setSupportOpen} />
+    </>
   );
 }

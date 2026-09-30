@@ -1,20 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PricingPage } from "@/pages/PricingPage";
+import { createSeoHead } from "@/lib/seo";
+import { pricingFaq } from "@/lib/faq-data";
 
-const title = "Pricing Plans — PDF Studio";
-const description =
-  "Simple, transparent pricing for PDF Studio. Free community plan and upcoming premium productivity tiers.";
+export { pricingFaq } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/pricing")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    createSeoHead({
+      title: "Simple & Transparent Pricing Plans — WebToolOcean PDF Studio",
+      description:
+        "Transparent pricing for PDF Studio. Free forever community tier with full editing & 256-bit AES protection, plus scalable premium plans for teams.",
+      path: "/pricing",
+      keywords: ["pdf editor pricing", "free pdf tools", "pdf studio plans", "webtoolocean pricing"],
+      faqItems: pricingFaq,
+      applicationName: "WebToolOcean PDF Studio Pricing",
+    }),
   component: PricingPage,
 });

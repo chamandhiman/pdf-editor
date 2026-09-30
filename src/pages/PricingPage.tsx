@@ -1,11 +1,16 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, Sparkles, FileUp, Shield, Zap, HelpCircle } from "lucide-react";
+import { CheckCircle2, Sparkles, Shield, Zap, Lock, Cloud, ShieldCheck, HeartHandshake, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
 import { ToolWorkspaceModal } from "@/components/saas/ToolWorkspaceModal";
+import { HowItWorksSection } from "@/components/saas/HowItWorksSection";
+import { WhyUseSection } from "@/components/saas/WhyUseSection";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { pricingFaq } from "@/lib/faq-data";
 import { type PdfTool } from "@/lib/pdf-tools-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
 
@@ -254,6 +259,102 @@ export function PricingPage() {
           </div>
         </div>
       </main>
+
+      {/* 1. HOW IT WORKS */}
+      <HowItWorksSection
+        badge="Simple & Fair"
+        title="How Subscription & Access Works"
+        subtitle="Transparent onboarding designed for both individual creators and enterprise teams."
+        steps={[
+          {
+            step: "01",
+            title: "Choose Your Plan",
+            description: "Start completely free with zero credit card required or unlock team-scale capacities.",
+            badgeText: "Instant Activation",
+            badgeIcon: Sparkles,
+            colorClass: "icon-edit",
+          },
+          {
+            step: "02",
+            title: "Process Documents",
+            description: "Edit, protect, annotate, and merge your PDFs with client-side zero-latency speed.",
+            badgeText: "100% In-Browser",
+            badgeIcon: Zap,
+            colorClass: "icon-convert",
+          },
+          {
+            step: "03",
+            title: "Export & Share",
+            description: "Download crystal-clear vector PDFs without watermarks or upload limits.",
+            badgeText: "Zero Watermarks",
+            badgeIcon: FileCheck,
+            colorClass: "icon-organize",
+          },
+        ]}
+      />
+
+      {/* 2. WHY USE SECTION */}
+      <WhyUseSection
+        badge="Enterprise Guarantee"
+        title="Why Choose WebToolOcean PDF Studio"
+        subtitle="Unmatched privacy, high rendering fidelity, and transparent policies."
+        benefits={[
+          {
+            icon: ShieldCheck,
+            title: "Client-Side Zero-Knowledge",
+            description: "Documents are processed locally in your browser memory. Your files never touch external clouds.",
+            colorClass: "icon-security",
+          },
+          {
+            icon: Zap,
+            title: "High Performance Engine",
+            description: "Instant loading and lightning-fast exports with no file upload queues or bandwidth throttling.",
+            colorClass: "icon-convert",
+          },
+          {
+            icon: Lock,
+            title: "Bank-Grade Encryption",
+            description: "All document protection adheres to ISO 32000 256-bit AES standards compatible with Adobe Acrobat.",
+            colorClass: "icon-edit",
+          },
+          {
+            icon: Cloud,
+            title: "Cross-Platform Freedom",
+            description: "Works on Windows, macOS, Linux, iOS, and Android without downloading any software.",
+            colorClass: "icon-organize",
+          },
+          {
+            icon: HeartHandshake,
+            title: "No Hidden Paywalls",
+            description: "Core features are free forever. No deceptive countdown timers or forced watermark stamps.",
+            colorClass: "icon-edit",
+          },
+          {
+            icon: Sparkles,
+            title: "Continuous Enhancements",
+            description: "New tools, OCR improvements, and format conversions roll out regularly with zero downtime.",
+            colorClass: "icon-convert",
+          },
+        ]}
+      />
+
+      {/* 3. CONSISTENT FAQ */}
+      <ConsistentFaqSection
+        badge="Pricing FAQs"
+        title="Frequently Asked Questions About Billing"
+        subtitle="Transparent answers regarding our community tiers, team licensing, and refund guarantees."
+        items={pricingFaq}
+      />
+
+      {/* 4. FINAL CTA BANNER */}
+      <ConsistentCtaSection
+        title="Start Using WebToolOcean PDF Studio Today"
+        subtitle="No credit card, no sign-up barrier, and complete document privacy guaranteed."
+        primaryCtaText="Launch Free Studio"
+        onPrimaryClick={handleTriggerUpload}
+        secondaryCtaText="Browse All Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <SaasFooter onSelectTool={(tool) => setSelectedTool(tool)} />
 

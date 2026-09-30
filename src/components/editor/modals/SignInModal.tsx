@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
 import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 interface SignInModalProps {
   open: boolean;
@@ -99,13 +100,23 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
 
           <p className="text-center text-[11.5px] leading-relaxed text-muted-foreground">
             By continuing you agree to our{" "}
-            <a href="#" className="underline underline-offset-2 hover:text-foreground">
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 font-medium text-foreground/80 hover:text-foreground transition-colors"
+            >
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="#" className="underline underline-offset-2 hover:text-foreground">
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 font-medium text-foreground/80 hover:text-foreground transition-colors"
+            >
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </div>

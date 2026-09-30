@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { HelpCircle, Search, FileUp } from "lucide-react";
+import { HelpCircle, Search, ShieldCheck, Zap, Lock, Cloud, HeartHandshake, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
 import { ToolWorkspaceModal } from "@/components/saas/ToolWorkspaceModal";
+import { WhyUseSection } from "@/components/saas/WhyUseSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
 import { type PdfTool } from "@/lib/pdf-tools-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
 import {
@@ -53,8 +55,16 @@ export function FaqPage() {
       a: "PDF Studio is a high-performance web-based PDF suite. You can view, annotate, add text, headings, shapes, freehand drawings, stamps, insert images, rotate, and delete pages directly inside your web browser. You can export clean, vector-rendered PDFs instantly.",
     },
     {
+      q: "Is WebToolOcean PDF Studio secure and private?",
+      a: "Yes, 100%. Our platform uses client-side WebAssembly and modern browser APIs so your files are never transmitted to external servers. Your documents remain entirely within your private device memory.",
+    },
+    {
       q: "Can I edit existing PDF text?",
       a: "Yes! PDF Studio allows you to overlay new text, headings, paragraphs, lists, and shapes directly over your document pages. For native scanned PDFs, OCR text recognition and direct text layer editing workflows are currently being integrated.",
+    },
+    {
+      q: "What encryption standard is used to protect PDFs?",
+      a: "We use standard 256-bit AES encryption conforming to the ISO 32000 PDF security specification, ensuring maximum military-grade confidentiality compatible with Adobe Acrobat and all standard PDF readers.",
     },
     {
       q: "Can I upload a PDF from my computer?",
@@ -69,19 +79,7 @@ export function FaqPage() {
       a: "Yes. PDF Studio includes an integrated digital signature tool in the editor. You can draw your signature with your mouse or trackpad, type your name, customize ink colors, and stamp it anywhere on any page.",
     },
     {
-      q: "Can I convert PDF to Word?",
-      a: "PDF to Word conversion is currently under active development. You can preview the upcoming format preservation engine in our Convert section and subscribe for early access updates.",
-    },
-    {
-      q: "Can I merge multiple PDFs?",
-      a: "The multi-file merge engine is currently scheduled for the next platform release. Within the current editor, you can manage, reorder, rotate, and delete pages within your active document.",
-    },
-    {
-      q: "Can I compress a PDF?",
-      a: "A dedicated stream-compression utility is coming soon. The current PDF Studio export engine already optimizes image elements and font embeds to minimize output file size upon export.",
-    },
-    {
-      q: "Can I edit PDFs on mobile?",
+      q: "Can I edit PDFs on mobile and tablets?",
       a: "Yes. PDF Studio is built with responsive web standards and works seamlessly on tablets and modern mobile browsers with touch controls for annotating and reviewing documents on the go.",
     },
     {
@@ -144,18 +142,18 @@ export function FaqPage() {
             />
           </div>
 
-          {/* Accordion */}
-          <Accordion type="single" collapsible className="w-full space-y-3">
+          {/* Accordion with consistent styling */}
+          <Accordion type="single" collapsible className="w-full space-y-3.5">
             {filteredFaqs.map((item, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="rounded-2xl border border-border bg-card px-6 py-1 data-[state=open]:shadow-sm"
+                className="rounded-2xl border border-border bg-card px-5 sm:px-6 py-1 data-[state=open]:border-brand/40 data-[state=open]:shadow-md transition-all pdf-card-glow"
               >
-                <AccordionTrigger className="text-base font-semibold text-foreground hover:no-underline py-4 text-left">
-                  {item.q}
+                <AccordionTrigger className="text-sm sm:text-base font-semibold text-foreground hover:no-underline py-4 text-left cursor-pointer group">
+                  <span className="group-hover:text-brand transition-colors">{item.q}</span>
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4 pt-1">
+                <AccordionContent className="text-xs sm:text-sm text-muted-foreground leading-relaxed pb-4 pt-1">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -178,6 +176,61 @@ export function FaqPage() {
           </div>
         </div>
       </main>
+
+      {/* WHY USE SECTION */}
+      <WhyUseSection
+        badge="Enterprise Guarantee"
+        title="Engineered For Privacy & Speed"
+        subtitle="Every tool in WebToolOcean PDF Studio is built for maximum confidentiality and zero learning curve."
+        benefits={[
+          {
+            icon: ShieldCheck,
+            title: "Private In-Browser Engine",
+            description: "Files are handled in your device's memory. No document uploads, zero data logs.",
+            colorClass: "icon-security",
+          },
+          {
+            icon: Zap,
+            title: "Instant Zero-Lag Processing",
+            description: "No server queuing or download waiting periods. Processing is instant.",
+            colorClass: "icon-convert",
+          },
+          {
+            icon: Lock,
+            title: "256-Bit AES Encryption",
+            description: "Protect sensitive legal, medical, and financial documents with standard ISO 32000 encryption.",
+            colorClass: "icon-edit",
+          },
+          {
+            icon: Cloud,
+            title: "Universal Cross-Platform",
+            description: "Fully compatible with Windows, macOS, Linux, iOS, and Android web browsers.",
+            colorClass: "icon-organize",
+          },
+          {
+            icon: HeartHandshake,
+            title: "100% Free Core Tools",
+            description: "No subscriptions, mandatory watermarks, or hidden checkout screens for core editing.",
+            colorClass: "icon-edit",
+          },
+          {
+            icon: Sparkles,
+            title: "Crystal-Clear Vector Quality",
+            description: "Annotated PDFs export with high precision vector fonts and lossless graphics.",
+            colorClass: "icon-convert",
+          },
+        ]}
+      />
+
+      {/* CONSISTENT CTA SECTION */}
+      <ConsistentCtaSection
+        title="Ready to Edit or Protect Your PDF?"
+        subtitle="Start editing documents in seconds. No registration or credit card required."
+        primaryCtaText="Launch PDF Studio"
+        onPrimaryClick={handleTriggerUpload}
+        secondaryCtaText="Explore All Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <SaasFooter onSelectTool={(tool) => setSelectedTool(tool)} />
 

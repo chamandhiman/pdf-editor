@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { EditorPage } from "@/pages/EditorPage";
 
-const title = "Editor — PDF Studio";
+const title = "PDF Editor Workspace — WebToolOcean PDF Studio";
 const description =
-  "A full PDF editing workspace: pages, annotation tools, text editing and document properties.";
+  "In-browser PDF editing workspace: modify original text, draw, sign, add vector shapes and export.";
 
 export const Route = createFileRoute("/editor")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -13,10 +13,14 @@ export const Route = createFileRoute("/editor")({
     meta: [
       { title },
       { name: "description", content: description },
+      { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://pdf.webtoolocean.com/editor" },
     ],
   }),
   component: EditorRoute,

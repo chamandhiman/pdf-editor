@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Bold, Italic, Underline,
-  Palette, Minus, Plus, ChevronDown,
-  Copy, PenLine, Trash2, Layers, ChevronsUp, ChevronUp, ChevronsDown,
+  Palette, Minus, Plus, ChevronDown, Check,
+  Copy, PenLine, Trash2, Layers, ChevronsUp, ChevronUp, ChevronsDown, ListPlus,
 } from "lucide-react";
 import type { PDFObject, TextStyleOverride } from "@/types/pdf";
 import type { EditorState } from "./useEditorState";
@@ -50,6 +50,8 @@ interface StandaloneProps {
   align: "left" | "center" | "right" | "justify";
   detectedFont?: string | null;
   onChange: (updates: Partial<TextStyleOverride>) => void;
+  onAddListItem?: () => void;
+  onDeleteTextBlock?: () => void;
   position: { top: number; left: number };
 }
 
@@ -240,6 +242,129 @@ function ColorPicker({ color, onChange }: { color: string; onChange: (c: string)
   );
 }
 
+// ── Style Formatting Dropdown (Bold, Italic, Underline) ─────────────────────
+function StyleDropdown({
+  bold,
+  italic,
+  underline,
+  onChange,
+}: {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  onChange: (updates: Partial<TextStyleOverride>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const trigRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  const hasAnyActive = bold || italic || underline;
+
+  const openMenu = () => {
+    if (!trigRef.current) return;
+    const r = trigRef.current.getBoundingClientRect();
+    const top = (window.innerHeight - r.bottom) >= 140 ? r.bottom + 4 : r.top - 144;
+    const left = Math.max(4, Math.min(r.left, window.innerWidth - 170));
+    setPos({ top, left });
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current?.contains(e.target as Node) || trigRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", close, true);
+    return () => document.removeEventListener("mousedown", close, true);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={trigRef}
+        type="button"
+        data-floating-toolbar="true"
+        title="Formatting (Bold, Italic, Underline)"
+        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); open ? setOpen(false) : openMenu(); }}
+        className={`flex h-7 items-center gap-1 rounded px-1.5 cursor-pointer select-none transition-colors ${
+          hasAnyActive ? "bg-accent text-accent-foreground font-bold" : "hover:bg-accent/70 text-foreground/80 hover:text-foreground"
+        }`}
+      >
+        <span className="flex items-center text-xs font-bold">
+          <Bold className="h-3.5 w-3.5" />
+        </span>
+        <ChevronDown className="h-2.5 w-2.5 opacity-60" />
+      </button>
+
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          data-floating-toolbar="true"
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: 160, zIndex: 99999 }}
+          className="rounded-lg border border-border bg-popover p-1 shadow-xl text-popover-foreground"
+        >
+          <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Text Style
+          </div>
+
+          <button
+            type="button"
+            data-floating-toolbar="true"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange({ bold: !bold }); }}
+            className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-accent cursor-pointer transition-colors ${
+              bold ? "bg-accent/60 font-bold text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Bold className="h-3.5 w-3.5" />
+              <span>Bold</span>
+            </div>
+            {bold && <Check className="h-3.5 w-3.5 text-brand" />}
+          </button>
+
+          <button
+            type="button"
+            data-floating-toolbar="true"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange({ italic: !italic }); }}
+            className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-accent cursor-pointer transition-colors ${
+              italic ? "bg-accent/60 italic font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Italic className="h-3.5 w-3.5" />
+              <span>Italic</span>
+            </div>
+            {italic && <Check className="h-3.5 w-3.5 text-brand" />}
+          </button>
+
+          <button
+            type="button"
+            data-floating-toolbar="true"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange({ underline: !underline }); }}
+            className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-accent cursor-pointer transition-colors ${
+              underline ? "bg-accent/60 underline font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Underline className="h-3.5 w-3.5" />
+              <span>Underline</span>
+            </div>
+            {underline && <Check className="h-3.5 w-3.5 text-brand" />}
+          </button>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ── Small helpers ───────────────────────────────────────────────────────────
 function ToolBtn({
   active,
@@ -396,9 +521,13 @@ export function FloatingTextToolbar(props: FloatingTextToolbarProps) {
 
       <VSep />
 
-      <ToolBtn active={bold} onClick={() => onChange({ bold: !bold })} title="Bold"><Bold className="h-3.5 w-3.5" /></ToolBtn>
-      <ToolBtn active={italic} onClick={() => onChange({ italic: !italic })} title="Italic"><Italic className="h-3.5 w-3.5" /></ToolBtn>
-      <ToolBtn active={underline} onClick={() => onChange({ underline: !underline })} title="Underline"><Underline className="h-3.5 w-3.5" /></ToolBtn>
+      {/* Formatting Dropdown: Bold, Italic, Underline */}
+      <StyleDropdown
+        bold={bold}
+        italic={italic}
+        underline={underline}
+        onChange={onChange}
+      />
 
       <VSep />
 
@@ -458,11 +587,43 @@ export function FloatingTextToolbar(props: FloatingTextToolbarProps) {
           <ToolBtn
             active={false}
             onClick={() => props.editor.deleteObject(props.object.id)}
-            title="Delete"
+            title="Delete text block"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </ToolBtn>
+        </>
+      )}
+
+      {/* Add Item Below & Delete Text Block actions */}
+      {"onAddListItem" in props && (props.onAddListItem !== undefined || props.onDeleteTextBlock !== undefined) && (
+        <>
+          <VSep />
+          {Boolean(props.onAddListItem) && (
+            <button
+              type="button"
+              data-floating-toolbar="true"
+              title="Add item below (shifts page content down)"
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); props.onAddListItem?.(); }}
+              className="flex h-7 w-7 items-center justify-center rounded hover:bg-brand/10 text-brand hover:text-brand cursor-pointer transition-colors"
+            >
+              <ListPlus className="h-3.5 w-3.5" />
+            </button>
+          )}
+
+          {Boolean(props.onDeleteTextBlock) && (
+            <button
+              type="button"
+              data-floating-toolbar="true"
+              title="Delete text block (shifts page content up)"
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); props.onDeleteTextBlock?.(); }}
+              className="flex h-7 w-7 items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </>
       )}
     </div>

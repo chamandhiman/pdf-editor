@@ -185,8 +185,30 @@ export function HomePage() {
   };
 
   const handleSelectTool = (tool: PdfTool) => {
-    if (tool.status === "available" && tool.slug === "edit-pdf") {
-      handleTriggerUpload();
+    if (tool.id === "protect-pdf" || tool.slug === "protect-pdf") {
+      navigate({ to: "/protect" });
+    } else if (tool.id === "merge-pdf" || tool.slug === "merge-pdf") {
+      navigate({ to: "/merge-pdf" });
+    } else if (tool.id === "split-pdf" || tool.slug === "split-pdf") {
+      navigate({ to: "/split-pdf" });
+    } else if (tool.id === "delete-pages" || tool.slug === "delete-pages") {
+      navigate({ to: "/remove-pages" });
+    } else if (tool.id === "reorder-pages" || tool.slug === "reorder-pages") {
+      navigate({ to: "/reorder-pages" });
+    } else if (tool.id === "unlock-pdf" || tool.slug === "unlock-pdf") {
+      navigate({ to: "/unlock-pdf" });
+    } else if (tool.id === "ocr-pdf" || tool.slug === "ocr-pdf") {
+      navigate({ to: "/ocr-pdf" });
+    } else if (tool.id === "compress-pdf" || tool.slug === "compress-pdf") {
+      navigate({ to: "/compress-pdf" });
+    } else if (tool.id === "jpg-to-pdf" || tool.slug === "jpg-to-pdf") {
+      navigate({ to: "/jpg-to-pdf" });
+    } else if (tool.id === "pdf-to-word" || tool.slug === "pdf-to-word") {
+      navigate({ to: "/pdf-to-word" });
+    } else if (tool.id === "pdf-to-excel" || tool.slug === "pdf-to-excel") {
+      navigate({ to: "/pdf-to-excel" });
+    } else if (tool.status === "available" && tool.slug === "edit-pdf") {
+      navigate({ to: "/edit-pdf" });
     } else {
       setSelectedTool(tool);
     }
@@ -364,21 +386,21 @@ export function HomePage() {
                 {/* Trust Badge */}
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-brand/10 to-orange-500/10 border border-brand/25 text-brand text-xs font-semibold mb-6 shadow-sm">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Next-Gen In-Browser PDF Suite · 30+ Tools</span>
+                  <span>Next-Gen In-Browser PDF Suite</span>
                 </div>
 
                 {/* Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-                  Your Complete
+                  Start Editing PDF
                   <br />
                   <span className="gradient-brand">
-                    PDF Power Center
+                    Upload Your File
                   </span>
                 </h1>
 
                 {/* Subheading */}
                 <p className="mt-5 text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                  Edit, convert, organize, sign, protect and compress PDF documents — entirely in your browser, instantly and securely.
+                  Edit existing text, add headings, sign documents, insert images, and organize pages — 100% private, right in your web browser.
                 </p>
 
                 {/* Action Buttons */}
@@ -386,15 +408,15 @@ export function HomePage() {
                   <button
                     type="button"
                     onClick={handleTriggerUpload}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-brand text-white font-bold text-base shadow-lg shadow-brand/30 hover:shadow-brand/50 hover:bg-brand/90 transition-all active:scale-[0.98] cursor-pointer animate-pulse-glow"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-[4px] bg-brand text-white font-bold text-base shadow-lg shadow-brand/30 hover:shadow-brand/50 hover:bg-brand/90 transition-all active:scale-[0.98] cursor-pointer animate-pulse-glow"
                   >
                     <FileUp className="w-5 h-5" />
-                    <span>Start Editing — Free</span>
+                    <span>Start Editing PDF — Free</span>
                   </button>
 
                   <a
                     href="#tools"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-border bg-card/70 backdrop-blur-sm hover:bg-accent text-foreground font-semibold text-base transition-colors hover:border-brand/30"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-[4px] border border-border bg-card/70 backdrop-blur-sm hover:bg-accent text-foreground font-semibold text-base transition-colors hover:border-brand/30"
                   >
                     <Compass className="w-4 h-4 text-muted-foreground" />
                     <span>Explore All Tools</span>
@@ -457,11 +479,11 @@ export function HomePage() {
                       <FileText className="w-10 h-10 text-white drop-shadow" />
                     </div>
 
-                    <h3 className="text-xl sm:text-2xl font-bold text-foreground">
-                      Drop your PDF here
+                    <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                      Start Editing PDF
                     </h3>
-                    <p className="mt-1.5 text-sm sm:text-base text-muted-foreground font-normal">
-                      or click anywhere to browse files
+                    <p className="mt-1.5 text-sm sm:text-base text-muted-foreground font-medium">
+                      Upload your file or drop PDF here to start editing
                     </p>
 
                     <div className="mt-5 flex items-center justify-center gap-3 w-36">
@@ -472,10 +494,10 @@ export function HomePage() {
 
                     <button
                       type="button"
-                      className="mt-4 inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-sm font-bold shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all pointer-events-none"
+                      className="mt-4 inline-flex items-center gap-2 px-7 py-3 rounded-[4px] bg-brand text-white text-sm font-bold shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all pointer-events-none"
                     >
                       <FileUp className="w-4 h-4" />
-                      <span>Choose PDF File</span>
+                      <span>Upload PDF File to Edit</span>
                     </button>
 
                     {/* Feature badges */}
@@ -504,7 +526,7 @@ export function HomePage() {
                 {/* Social proof below upload box */}
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   {[
-                    { icon: TrendingUp, label: "30+ Tools", sub: "Specialized", color: "text-brand" },
+                    { icon: TrendingUp, label: "All-in-One", sub: "PDF Tools", color: "text-brand" },
                     { icon: Users, label: "50K+", sub: "Users", color: "text-blue-500" },
                     { icon: Award, label: "4.9★", sub: "Rated", color: "text-amber-500" },
                   ].map(({ icon: Icon, label, sub, color }) => (
@@ -584,40 +606,7 @@ export function HomePage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Edit PDFs */}
-              <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-1 icon-edit rounded-t-2xl" />
-                <div className="flex items-center gap-3 mb-4 pt-1">
-                  <div className="w-11 h-11 rounded-xl icon-edit flex items-center justify-center shadow-md">
-                    <Edit3 className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-foreground text-lg">Edit PDFs</h3>
-                    <span className="text-xs text-muted-foreground">In-browser editor</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                  Rich formatting, vector drawing, overlays and live document adjustments.
-                </p>
-                <div className="space-y-1.5 mt-auto">
-                  {editTools.map((tool) => (
-                    <button
-                      key={tool.id}
-                      type="button"
-                      onClick={() => handleSelectTool(tool)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-soft flex items-center justify-between group/item transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-brand flex-shrink-0" />
-                        <span className="truncate">{tool.name}</span>
-                      </div>
-                      <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Organize PDFs */}
               <div className="group rounded-2xl border border-border bg-card p-6 flex flex-col pdf-card-glow overflow-hidden relative">
                 <div className="absolute top-0 left-0 right-0 h-1 icon-organize rounded-t-2xl" />
@@ -851,7 +840,7 @@ export function HomePage() {
               className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-brand text-white font-bold text-sm shadow-lg shadow-brand/25 hover:bg-brand/90 hover:shadow-brand/40 transition-all"
             >
               <BookOpen className="w-4 h-4" />
-              <span>Browse All 30+ PDF Tools</span>
+              <span>Browse All PDF Tools</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

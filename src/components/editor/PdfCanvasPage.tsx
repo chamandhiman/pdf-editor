@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { getPdfJs } from "@/lib/pdf-loader";
 import type { PDFPage } from "@/types/pdf";
 import { usePdfDoc } from "./usePdfDocument";
@@ -506,6 +507,94 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
   const activeUnderline = activeStyle.underline ?? false;
   const activeAlign = activeStyle.align ?? "left";
 
+  // Dynamic layout vertical shift: when lines/items are added to items above, shift lower items down;
+  // when items above are deleted, shift lower items up.
+  // The whole page below shifts dynamically!
+  const itemShiftMap = useMemo(() => {
+    const shifts: Record<number, number> = {};
+    if (items.length === 0) return shifts;
+
+    const sorted = [...items].sort((a, b) => a.top - b.top);
+
+    for (const item of sorted) {
+      let cumulativeShift = 0;
+
+      for (const other of sorted) {
+        // Is other strictly situated above item in vertical space?
+        if (other.top + other.fontSize * 0.4 < item.top) {
+          const otherKey = keyFor(other.idx);
+          const otherOverride = overrides[otherKey];
+
+          if (otherOverride !== undefined) {
+            const fs = styleOverrides?.[otherKey]?.fontSize ?? other.fontSize;
+            const defaultStr = other.hasBulletPrefix
+              ? other.textWithoutBullet
+              : other.str;
+            const defaultLines = Math.max(1, defaultStr.split("\n").length);
+
+            if (otherOverride === "") {
+              // Block was deleted: shift everything below it upwards by its full vertical height
+              const blockHeight = Math.max(other.fontSize * 1.35, defaultLines * fs * 1.35);
+              cumulativeShift -= blockHeight;
+            } else {
+              // Lines were added or removed
+              const overrideLines = otherOverride.split("\n").length;
+              const delta = overrideLines - defaultLines;
+              if (delta !== 0) {
+                cumulativeShift += delta * fs * 1.35;
+              }
+            }
+          }
+        }
+      }
+      shifts[item.idx] = cumulativeShift;
+    }
+    return shifts;
+  }, [items, overrides, styleOverrides, page.index]);
+
+  const handleAddListItem = () => {
+    if (!activeItem || !activeKey) return;
+    const currentStr = overrides[activeKey] ?? (activeItem.hasBulletPrefix ? activeItem.textWithoutBullet : activeItem.str);
+    const currentTextEl = layerRef.current?.querySelector<HTMLElement>(`[data-idx="${activeItem.idx}"] [contenteditable], [data-idx="${activeItem.idx}"][contenteditable]`);
+    let liveStr = currentTextEl?.textContent || currentStr;
+    if (activeItem.hasBulletPrefix) {
+      liveStr = liveStr.replace(/^[\u2022\u2023\u2043\u25CF\u25AA\u25E6\u2219\u00B7\u25AB\u25B8\u25B9\u2192\u27A4\u2714\u2013\u2014\u2010\u00BB\*\-]\s*/, "");
+    }
+
+    const isBulletList = activeItem.hasBulletPrefix || /^[•\-\*]/.test(liveStr);
+    const newLine = isBulletList ? "\n• New item" : "\nNew item";
+    const updatedStr = `${liveStr}${newLine}`;
+
+    const targetColor = styleOverrides?.[activeKey]?.color ?? colors[activeItem.idx]?.text ?? "#000000";
+    const targetBg = styleOverrides?.[activeKey]?.bg ?? colors[activeItem.idx]?.bg ?? "#ffffff";
+
+    editor.setTextOverride(activeKey, updatedStr, targetColor, targetBg);
+    toast.success("Added new list item below — page content shifted down");
+  };
+
+  const handleDeleteTextBlock = () => {
+    if (!activeItem || !activeKey) return;
+    const targetColor = styleOverrides?.[activeKey]?.color ?? colors[activeItem.idx]?.text ?? "#000000";
+    const targetBg = styleOverrides?.[activeKey]?.bg ?? colors[activeItem.idx]?.bg ?? "#ffffff";
+
+    // Delete the text block by overriding its text to empty string
+    editor.setTextOverride(activeKey, "", targetColor, targetBg);
+
+    // If there is an adjacent standalone bullet item, also delete it
+    const adjacentBullet = items.find(
+      (b) => b.isBullet && Math.abs(b.top - activeItem.top) < 8 && b.left < activeItem.left && activeItem.left - b.left < 40
+    );
+    if (adjacentBullet) {
+      const bulletKey = keyFor(adjacentBullet.idx);
+      editor.setTextOverride(bulletKey, "", targetColor, targetBg);
+    }
+
+    setActiveIdx(null);
+    toast.success("Text block deleted — page content shifted up");
+  };
+
+  const activeRenderedTop = activeItem ? activeItem.top + (itemShiftMap[activeItem.idx] ?? 0) : 0;
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       <canvas ref={canvasRef} className="h-full w-full" />
@@ -529,6 +618,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
             color={activeColor}
             align={activeAlign}
             detectedFont={activeItem.detectedFontFamily}
+            onAddListItem={handleAddListItem}
+            onDeleteTextBlock={handleDeleteTextBlock}
             onChange={(updates) => {
               const currentStr = overrides[activeKey] ?? (activeItem.hasBulletPrefix ? activeItem.textWithoutBullet : activeItem.str);
               const currentTextEl = layerRef.current?.querySelector<HTMLElement>(`[data-idx="${activeItem.idx}"] [contenteditable], [data-idx="${activeItem.idx}"][contenteditable]`);
@@ -543,8 +634,8 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
               editor.setTextStyleOverride(activeKey, updates);
             }}
             position={{
-              top: activeItem.top > 48 ? activeItem.top - 44 : activeItem.top + activeFontSize + 8,
-              left: Math.max(8, Math.min(page.width - 440, activeItem.left)),
+              top: activeRenderedTop > 48 ? activeRenderedTop - 44 : activeRenderedTop + activeFontSize + 8,
+              left: Math.max(8, Math.min(page.width - 320, activeItem.left)),
             }}
           />
         )}
@@ -582,16 +673,29 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
             isOrigFontActive
           );
           const renderedFontSize = Math.round(nominalFontSize * compensation * 100) / 100;
-          // Use item.top for positioning — it is already correctly anchored to the PDF glyph.
-          // The baselineY-renderedFontSize approach shifts text upward when compensation ≠ 1.0,
-          // making the overlay appear larger/higher than the original.
-          const renderedTop = item.top;
+          // Apply vertical layout shift from expanded items above
+          const renderedTop = item.top + (itemShiftMap[item.idx] ?? 0);
 
           const curBold = style.bold !== undefined ? style.bold : (item.fontWeight === 700 || item.fontWeight === "bold");
           const curItalic = style.italic !== undefined ? style.italic : (item.fontStyle === "italic");
           const curUnderline = style.underline ?? false;
           const curColor = style.color ?? c.text;
           const curAlign = style.align ?? "left";
+
+          // If this item has been deleted, do not render HTML overlay
+          if (override === "") {
+            return null;
+          }
+
+          if (item.isBullet) {
+            // Check if adjacent text item was deleted
+            const adjacentText = items.find(
+              (t) => !t.isBullet && Math.abs(t.top - item.top) < 8 && t.left > item.left && t.left - item.left < 40
+            );
+            if (adjacentText && overrides[keyFor(adjacentText.idx)] === "") {
+              return null;
+            }
+          }
 
           return (
             <span key={item.idx} className="contents">
@@ -709,7 +813,17 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        e.currentTarget.blur();
+                        const sel = window.getSelection();
+                        if (sel && sel.rangeCount > 0) {
+                          const range = sel.getRangeAt(0);
+                          const node = document.createTextNode("\n• ");
+                          range.deleteContents();
+                          range.insertNode(node);
+                          range.setStartAfter(node);
+                          range.collapse(true);
+                          sel.removeAllRanges();
+                          sel.addRange(range);
+                        }
                       }
                       e.stopPropagation();
                     }}
@@ -771,13 +885,23 @@ export function PdfCanvasPage({ page, editor }: { page: PDFPage; editor: EditorS
                       sel?.addRange(range);
                     }
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      e.currentTarget.blur();
-                    }
-                    e.stopPropagation();
-                  }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const sel = window.getSelection();
+                        if (sel && sel.rangeCount > 0) {
+                          const range = sel.getRangeAt(0);
+                          const node = document.createTextNode("\n");
+                          range.deleteContents();
+                          range.insertNode(node);
+                          range.setStartAfter(node);
+                          range.collapse(true);
+                          sel.removeAllRanges();
+                          sel.addRange(range);
+                        }
+                      }
+                      e.stopPropagation();
+                    }}
                   className="absolute outline-none select-text"
                   style={{
                     left: item.left,

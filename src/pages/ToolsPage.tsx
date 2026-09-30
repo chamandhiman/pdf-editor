@@ -1,11 +1,16 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Compass, ArrowRight, FileUp } from "lucide-react";
+import { Search, Compass, ArrowRight, FileUp, Zap, ShieldCheck, Globe, Download, Lock, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
 import { ToolWorkspaceModal } from "@/components/saas/ToolWorkspaceModal";
+import { HowItWorksSection } from "@/components/saas/HowItWorksSection";
+import { WhyUseSection } from "@/components/saas/WhyUseSection";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { toolsFaq } from "@/lib/faq-data";
 import {
   pdfTools,
   pdfToolCategories,
@@ -48,7 +53,23 @@ export function ToolsPage() {
   };
 
   const handleSelectTool = (tool: PdfTool) => {
-    if (tool.status === "available" && tool.slug === "edit-pdf") {
+    if (tool.id === "protect-pdf" || tool.slug === "protect-pdf") {
+      navigate({ to: "/protect" });
+    } else if (tool.id === "merge-pdf" || tool.slug === "merge-pdf") {
+      navigate({ to: "/merge-pdf" });
+    } else if (tool.id === "split-pdf" || tool.slug === "split-pdf") {
+      navigate({ to: "/split-pdf" });
+    } else if (tool.id === "delete-pages" || tool.slug === "delete-pages") {
+      navigate({ to: "/remove-pages" });
+    } else if (tool.id === "reorder-pages" || tool.slug === "reorder-pages") {
+      navigate({ to: "/reorder-pages" });
+    } else if (tool.id === "unlock-pdf" || tool.slug === "unlock-pdf") {
+      navigate({ to: "/unlock-pdf" });
+    } else if (tool.id === "ocr-pdf" || tool.slug === "ocr-pdf") {
+      navigate({ to: "/ocr-pdf" });
+    } else if (tool.id === "compress-pdf" || tool.slug === "compress-pdf") {
+      navigate({ to: "/compress-pdf" });
+    } else if (tool.status === "available" && tool.slug === "edit-pdf") {
       handleTriggerUpload();
     } else {
       setSelectedTool(tool);
@@ -97,7 +118,7 @@ export function ToolsPage() {
               All PDF Tools
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-              Explore 30+ tools for editing, converting, compressing, organizing, and protecting your documents.
+              Explore tools for editing, converting, compressing, organizing, and protecting your documents.
             </p>
           </div>
 
@@ -180,26 +201,103 @@ export function ToolsPage() {
             })}
           </div>
 
-          {/* Quick upload footer banner */}
-          <div className="mt-16 rounded-3xl bg-gradient-to-br from-brand to-orange-600 p-8 md:p-12 text-center max-w-3xl mx-auto shadow-xl shadow-brand/20 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white" />
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-white relative z-10">Ready to edit a PDF right now?</h2>
-            <p className="mt-2 text-sm text-white/80 relative z-10">
-              Upload any PDF and start editing text, adding signatures, annotations, and more — free, instantly.
-            </p>
-            <button
-              type="button"
-              onClick={handleTriggerUpload}
-              className="mt-6 inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-brand font-bold text-sm shadow-lg hover:bg-white/95 transition-all active:scale-[0.98] cursor-pointer relative z-10"
-            >
-              <FileUp className="w-4 h-4" />
-              <span>Open PDF Editor — Free</span>
-            </button>
-          </div>
         </div>
+
+        {/* 1. HOW IT WORKS SECTION */}
+        <HowItWorksSection
+          badge="Productivity Directory"
+          title="How to Use WebToolOcean PDF Tools"
+          subtitle="Everything you need to modify, encrypt, and transform documents in 3 clean steps."
+          steps={[
+            {
+              step: "01",
+              title: "Choose Your Specialty Tool",
+              description: "Select from dedicated utilities for editing, protection, page organization, and conversions.",
+              badgeText: "Dedicated PDF modules",
+              badgeIcon: Compass,
+              colorClass: "icon-edit",
+            },
+            {
+              step: "02",
+              title: "Instant In-Browser Processing",
+              description: "Files are rendered and transformed locally in browser memory without sending private data to cloud servers.",
+              badgeText: "Zero server uploads",
+              badgeIcon: Zap,
+              colorClass: "icon-organize",
+            },
+            {
+              step: "03",
+              title: "Download or Continue Editing",
+              description: "Save high-fidelity PDF documents or seamlessly open them in the full in-browser editor workspace.",
+              badgeText: "Lossless vector quality",
+              badgeIcon: Download,
+              colorClass: "icon-convert",
+            },
+          ]}
+        />
+
+        {/* 2. WHY USE SECTION */}
+        <WhyUseSection
+          badge="Why WebToolOcean"
+          title="A Modern PDF Suite Built for Privacy & Speed"
+          subtitle="No software bloat, no desktop installs, and zero security compromises."
+          benefits={[
+            {
+              icon: Globe,
+              title: "100% Web-Based Suite",
+              description: "Runs seamlessly in Chrome, Edge, Safari, and Firefox across Windows, macOS, Linux, and mobile devices.",
+              colorClass: "icon-organize",
+            },
+            {
+              icon: Lock,
+              title: "Military-Grade Encryption",
+              description: "Protect sensitive contracts and financial statements with standard 256-bit AES password encryption.",
+              colorClass: "icon-security",
+            },
+            {
+              icon: Zap,
+              title: "High-Performance Engine",
+              description: "Engineered with WebAssembly and HTML5 Canvas for sub-second rendering, zooming, and processing.",
+              colorClass: "icon-edit",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Pure Local Sandbox",
+              description: "Your documents stay strictly on your device. We do not store, copy, or index your private content.",
+              colorClass: "icon-compress",
+            },
+            {
+              icon: FileCheck,
+              title: "ISO 32000 PDF Standard",
+              description: "All exported files strictly adhere to global PDF standards, ensuring 100% visual parity across all PDF viewers.",
+              colorClass: "icon-convert",
+            },
+            {
+              icon: FileUp,
+              title: "Free Community Access",
+              description: "Enjoy clean exports with zero watermarks, zero hidden download limits, and instant document processing.",
+              colorClass: "icon-security",
+            },
+          ]}
+        />
+
+        {/* 3. CONSISTENT FAQ ACCORDION */}
+        <ConsistentFaqSection
+          badge="Tools FAQs"
+          title="Frequently Asked Questions"
+          subtitle="Answers to common questions regarding tools, browser capabilities, and file safety."
+          items={toolsFaq}
+        />
+
+        {/* 4. FINAL CTA BANNER */}
+        <ConsistentCtaSection
+          title="Ready to Edit or Protect Your PDF Right Now?"
+          subtitle="Open any PDF and start modifying text, applying 256-bit encryption, or organizing pages instantly."
+          primaryCtaText="Open In-Browser Editor"
+          onPrimaryClick={handleTriggerUpload}
+          secondaryCtaText="Password Protect a PDF"
+          secondaryCtaLink="/protect"
+        />
       </main>
 
       <SaasFooter onSelectTool={handleSelectTool} />

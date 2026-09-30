@@ -23,7 +23,10 @@ import {
   Stamp,
   StickyNote,
   Type,
+  RotateCw,
+  RotateCcw,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -122,8 +125,8 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <span className="font-medium">{tool.label}</span>
-          <span className="ml-1.5 text-muted-foreground">{tool.hint}</span>
+          <span className="font-semibold text-white">{tool.label}</span>
+          <span className="ml-1.5 text-white/90">{tool.hint}</span>
         </TooltipContent>
       </Tooltip>
     );
@@ -170,8 +173,8 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <span className="font-medium">{currentLabel}</span>
-            <span className="ml-1.5 text-muted-foreground">{currentHint}</span>
+            <span className="font-semibold text-white">{currentLabel}</span>
+            <span className="ml-1.5 text-white/90">{currentHint}</span>
           </TooltipContent>
         </Tooltip>
         <DropdownMenu>
@@ -259,8 +262,8 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <span className="font-medium">{currentPreset.label}</span>
-            <span className="ml-1.5 text-muted-foreground">Click page to place, or choose preset from dropdown</span>
+            <span className="font-semibold text-white">{currentPreset.label}</span>
+            <span className="ml-1.5 text-white/90">Click page to place, or choose preset from dropdown</span>
           </TooltipContent>
         </Tooltip>
 
@@ -381,6 +384,112 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Separator orientation="vertical" className="mx-1.5 h-6" />
+
+      {/* Rotate PDF Tool */}
+      <div className="flex shrink-0 items-center rounded-md border border-border/60 hover:border-brand/40 bg-background/50">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const activePageObj = editor.document.pages[editor.activePage - 1];
+                if (activePageObj) {
+                  editor.rotatePage(activePageObj.id, 90);
+                  toast.success(`Rotated page ${editor.activePage} 90° clockwise`);
+                }
+              }}
+              className="h-8 gap-1.5 rounded-r-none px-2 text-muted-foreground hover:text-foreground"
+            >
+              <RotateCw className="h-4 w-4 text-brand" />
+              <span className="text-xs font-semibold text-foreground">Rotate PDF</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span className="font-semibold text-white">Rotate Page</span>
+            <span className="ml-1.5 text-white/90">Rotate current page 90° clockwise</span>
+          </TooltipContent>
+        </Tooltip>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Rotate PDF options"
+              className="h-8 w-5 rounded-l-none px-0 text-muted-foreground hover:text-foreground border-l border-border/40"
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 shadow-xl rounded-xl">
+            <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              Current Page (Page {editor.activePage})
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => {
+                const p = editor.document.pages[editor.activePage - 1];
+                if (p) {
+                  editor.rotatePage(p.id, 90);
+                  toast.success(`Rotated page ${editor.activePage} 90° clockwise`);
+                }
+              }}
+              className="cursor-pointer text-xs"
+            >
+              <RotateCw className="mr-2 h-4 w-4 text-brand" /> Rotate 90° Clockwise
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const p = editor.document.pages[editor.activePage - 1];
+                if (p) {
+                  editor.rotatePage(p.id, -90);
+                  toast.success(`Rotated page ${editor.activePage} 90° counter-clockwise`);
+                }
+              }}
+              className="cursor-pointer text-xs"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Rotate 90° Counter-Clockwise
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const p = editor.document.pages[editor.activePage - 1];
+                if (p) {
+                  editor.rotatePage(p.id, 180);
+                  toast.success(`Rotated page ${editor.activePage} 180°`);
+                }
+              }}
+              className="cursor-pointer text-xs"
+            >
+              <RotateCw className="mr-2 h-4 w-4" /> Rotate 180°
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              All Pages ({editor.document.pages.length} Pages)
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => {
+                editor.document.pages.forEach((p) => editor.rotatePage(p.id, 90));
+                toast.success("Rotated all pages 90° clockwise");
+              }}
+              className="cursor-pointer text-xs"
+            >
+              <RotateCw className="mr-2 h-4 w-4 text-brand" /> Rotate All Pages 90° CW
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                editor.document.pages.forEach((p) => editor.rotatePage(p.id, -90));
+                toast.success("Rotated all pages 90° counter-clockwise");
+              }}
+              className="cursor-pointer text-xs"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Rotate All Pages 90° CCW
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

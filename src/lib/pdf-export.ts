@@ -15,7 +15,7 @@
  *   PDF coordinate space (origin bottom-left) and draw them with pdf-lib.
  */
 
-import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees, type PDFFont } from "pdf-lib";
 import { getUploadedPdf } from "@/lib/pdf-store";
 import { loadPdfDocument, getPdfJs } from "@/lib/pdf-loader";
 import type { PDFDocument as AppDocument, PDFObject } from "@/types/pdf";
@@ -79,12 +79,23 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
     }
 
     pdfLib = await PDFDocument.create();
-    for (const page of appDoc.pages) {
-      if (page.type === "blank" || !page.originalPageNumber) {
+    const totalSourcePages = sourcePdf.getPageCount();
+    for (let pIdx = 0; pIdx < appDoc.pages.length; pIdx++) {
+      const page = appDoc.pages[pIdx]!;
+      if (page.type === "blank") {
         pdfLib.addPage([page.width || 595, page.height || 842]);
       } else {
-        const [copied] = await pdfLib.copyPages(sourcePdf, [page.originalPageNumber - 1]);
-        pdfLib.addPage(copied);
+        const sourceIdx =
+          page.originalPageNumber !== undefined && page.originalPageNumber > 0
+            ? page.originalPageNumber - 1
+            : pIdx;
+
+        if (sourceIdx >= 0 && sourceIdx < totalSourcePages) {
+          const [copied] = await pdfLib.copyPages(sourcePdf, [sourceIdx]);
+          pdfLib.addPage(copied);
+        } else {
+          pdfLib.addPage([page.width || 595, page.height || 842]);
+        }
       }
     }
   } else {
@@ -100,6 +111,13 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
     const libPage = libPages[pageIdx]!;
     const appPage = appDoc.pages[pageIdx];
     const { height: pdfPageHeight } = libPage.getSize();
+
+    // Apply user page rotation delta
+    const rotationDelta = (appPage?.rotation || 0) % 360;
+    if (rotationDelta !== 0) {
+      const currentAngle = libPage.getRotation().angle;
+      libPage.setRotation(degrees(((currentAngle + rotationDelta) % 360 + 360) % 360));
+    }
 
     // -----------------------------------------------------------------------
     // 1. Apply text overrides (in-place PDF text replacement)
@@ -289,6 +307,34 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
           borderWidth: 0,
         });
 
+        // Calculate cumulative vertical shift for items situated below expanded or deleted items
+        let shiftPts = 0;
+        for (const other of rawItems) {
+          if (other.idx === itemIdx) continue;
+          if (other.pdfY - other.pdfFontSize * 0.4 > ri.pdfY) {
+            const oKey = `${pageIdx}:${other.idx}`;
+            const oOverride = appDoc.textOverrides[oKey];
+            if (oOverride !== undefined) {
+              const oFs = appDoc.textStyleOverrides?.[oKey]?.fontSize ?? other.pdfFontSize;
+              const defStr = other.hasBulletPrefix ? other.textWithoutBullet : other.str;
+              const defLines = Math.max(1, defStr.split("\n").length);
+
+              if (oOverride === "") {
+                const blockHeight = Math.max(other.pdfFontSize * 1.35, defLines * oFs * 1.35);
+                shiftPts += blockHeight;
+              } else {
+                const ovLines = oOverride.split("\n").length;
+                const delta = ovLines - defLines;
+                if (delta !== 0) {
+                  shiftPts -= delta * oFs * 1.35;
+                }
+              }
+            }
+          }
+        }
+
+        const finalDrawY = ri.pdfY + shiftPts;
+
         // Alignment adjustment
         let drawX = ri.pdfX;
         if (style?.align === "center") {
@@ -297,23 +343,25 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
           drawX = ri.pdfX + Math.max(0, originalWidth - newWidth);
         }
 
-        // Draw the replacement text in the preserved color
-        libPage.drawText(newText, {
-          x: drawX,
-          y: ri.pdfY,
-          size: fs,
-          font,
-          color: rgb(tr, tg, tb),
-        });
-
-        // Underline if active
-        if (style?.underline) {
-          libPage.drawLine({
-            start: { x: drawX, y: ri.pdfY - 2 },
-            end: { x: drawX + newWidth, y: ri.pdfY - 2 },
-            thickness: Math.max(1, fs * 0.06),
+        // Draw the replacement text in the preserved color (if not deleted)
+        if (newText.trim() !== "") {
+          libPage.drawText(newText, {
+            x: drawX,
+            y: finalDrawY,
+            size: fs,
+            font,
             color: rgb(tr, tg, tb),
           });
+
+          // Underline if active
+          if (style?.underline) {
+            libPage.drawLine({
+              start: { x: drawX, y: finalDrawY - 2 },
+              end: { x: drawX + newWidth, y: finalDrawY - 2 },
+              thickness: Math.max(1, fs * 0.06),
+              color: rgb(tr, tg, tb),
+            });
+          }
         }
       }
     }
@@ -669,5 +717,5 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
     }
   }
 
-  return pdfLib.save();
+  return pdfLib.save({ useObjectStreams: false, addDefaultPage: false });
 }

@@ -1,20 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PrivacyPage } from "@/pages/PrivacyPage";
+import { createSeoHead } from "@/lib/seo";
+import { privacyFaq } from "@/lib/faq-data";
 
-const title = "Privacy Policy — PDF Studio";
-const description =
-  "Learn how PDF Studio protects your privacy with client-side document processing and strict data boundaries.";
+export { privacyFaq } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    createSeoHead({
+      title: "Privacy Architecture & Data Protection — WebToolOcean PDF Studio",
+      description:
+        "Learn about our client-side architecture. Files processed locally in your browser memory, zero server storage, zero third-party tracking.",
+      path: "/privacy",
+      keywords: ["pdf privacy", "zero upload pdf", "client side privacy", "webtoolocean security", "gdpr pdf tools"],
+      faqItems: privacyFaq,
+      applicationName: "WebToolOcean PDF Privacy Standards",
+    }),
   component: PrivacyPage,
 });
+

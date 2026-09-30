@@ -29,7 +29,7 @@ interface EditorPreviewSectionProps {
 }
 
 export function EditorPreviewSection({ onTryNow, onTryEditor }: EditorPreviewSectionProps) {
-  const handleTry = onTryNow || onTryEditor || (() => {});
+  const handleTry = onTryNow || onTryEditor || (() => { });
 
   return (
     <section className="relative overflow-hidden py-20 bg-gradient-to-b from-background via-secondary/30 to-background border-y border-border/60">
@@ -192,7 +192,7 @@ export function EditorPreviewSection({ onTryNow, onTryEditor }: EditorPreviewSec
                       Authorized Signature
                     </span>
                     <span className="font-serif italic text-lg text-brand mt-0.5 block">
-                      Chaman Dhiman
+                      John Doe
                     </span>
                   </div>
                   <div className="text-right">
@@ -260,7 +260,7 @@ export function EditorPreviewSection({ onTryNow, onTryEditor }: EditorPreviewSec
           </Button>
           <Link to="/tools">
             <Button variant="outline" size="lg">
-              Explore All 30+ Tools
+              Explore All Tools
             </Button>
           </Link>
         </div>

@@ -26,6 +26,11 @@ import {
 import { BrandMark } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 import { setUploadedPdf } from "@/lib/pdf-store";
+import { HowItWorksSection } from "@/components/saas/HowItWorksSection";
+import { WhyUseSection } from "@/components/saas/WhyUseSection";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { homeFaq } from "@/lib/faq-data";
 
 const nav = ["Tools", "Features", "Pricing", "Resources"];
 
@@ -136,7 +141,7 @@ export function UploadPage() {
           className={cn(
             "mt-10 cursor-pointer rounded-3xl border-2 border-dashed border-border bg-card/60 p-8 sm:p-14 text-center transition-all relative overflow-hidden",
             "hover:border-brand hover:bg-brand-soft/30 hover:shadow-xl pdf-card-glow",
-            dragging && "border-brand bg-brand-soft/60 shadow-2xl scale-[1.01]",
+            dragging && "border-brand bg-brand-soft/60 shadow-2xl scale-[1.01] drag-pattern-active",
           )}
         >
           {/* Subtle decorative glow */}
@@ -237,6 +242,84 @@ export function UploadPage() {
           ))}
         </section>
       </main>
+
+      {/* 1. HOW IT WORKS */}
+      <HowItWorksSection
+        badge="Simple Document Flow"
+        title="How In-Browser PDF Processing Works"
+        subtitle="Three straightforward steps to edit, protect, or organize documents without privacy risks."
+        steps={[
+          {
+            step: "01",
+            title: "Drop or Choose Document",
+            description: "Drag and drop any PDF file. It loads directly into client memory in milliseconds.",
+            badgeText: "Instant local load",
+            badgeIcon: FileUp,
+            colorClass: "icon-edit",
+          },
+          {
+            step: "02",
+            title: "Apply Edits & Protection",
+            description: "Edit text, annotate, sign, or encrypt with standard 256-bit AES protection.",
+            badgeText: "Zero server uploads",
+            badgeIcon: Lock,
+            colorClass: "icon-organize",
+          },
+          {
+            step: "03",
+            title: "Instant Clean Export",
+            description: "Download finished PDF documents with preserved fonts, zero watermarks, and full compatibility.",
+            badgeText: "ISO 32000 compliant",
+            badgeIcon: FileText,
+            colorClass: "icon-convert",
+          },
+        ]}
+      />
+
+      {/* 2. WHY USE */}
+      <WhyUseSection
+        badge="Enterprise Advantage"
+        title="Why Choose WebToolOcean PDF Studio"
+        subtitle="Designed for modern teams, freelancers, and businesses who value privacy and speed."
+        benefits={[
+          {
+            icon: ShieldCheck,
+            title: "Zero Cloud Leaks",
+            description: "Your documents never touch a third-party server. All operations run in your device's browser.",
+            colorClass: "icon-security",
+          },
+          {
+            icon: Zap,
+            title: "Ultra-Fast Execution",
+            description: "No upload lag or download wait times. Processing is instant on documents up to 100 MB.",
+            colorClass: "icon-convert",
+          },
+          {
+            icon: Lock,
+            title: "256-Bit AES Security",
+            description: "Protect sensitive legal, medical, and financial documents with military-grade encryption.",
+            colorClass: "icon-edit",
+          },
+        ]}
+      />
+
+      {/* 3. CONSISTENT FAQ */}
+      <ConsistentFaqSection
+        badge="Upload FAQs"
+        title="Frequently Asked Questions"
+        subtitle="Helpful answers regarding file formats, privacy, and browser editing."
+        items={homeFaq}
+      />
+
+      {/* 4. FINAL CTA BANNER */}
+      <ConsistentCtaSection
+        title="Ready to Edit or Secure Your PDF?"
+        subtitle="Join thousands of professionals processing PDFs privately and quickly."
+        primaryCtaText="Upload PDF Now"
+        onPrimaryClick={() => inputRef.current?.click()}
+        secondaryCtaText="Explore All PDF Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <footer className="border-t border-border py-6">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 text-[12.5px] text-muted-foreground">

@@ -20,6 +20,17 @@ import { useEditorState } from "@/components/editor/useEditorState";
 import { PdfDocContext, usePdfUpload } from "@/components/editor/usePdfDocument";
 import { recordRecentDoc } from "@/lib/recent-docs";
 import { saveDocumentState } from "@/lib/pdf-storage";
+import { SaveDocumentModal } from "@/components/editor/modals/SaveDocumentModal";
+import { LeaveEditorModal } from "@/components/editor/modals/LeaveEditorModal";
+import { PlanSelectionModal } from "@/components/editor/modals/PlanSelectionModal";
+import { PlanLimitModal } from "@/components/editor/modals/PlanLimitModal";
+import { saveDocumentToCloud, canUserSaveDocument, getUserProfile, getCloudDocuments } from "@/lib/cloud-documents";
+import { clearUploadedPdf } from "@/lib/pdf-store";
+import { getDocumentPdfBytes } from "@/lib/pdf-download";
+import { renderPageThumbnail } from "@/lib/pdf-operations";
+import { useAuth } from "@/lib/auth-context";
+import { auth } from "@/lib/firebase";
+import type { PlanId } from "@/lib/pricing-plans";
 
 export function EditorPage({ fileName }: { fileName?: string }) {
   const navigate = useNavigate();
@@ -28,9 +39,18 @@ export function EditorPage({ fileName }: { fileName?: string }) {
   const setPdfPages = editor.setPdfPages;
   const setDocument = editor.setDocument;
 
+  const { user, signInWithGoogle } = useAuth();
+
   // Modal visibility state
   const [replacePdfOpen, setReplacePdfOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [currentSavedDocId, setCurrentSavedDocId] = useState<string | undefined>();
 
   // If no document can be restored on refresh, redirect to home/upload page
   useEffect(() => {
@@ -52,6 +72,20 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     }
   }, [pdf, setPdfPages, setDocument]);
 
+  // Auto-link existing cloud document ID if document with same filename was already saved
+  useEffect(() => {
+    if (user && pdf?.fileName && !currentSavedDocId) {
+      getCloudDocuments(user.uid)
+        .then((docs) => {
+          const match = docs.find((d) => d.name.toLowerCase() === pdf.fileName.toLowerCase());
+          if (match) {
+            setCurrentSavedDocId(match.id);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, pdf?.fileName, currentSavedDocId]);
+
   // Persist editor changes (text edits, annotations, objects) across refreshes
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
@@ -66,6 +100,54 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     };
   }, [editor.document, status, pdf]);
 
+  const lastSavedJsonRef = useRef<string>("");
+  const documentRef = useRef(editor.document);
+  documentRef.current = editor.document;
+  const isSavingRef = useRef(isSaving);
+  isSavingRef.current = isSaving;
+  const currentSavedDocIdRef = useRef(currentSavedDocId);
+  currentSavedDocIdRef.current = currentSavedDocId;
+
+  // Initialize lastSavedJsonRef when document is first synced
+  useEffect(() => {
+    if (editor.document.pages.length > 0 && !lastSavedJsonRef.current) {
+      lastSavedJsonRef.current = JSON.stringify(editor.document);
+    }
+  }, [editor.document]);
+
+  // Periodic cloud auto-save every 2 minutes for authenticated users
+  useEffect(() => {
+    if (!user || status !== "ready") return;
+
+    const interval = setInterval(async () => {
+      if (isSavingRef.current) return;
+      if (!documentRef.current || documentRef.current.pages.length === 0) return;
+
+      const currentJson = JSON.stringify(documentRef.current);
+      // Only auto-save if edits were made since last save
+      if (lastSavedJsonRef.current && currentJson === lastSavedJsonRef.current) {
+        return;
+      }
+
+      try {
+        const profile = await getUserProfile(user.uid);
+        const planId = profile?.planId || "free";
+        const check = await canUserSaveDocument(
+          user.uid,
+          currentSavedDocIdRef.current,
+          documentRef.current.fileName
+        );
+        if (!check.allowed) return;
+
+        await executeSave(user.uid, planId, true);
+      } catch (err) {
+        console.warn("[auto-save] Background auto-save skipped:", err);
+      }
+    }, 2 * 60 * 1000); // 2 minutes
+
+    return () => clearInterval(interval);
+  }, [user, status]);
+
   const closeModal = (open: boolean) => {
     if (!open) {
       editor.setModal(null);
@@ -78,10 +160,118 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     reload();
   };
 
+  const executeSave = async (uid: string, planId: PlanId = "free", isAutoSave = false) => {
+    setIsSaving(true);
+    const toastId = !isAutoSave ? toast.loading("Saving document to cloud…") : undefined;
+    try {
+      const bytes = await getDocumentPdfBytes(documentRef.current);
+      let thumbnailUrl: string | undefined;
+      try {
+        thumbnailUrl = await renderPageThumbnail(bytes, 1, 160);
+      } catch {
+        // Thumbnail generation is optional
+      }
+
+      const cloudDoc = await saveDocumentToCloud(uid, {
+        name: documentRef.current.fileName,
+        bytes,
+        pageCount: documentRef.current.pages.length,
+        editorState: documentRef.current,
+        thumbnailUrl,
+        existingId: currentSavedDocIdRef.current,
+        planId,
+        userEmail: user?.email,
+        userDisplayName: user?.displayName,
+      });
+
+      setCurrentSavedDocId(cloudDoc.id);
+      lastSavedJsonRef.current = JSON.stringify(documentRef.current);
+      recordRecentDoc(documentRef.current.fileName, documentRef.current.pages.length);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 4000);
+      if (toastId) {
+        toast.success("Document saved successfully.", { id: toastId });
+      } else {
+        toast.success("Document auto-saved to cloud.", { duration: 3000 });
+      }
+      return cloudDoc;
+    } catch (err: any) {
+      console.error("[cloud-save] Failed to save document:", err);
+      if (toastId) {
+        toast.error(`Failed to save to cloud: ${err?.message || "Please check connection"}`, { id: toastId });
+      }
+      if (!isAutoSave) throw err;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const proceedSaveWithLimitCheck = async (uid: string, planId: PlanId) => {
+    try {
+      const check = await canUserSaveDocument(uid, currentSavedDocId, editor.document.fileName);
+      if (!check.allowed) {
+        setLimitModalOpen(true);
+        return;
+      }
+      await executeSave(uid, planId);
+    } catch {
+      // Toast already handled inside executeSave
+    }
+  };
+
+  const handleConfirmLeave = () => {
+    clearUploadedPdf();
+    setLeaveModalOpen(false);
+    navigate({ to: "/" });
+  };
+
+  const handleSaveClick = async () => {
+    if (!user) {
+      setSaveModalOpen(true);
+      return;
+    }
+
+    // Check if user already has an active plan selected
+    const profile = await getUserProfile(user.uid);
+    if (!profile || !profile.planId) {
+      setPlanModalOpen(true);
+      return;
+    }
+
+    await proceedSaveWithLimitCheck(user.uid, profile.planId);
+  };
+
+  const handleContinueWithGoogle = async () => {
+    await signInWithGoogle();
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Could not retrieve authenticated user.");
+    setSaveModalOpen(false);
+
+    // After successful login: OPEN PLAN SELECTION SCREEN
+    const profile = await getUserProfile(currentUser.uid);
+    if (!profile || !profile.planId) {
+      setPlanModalOpen(true);
+    } else {
+      await proceedSaveWithLimitCheck(currentUser.uid, profile.planId);
+    }
+  };
+
+  const handleSelectFreePlan = async () => {
+    setPlanModalOpen(false);
+    const currentUser = user || (auth.currentUser ? { uid: auth.currentUser.uid } : null);
+    if (!currentUser) {
+      setSaveModalOpen(true);
+      return;
+    }
+    await proceedSaveWithLimitCheck(currentUser.uid, "free");
+  };
+
+  const expectedPageCount = pdf?.storedDocState?.pages?.length ?? pdf?.sizes?.length ?? 0;
   const documentIsSynced =
     pdf !== null &&
     editor.document.fileName === pdf.fileName &&
-    editor.document.pages.length > 0;
+    editor.document.pages.length === expectedPageCount &&
+    editor.document.pages.every((p) => p.type === "pdf" || p.type === "blank");
 
   if (status === "loading" || (status === "ready" && !documentIsSynced) || status === "empty") {
     return (
@@ -121,6 +311,10 @@ export function EditorPage({ fileName }: { fileName?: string }) {
           editor={editor}
           onReplaceClick={() => setReplacePdfOpen(true)}
           onSignInRequired={() => setSignInOpen(true)}
+          onSaveClick={handleSaveClick}
+          onLeaveClick={() => setLeaveModalOpen(true)}
+          isSaving={isSaving}
+          isSaved={isSaved}
         />
         <EditorToolbar editor={editor} />
 
@@ -342,6 +536,38 @@ export function EditorPage({ fileName }: { fileName?: string }) {
 
         {/* Sign In modal */}
         <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
+
+        {/* Save Document modal (Guest -> Google Sign In -> Save) */}
+        <SaveDocumentModal
+          open={saveModalOpen}
+          onOpenChange={setSaveModalOpen}
+          onContinueWithGoogle={handleContinueWithGoogle}
+          isSaving={isSaving}
+        />
+
+        {/* Plan Selection modal */}
+        <PlanSelectionModal
+          open={planModalOpen}
+          onOpenChange={setPlanModalOpen}
+          onSelectFreePlan={handleSelectFreePlan}
+          isSaving={isSaving}
+        />
+
+        {/* Free Plan 1-Document Limit modal */}
+        <PlanLimitModal
+          open={limitModalOpen}
+          onOpenChange={setLimitModalOpen}
+          onUpgradeClick={() => setPlanModalOpen(true)}
+        />
+
+        {/* Leave Editor Confirmation modal */}
+        <LeaveEditorModal
+          open={leaveModalOpen}
+          onOpenChange={setLeaveModalOpen}
+          onConfirmLeave={handleConfirmLeave}
+          onSignInClick={() => setSignInOpen(true)}
+          onSaveClick={handleSaveClick}
+        />
       </div>
     </PdfDocContext.Provider>
   );

@@ -24,9 +24,61 @@ function triggerDownload(bytes: ArrayBuffer | Uint8Array, name: string) {
 }
 
 /**
+ * Checks if the document has any user modifications (text overrides, objects, rotations, page structure)
+ */
+export function documentHasEdits(appDoc: AppDocument): boolean {
+  const hasTextOverrides =
+    Object.keys(appDoc.textOverrides).length > 0 ||
+    Object.keys(appDoc.textStyleOverrides ?? {}).length > 0;
+  const hasObjects = appDoc.pages.some((p) => p.objects.length > 0);
+  const hasBlankPages = appDoc.pages.some((p) => p.type === "blank");
+  const hasRotations = appDoc.pages.some((p) => (p.rotation || 0) % 360 !== 0);
+  const hasPageStructuralChanges = appDoc.pages.some(
+    (p, i) => (p.originalPageNumber ?? (i + 1)) !== i + 1,
+  );
+
+  return (
+    hasTextOverrides ||
+    hasObjects ||
+    hasBlankPages ||
+    hasRotations ||
+    hasPageStructuralChanges
+  );
+}
+
+/**
+ * Retrieves the compiled PDF bytes for the current document (applying all edits if present, or falling back to original upload).
+ */
+export async function getDocumentPdfBytes(appDoc: AppDocument): Promise<ArrayBuffer> {
+  const upload = getUploadedPdf();
+  const hasEdits = documentHasEdits(appDoc);
+
+  if (hasEdits || !upload) {
+    try {
+      const edited = await exportEditedPdf(appDoc);
+      if (edited) {
+        const ab = edited.buffer.slice(
+          edited.byteOffset,
+          edited.byteOffset + edited.byteLength,
+        ) as ArrayBuffer;
+        return ab;
+      }
+    } catch (err) {
+      console.error("[pdf-download] Export failed, attempting upload bytes fallback:", err);
+    }
+  }
+
+  if (upload?.bytes) {
+    return upload.bytes.slice(0);
+  }
+
+  throw new Error("No PDF data found in current session.");
+}
+
+/**
  * Export and download the current PDF with all editor changes applied.
  *
- * @param appDoc  - The current editor document (text overrides + overlay objects)
+ * @param appDoc  - The current editor document (text overrides + overlay objects + rotations)
  * @param onStart - Called when the export begins (show loading state)
  * @param onDone  - Called when the export finishes (success or failure)
  * @returns true if a download was triggered, false if there was no PDF loaded
@@ -41,10 +93,7 @@ export async function downloadEditedPdf(
 
   onStart?.();
 
-  const hasEdits =
-    Object.keys(appDoc.textOverrides).length > 0 ||
-    Object.keys(appDoc.textStyleOverrides ?? {}).length > 0 ||
-    appDoc.pages.some((p) => p.objects.length > 0);
+  const hasEdits = documentHasEdits(appDoc);
 
   if (hasEdits || !upload) {
     try {
@@ -82,10 +131,7 @@ export async function printEditedPdf(
   onStart?.();
 
   let bytes: ArrayBuffer | Uint8Array | null = null;
-  const hasEdits =
-    Object.keys(appDoc.textOverrides).length > 0 ||
-    Object.keys(appDoc.textStyleOverrides ?? {}).length > 0 ||
-    appDoc.pages.some((p) => p.objects.length > 0);
+  const hasEdits = documentHasEdits(appDoc);
 
   if (hasEdits || !upload) {
     try {

@@ -1,20 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TermsPage } from "@/pages/TermsPage";
+import { createSeoHead } from "@/lib/seo";
+import { termsFaq } from "@/lib/faq-data";
 
-const title = "Terms of Use — PDF Studio";
-const description =
-  "Terms and conditions for utilizing PDF Studio online editing and document processing services.";
+export { termsFaq } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    createSeoHead({
+      title: "Terms of Service & Usage Rights — WebToolOcean PDF Studio",
+      description:
+        "Terms and conditions for utilizing WebToolOcean PDF Studio tools, document editing features, and cloud services.",
+      path: "/terms",
+      keywords: ["terms of service", "pdf studio terms", "webtoolocean conditions", "commercial pdf rights"],
+      faqItems: termsFaq,
+      applicationName: "WebToolOcean PDF Studio Terms",
+    }),
   component: TermsPage,
 });
+

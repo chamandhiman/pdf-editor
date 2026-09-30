@@ -5,6 +5,9 @@ import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { contactFaq } from "@/lib/faq-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
 
 export function ContactPage() {
@@ -241,6 +244,24 @@ export function ContactPage() {
           </div>
         </div>
       </main>
+
+      {/* CONSISTENT FAQ */}
+      <ConsistentFaqSection
+        badge="Contact & Support FAQ"
+        title="Common Support Questions"
+        subtitle="Quick answers before submitting your inquiry."
+        items={contactFaq}
+      />
+
+      {/* CONSISTENT CTA */}
+      <ConsistentCtaSection
+        title="Need to Work on a PDF Right Away?"
+        subtitle="You can edit, organize, or protect any PDF document right now without waiting."
+        primaryCtaText="Launch PDF Studio"
+        onPrimaryClick={handleTriggerUpload}
+        secondaryCtaText="Explore All Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <SaasFooter />
     </div>

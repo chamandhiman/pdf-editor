@@ -287,6 +287,9 @@ body { overflow-x: hidden; min-height: 100vh; min-height: 100dvh; }
 .icon-security { background: linear-gradient(135deg, #5ee7df 0%, #0891b2 100%); }
 .icon-ocr      { background: linear-gradient(135deg, #6ee7b7 0%, #0d9488 100%); }
 .icon-image    { background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%); }
+.icon-merge    { background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); }
+.icon-word     { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+.icon-excel    { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
 
 /* Status badges */
 .status-active {
@@ -357,4 +360,84 @@ body { overflow-x: hidden; min-height: 100vh; min-height: 100dvh; }
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATED DRAG PATTERNS
+   ───────────────────────────────────────────── */
+@keyframes drag-pattern-slide {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 48px 48px;
+  }
+}
+
+.drag-pattern-active {
+  background-color: oklch(0.55 0.24 22 / 0.05);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    oklch(0.55 0.24 22 / 0.12) 0,
+    oklch(0.55 0.24 22 / 0.12) 14px,
+    transparent 14px,
+    transparent 28px
+  );
+  background-size: 39.6px 39.6px;
+  animation: drag-pattern-slide 1.5s linear infinite;
+}
+
+.dark .drag-pattern-active {
+  background-color: oklch(0.62 0.245 22 / 0.1);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    oklch(0.62 0.245 22 / 0.2) 0,
+    oklch(0.62 0.245 22 / 0.2) 14px,
+    transparent 14px,
+    transparent 28px
+  );
+  background-size: 39.6px 39.6px;
+}
+
+.drag-pattern-overlay {
+  background-color: oklch(1 0 0 / 0.92);
+  background-image:
+    radial-gradient(oklch(0.55 0.24 22 / 0.15) 1.5px, transparent 1.5px),
+    repeating-linear-gradient(
+      -45deg,
+      oklch(0.55 0.24 22 / 0.06) 0,
+      oklch(0.55 0.24 22 / 0.06) 16px,
+      transparent 16px,
+      transparent 32px
+    );
+  background-size: 24px 24px, 45.25px 45.25px;
+  animation: drag-pattern-slide 2s linear infinite;
+}
+
+.dark .drag-pattern-overlay {
+  background-color: oklch(0.14 0.04 265 / 0.94);
+  background-image:
+    radial-gradient(oklch(0.62 0.245 22 / 0.25) 1.5px, transparent 1.5px),
+    repeating-linear-gradient(
+      -45deg,
+      oklch(0.62 0.245 22 / 0.12) 0,
+      oklch(0.62 0.245 22 / 0.12) 16px,
+      transparent 16px,
+      transparent 32px
+    );
+  background-size: 24px 24px, 45.25px 45.25px;
+}
+
+/* 
+ * User requirement: all buttons border-radius: 4px; like sign in, upload pdf, ctas etc.
+ */
+button:not(.rounded-full):not([data-keep-round]),
+.btn,
+a[role="button"]:not(.rounded-full),
+button.rounded-xl,
+button.rounded-2xl,
+button.rounded-3xl,
+a.rounded-xl,
+a.rounded-2xl {
+  border-radius: 4px !important;
 }

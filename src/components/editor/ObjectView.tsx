@@ -838,7 +838,19 @@ function ListTextContent({
                 e.preventDefault();
                 const updated = [...cleanLines];
                 updated.splice(idx + 1, 0, "New item");
-                editor.updateObjectText(object.id, { value: updated.join("\n") });
+                const addedH = t.fontSize * 1.35;
+                editor.updateObject(object.id, {
+                  height: object.height + addedH,
+                  text: { ...t, value: updated.join("\n") },
+                });
+                const currentPage = editor.document.pages.find((p) => p.id === object.pageId);
+                if (currentPage) {
+                  for (const other of currentPage.objects) {
+                    if (other.id !== object.id && other.y > object.y + 10) {
+                      editor.updateObject(other.id, { y: other.y + addedH });
+                    }
+                  }
+                }
               }
             }}
             onBlur={(e) => {

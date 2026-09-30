@@ -1,20 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HomePage } from "@/pages/HomePage";
+import { createSeoHead } from "@/lib/seo";
+import { homeFaq } from "@/lib/faq-data";
 
-const title = "PDF Studio — Everything You Need to Work With PDFs";
-const description =
-  "Edit, convert, organize, sign and manage your PDF documents online — quickly and securely.";
+export { homeFaq } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    createSeoHead({
+      title: "WebToolOcean PDF Studio — Edit, Protect & Convert PDFs Online",
+      description:
+        "Free, private, and fast in-browser PDF suite. Edit original text, password protect with 256-bit AES, organize pages, sign, and convert documents with zero server uploads.",
+      path: "/",
+      keywords: [
+        "free online pdf editor",
+        "edit pdf text in place",
+        "password protect pdf",
+        "client side pdf tools",
+        "sign pdf online",
+        "merge pdf browser",
+        "webtoolocean",
+      ],
+      faqItems: homeFaq,
+      applicationName: "WebToolOcean PDF Studio",
+      applicationCategory: "BusinessApplication",
+    }),
   component: HomePage,
 });

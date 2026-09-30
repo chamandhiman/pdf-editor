@@ -5,6 +5,9 @@ import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { privacyFaq } from "@/lib/faq-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
 
 export function PrivacyPage() {
@@ -103,41 +106,67 @@ export function PrivacyPage() {
           <div className="prose prose-sm sm:prose max-w-none text-muted-foreground space-y-8">
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
               <h2 className="text-xl font-bold text-foreground mb-3">1. Information We Collect</h2>
+              <div className="space-y-3 leading-relaxed">
+                <p>
+                  <strong>Document Data:</strong> When you open or edit a document in PDF Studio, your file is processed directly in your device's browser memory using client-side JavaScript and WebAssembly. Your files are not uploaded to, parsed by, or stored on external servers in standard editing mode.
+                </p>
+                <p>
+                  <strong>Google Authentication Data:</strong> If you choose to sign in using Google Single Sign-On (OAuth), we collect your name, email address, and profile picture provided by Google. This data is used solely to authenticate your identity, provide access to your cloud dashboard, and display your user profile.
+                </p>
+                <p>
+                  We do not request or access your Google contacts, Google Drive files, or any other sensitive account scopes.
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">2. How We Use and Share Information</h2>
               <p className="leading-relaxed">
-                When you use PDF Studio, your document binary data is loaded directly into your client browser's memory using standard Web APIs (such as FileReader, Uint8Array, and IndexedDB). By default in community mode, your PDF files are not permanently stored on our servers.
+                We strictly use account information to authenticate users and manage saved document workspaces. We do <strong>not</strong> sell, rent, monetize, or share your personal data or document contents with third-party advertisers, data brokers, or AI model training datasets.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">2. Document Storage and Security</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">3. Local Storage, Cookies & Security</h2>
               <p className="leading-relaxed">
-                PDF Studio uses local browser storage (IndexedDB) solely to provide uninterrupted editing continuity—allowing you to refresh your browser or resume an active session without losing page overlays, annotations, and drawn signatures.
+                PDF Studio utilizes browser local storage (IndexedDB and localStorage) to preserve your document drafts, signature presets, and recent workspace files locally on your own machine. We do not place invasive cross-site tracking cookies.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">3. Cookies and Analytics</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">4. Data Retention & Account Deletion (GDPR & CCPA)</h2>
               <p className="leading-relaxed">
-                We may collect aggregated, non-personally identifiable diagnostic metrics (such as browser type, error crash logs, and anonymized feature usage) to improve performance and stability across different devices. We do not use third-party invasive tracking pixels.
+                You have the right to access, export, or delete your account and personal data at any time. When you delete your account or clear local browser storage, all associated local sessions and cloud records are permanently purged. To request immediate manual erasure, contact us at privacy@webtoolocean.com.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">4. Third-Party Services</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">5. Updates & Contact Information</h2>
               <p className="leading-relaxed">
-                PDF Studio is self-contained. When you export or print your PDF, the rendering engine runs locally within your browser tab. No document content is sent to third-party AI training corpora.
-              </p>
-            </section>
-
-            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">5. Contact Regarding Privacy</h2>
-              <p className="leading-relaxed">
-                If you have questions regarding this Privacy Policy or wish to request data deletion, please reach out via our contact page.
+                We may periodically update this policy to reflect new capabilities or regulatory requirements. For any privacy inquiries, reach out through our contact page or directly at privacy@webtoolocean.com.
               </p>
             </section>
           </div>
         </div>
       </main>
+
+      {/* CONSISTENT FAQ */}
+      <ConsistentFaqSection
+        badge="Privacy & Security FAQs"
+        title="Data Privacy Frequently Asked Questions"
+        subtitle="Transparent explanations regarding browser-only processing and zero telemetry."
+        items={privacyFaq}
+      />
+
+      {/* CONSISTENT CTA */}
+      <ConsistentCtaSection
+        title="Experience 100% Private PDF Processing"
+        subtitle="No document uploads to remote servers. All operations execute strictly in your local device memory."
+        primaryCtaText="Launch PDF Studio Free"
+        onPrimaryClick={handleTriggerUpload}
+        secondaryCtaText="Explore All Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <SaasFooter />
     </div>

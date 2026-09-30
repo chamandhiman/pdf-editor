@@ -5,6 +5,9 @@ import { toast } from "sonner";
 
 import { SaasHeader } from "@/components/saas/SaasHeader";
 import { SaasFooter } from "@/components/saas/SaasFooter";
+import { ConsistentFaqSection } from "@/components/saas/ConsistentFaqSection";
+import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
+import { termsFaq } from "@/lib/faq-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
 
 export function TermsPage() {
@@ -70,40 +73,72 @@ export function TermsPage() {
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
               <h2 className="text-xl font-bold text-foreground mb-3">1. Acceptance of Terms</h2>
               <p className="leading-relaxed">
-                By accessing or using the PDF Studio web application, you agree to be bound by these Terms of Use and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using the platform.
+                By accessing or using PDF Studio by WebToolOcean ("the Service"), whether as a guest or registered user, you agree to comply with and be bound by these Terms of Service. If you disagree with any portion of these terms, you should immediately discontinue use of the Service.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">2. Acceptable Use</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">2. User Accounts & Google Authentication</h2>
               <p className="leading-relaxed">
-                You agree to use PDF Studio only for lawful purposes. You must not use the service to process or distribute materials that infringe on copyright, contain malicious software, or violate any applicable municipal, state, or international laws.
+                You may access core editing features anonymously or opt to sign in using Google Single Sign-On (OAuth). When creating an account, you agree to maintain the security of your authentication credentials. You are solely responsible for all activities and saved workspace documents associated with your account.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">3. Document Ownership</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">3. Document Ownership & Intellectual Property</h2>
               <p className="leading-relaxed">
-                PDF Studio claims no ownership rights over any documents, images, text, or signatures you upload, edit, or create within the application. You retain full ownership and intellectual property rights at all times.
+                You retain complete, exclusive ownership and all intellectual property rights to any files, documents, text, images, or signatures you upload, process, or download through PDF Studio. WebToolOcean claims zero ownership or licensing rights over your content.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">4. Disclaimer of Warranties</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">4. Client-Side Processing Architecture</h2>
               <p className="leading-relaxed">
-                PDF Studio is provided on an "as is" and "as available" basis. While we strive to maintain high rendering fidelity and data reliability, we make no representations or warranties regarding uninterrupted availability or suitability for specific legal compliance mandates.
+                PDF Studio runs PDF parsing, page manipulation, text editing, and document rendering locally within your device browser using modern WebAssembly and HTML5 Canvas technologies. In standard mode, your documents are never transmitted to or stored on remote servers.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">5. Modifications</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">5. Acceptable Use Policy</h2>
               <p className="leading-relaxed">
-                We reserve the right to revise or update these terms at any time. Continued use of PDF Studio constitutes acceptance of the current terms.
+                You agree not to use PDF Studio for any unlawful purpose, including processing documents containing malicious code, violating copyright or trademark laws, distributing fraudulent materials, or attempting to reverse engineer or disrupt the service infrastructure.
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">6. Disclaimer of Warranties & Limitation of Liability</h2>
+              <p className="leading-relaxed">
+                The Service is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether express or implied. WebToolOcean shall not be held liable for any data loss, document corruption, business interruption, or consequential damages resulting from the use or inability to use the Service.
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">7. Modifications & Termination</h2>
+              <p className="leading-relaxed">
+                We reserve the right to amend or replace these Terms at our discretion. Notice of substantial revisions will be reflected by the "Last updated" date. Continued use of PDF Studio constitutes acceptance of the modified Terms.
               </p>
             </section>
           </div>
         </div>
       </main>
+
+      {/* CONSISTENT FAQ */}
+      <ConsistentFaqSection
+        badge="Legal & Usage FAQs"
+        title="Frequently Asked Terms & Licensing Questions"
+        subtitle="Clear details regarding commercial rights, data sovereignty, and fair use."
+        items={termsFaq}
+      />
+
+      {/* CONSISTENT CTA */}
+      <ConsistentCtaSection
+        title="Ready to Start Editing Your Documents?"
+        subtitle="Completely free with no credit card required. Fast, private, and browser-powered."
+        primaryCtaText="Launch PDF Studio"
+        onPrimaryClick={handleTriggerUpload}
+        secondaryCtaText="Explore All Tools"
+        secondaryCtaLink="/tools"
+      />
 
       <SaasFooter />
     </div>
