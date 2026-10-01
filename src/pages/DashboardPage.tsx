@@ -327,13 +327,18 @@ export function DashboardPage() {
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<string>("dashboard");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const [recentDocs, setRecentDocs] = useState<RecentDoc[]>(() => getRecentDocs());
+  const [mounted, setMounted] = useState(false);
+  const [recentDocs, setRecentDocs] = useState<RecentDoc[]>([]);
   const [cloudDocs, setCloudDocs] = useState<CloudDocument[]>([]);
   const [loadingCloudDocs, setLoadingCloudDocs] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [planSelectionOpen, setPlanSelectionOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setRecentDocs(getRecentDocs());
+  }, []);
 
   // Load user profile & cloud documents when user is authenticated
   useEffect(() => {
@@ -350,15 +355,13 @@ export function DashboardPage() {
       .then((prof) => {
         if (isMounted) setUserProfile(prof);
       })
-      .catch((e) => console.warn("[dashboard] Could not fetch profile:", e));
+      .catch(() => {});
 
     getCloudDocuments(user.uid)
       .then((docs) => {
         if (isMounted) setCloudDocs(docs);
       })
-      .catch((err) => {
-        console.warn("[dashboard] Could not load cloud docs:", err);
-      })
+      .catch(() => {})
       .finally(() => {
         if (isMounted) setLoadingCloudDocs(false);
       });
@@ -401,30 +404,16 @@ export function DashboardPage() {
       let buffer: ArrayBuffer | null = null;
       let editorState = doc.editorState;
 
-      // 1. Try remote fetch if HTTP URL
-      if (doc.fileUrl && !doc.fileUrl.startsWith("indexeddb://")) {
-        try {
-          const response = await fetch(doc.fileUrl);
-          if (response.ok) {
-            buffer = await response.arrayBuffer();
-          }
-        } catch {
-          // Fall back to offline store below
+      // 1. Check local offline store first (instant, 0ms, zero network, zero CORS errors)
+      const offline = await getOfflineCloudDoc(doc.id);
+      if (offline?.bytes) {
+        buffer = offline.bytes;
+        if (offline.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
+          editorState = offline.editorState;
         }
       }
 
-      // 2. Check offline store by exact doc.id
-      if (!buffer) {
-        const offline = await getOfflineCloudDoc(doc.id);
-        if (offline?.bytes) {
-          buffer = offline.bytes;
-          if (offline.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
-            editorState = offline.editorState;
-          }
-        }
-      }
-
-      // 3. Check offline store by sanitized recent id
+      // 2. Check offline store by sanitized recent id
       if (!buffer) {
         const sanitizedId = `recent_${doc.name.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
         const offlineRecent = await getOfflineCloudDoc(sanitizedId);
@@ -436,7 +425,7 @@ export function DashboardPage() {
         }
       }
 
-      // 4. Check all offline saved docs by name match
+      // 3. Check all offline saved docs by name match
       if (!buffer) {
         const allOffline = await getOfflineCloudDocs();
         const match = allOffline.find(
@@ -447,6 +436,18 @@ export function DashboardPage() {
           if (match.editorState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
             editorState = match.editorState;
           }
+        }
+      }
+
+      // 4. Try remote fetch ONLY if not found in offline store and fileUrl is HTTP URL
+      if (!buffer && doc.fileUrl && !doc.fileUrl.startsWith("indexeddb://")) {
+        try {
+          const response = await fetch(doc.fileUrl);
+          if (response.ok) {
+            buffer = await response.arrayBuffer();
+          }
+        } catch {
+          // Fall back to active document below
         }
       }
 
@@ -1064,7 +1065,7 @@ export function DashboardPage() {
                     Stored locally in this web browser.
                   </p>
                 </div>
-                {recentDocs.length > 0 && (
+                {mounted && recentDocs.length > 0 && (
                   <button
                     className="text-[12.5px] text-muted-foreground hover:text-foreground cursor-pointer"
                     onClick={() => {
@@ -1077,7 +1078,12 @@ export function DashboardPage() {
                 )}
               </div>
 
-              {recentDocs.length === 0 ? (
+              {!mounted ? (
+                <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin text-brand mr-2" />
+                  Loading recent documents…
+                </div>
+              ) : recentDocs.length === 0 ? (
                 !user && <EmptyState onUpload={() => inputRef.current?.click()} />
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

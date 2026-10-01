@@ -79,6 +79,49 @@ function sanitizeForFirestore<T>(data: T): T {
   );
 }
 
+let firestoreDisabled = false;
+let storageDisabled = false;
+
+export function isFirestoreAvailable(): boolean {
+  if (firestoreDisabled) return false;
+  try {
+    if (typeof window !== "undefined" && localStorage.getItem("pdfstudio_firestore_disabled") === "true") {
+      firestoreDisabled = true;
+      return false;
+    }
+  } catch {}
+  return true;
+}
+
+export function disableFirestore() {
+  firestoreDisabled = true;
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pdfstudio_firestore_disabled", "true");
+    }
+  } catch {}
+}
+
+export function isStorageAvailable(): boolean {
+  if (storageDisabled) return false;
+  try {
+    if (typeof window !== "undefined" && localStorage.getItem("pdfstudio_storage_disabled") === "true") {
+      storageDisabled = true;
+      return false;
+    }
+  } catch {}
+  return true;
+}
+
+export function disableStorage() {
+  storageDisabled = true;
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pdfstudio_storage_disabled", "true");
+    }
+  } catch {}
+}
+
 /**
  * Wraps any promise with a timeout to prevent infinite hanging states.
  */
@@ -115,10 +158,28 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     }
   } catch {}
 
-  // 2. Fetch from Firestore with fast timeout
+  // 2. If firestore is disabled or not configured, return default free profile
+  if (!isFirestoreAvailable()) {
+    const defaultProfile: UserProfile = {
+      uid: userId,
+      email: null,
+      displayName: null,
+      planId: "free",
+      planStatus: "active",
+      planStartedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(`user_profile_${userId}`, JSON.stringify(defaultProfile));
+    } catch {}
+    return defaultProfile;
+  }
+
+  // 3. Fetch from Firestore with fast timeout
   try {
     const userDocRef = doc(db, "users", userId);
-    const snap = await withTimeout(getDoc(userDocRef), 3500, "Get user profile");
+    const snap = await withTimeout(getDoc(userDocRef), 2000, "Get user profile");
     if (snap.exists()) {
       const data = snap.data() as UserProfile;
       try {
@@ -127,8 +188,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       return data;
     }
     return null;
-  } catch (err) {
-    console.warn("[cloud-documents] Could not fetch user profile from Firestore:", err);
+  } catch {
+    disableFirestore();
     return null;
   }
 }
@@ -155,7 +216,10 @@ export async function saveUserProfile(
     localStorage.setItem(`user_profile_${userId}`, JSON.stringify(updated));
   } catch {}
 
-  // 2. Attempt Firestore sync in background
+  // 2. If firestore is disabled, skip remote write completely
+  if (!isFirestoreAvailable()) return;
+
+  // 3. Attempt Firestore sync in background
   try {
     const userDocRef = doc(db, "users", userId);
     const cleanData = sanitizeForFirestore({
@@ -165,11 +229,11 @@ export async function saveUserProfile(
     });
     await withTimeout(
       setDoc(userDocRef, cleanData, { merge: true }),
-      4000,
+      2500,
       "Save user profile"
     );
-  } catch (err) {
-    console.warn("[cloud-documents] Non-fatal: Failed to save user profile to Firestore:", err);
+  } catch {
+    disableFirestore();
   }
 }
 
@@ -279,29 +343,28 @@ export async function saveDocumentToCloud(
   // 2. Also keep active document session up-to-date
   await saveActiveDocument(params.name, params.bytes, params.editorState);
 
-  // 3. Try Firebase Storage upload with fast timeout
+  // 3. Try Firebase Storage upload only if storage is available
   let fileUrl = `indexeddb://${docId}`;
-  try {
-    const fileRef = ref(storage, storagePath);
-    const blob = new Blob([params.bytes], { type: "application/pdf" });
-    await withTimeout(
-      uploadBytes(fileRef, blob, {
-        contentType: "application/pdf",
-        customMetadata: {
-          userId,
-          originalName: params.name,
-          planId,
-        },
-      }),
-      6000,
-      "PDF Storage upload"
-    );
-    fileUrl = await withTimeout(getDownloadURL(fileRef), 4000, "Get download URL");
-  } catch (storageErr) {
-    console.warn(
-      "[cloud-documents] Cloud Storage upload was skipped/failed; safely stored in client account storage:",
-      storageErr
-    );
+  if (isStorageAvailable()) {
+    try {
+      const fileRef = ref(storage, storagePath);
+      const blob = new Blob([params.bytes], { type: "application/pdf" });
+      await withTimeout(
+        uploadBytes(fileRef, blob, {
+          contentType: "application/pdf",
+          customMetadata: {
+            userId,
+            originalName: params.name,
+            planId,
+          },
+        }),
+        3000,
+        "PDF Storage upload"
+      );
+      fileUrl = await withTimeout(getDownloadURL(fileRef), 2500, "Get download URL");
+    } catch {
+      disableStorage();
+    }
   }
 
   // 4. Build CloudDocument record
@@ -323,15 +386,14 @@ export async function saveDocumentToCloud(
 
   const cleanDoc = sanitizeForFirestore(rawCloudDoc);
 
-  // 5. Try Firestore document save with fast timeout
-  try {
-    const docRef = doc(db, "users", userId, "documents", docId);
-    await withTimeout(setDoc(docRef, cleanDoc), 4500, "Firestore document save");
-  } catch (firestoreErr) {
-    console.warn(
-      "[cloud-documents] Firestore document save was skipped/failed; safely stored in account storage:",
-      firestoreErr
-    );
+  // 5. Try Firestore document save only if firestore is available
+  if (isFirestoreAvailable()) {
+    try {
+      const docRef = doc(db, "users", userId, "documents", docId);
+      await withTimeout(setDoc(docRef, cleanDoc), 2500, "Firestore document save");
+    } catch {
+      disableFirestore();
+    }
   }
 
   // 6. Update user profile to reflect active plan
@@ -346,9 +408,7 @@ export async function saveDocumentToCloud(
       planExpiresAt: expiresAt,
       createdAt: nowIso,
     });
-  } catch (err) {
-    console.warn("[cloud-documents] Non-fatal: Failed to update user profile plan metadata:", err);
-  }
+  } catch {}
 
   return cleanDoc;
 }
@@ -375,10 +435,14 @@ export async function getCloudDocuments(userId: string): Promise<CloudDocument[]
     editorState: od.editorState,
   }));
 
+  if (!isFirestoreAvailable()) {
+    return offlineCloudDocs;
+  }
+
   try {
     const collRef = collection(db, "users", userId, "documents");
     const q = query(collRef, orderBy("updatedAt", "desc"));
-    const snapshot = await withTimeout(getDocs(q), 3500, "Fetch cloud documents");
+    const snapshot = await withTimeout(getDocs(q), 2500, "Fetch cloud documents");
 
     const firestoreDocs: CloudDocument[] = [];
     snapshot.forEach((snap) => {
@@ -395,8 +459,8 @@ export async function getCloudDocuments(userId: string): Promise<CloudDocument[]
     return Array.from(map.values()).sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  } catch (err) {
-    console.warn("[cloud-documents] Could not fetch remote Firestore documents, using offline store:", err);
+  } catch {
+    disableFirestore();
     return offlineCloudDocs;
   }
 }
@@ -427,13 +491,15 @@ export async function getCloudDocumentById(
     };
   }
 
+  if (!isFirestoreAvailable()) return null;
+
   try {
     const docRef = doc(db, "users", userId, "documents", docId);
-    const snap = await withTimeout(getDoc(docRef), 3500, "Get document by ID");
+    const snap = await withTimeout(getDoc(docRef), 2500, "Get document by ID");
     if (!snap.exists()) return null;
     return snap.data() as CloudDocument;
-  } catch (err) {
-    console.warn("[cloud-documents] Failed to get document from Firestore:", err);
+  } catch {
+    disableFirestore();
     return null;
   }
 }
@@ -449,21 +515,23 @@ export async function deleteCloudDocument(
   // 1. Delete from IndexedDB offline storage
   await deleteOfflineCloudDoc(docId).catch(() => {});
 
-  // 2. Try delete from Firestore
-  try {
-    const docRef = doc(db, "users", userId, "documents", docId);
-    await withTimeout(deleteDoc(docRef), 3500, "Delete document record");
-  } catch (e) {
-    console.warn("[cloud-documents] Firestore deleteDoc ignored:", e);
+  // 2. Try delete from Firestore if available
+  if (isFirestoreAvailable()) {
+    try {
+      const docRef = doc(db, "users", userId, "documents", docId);
+      await withTimeout(deleteDoc(docRef), 2500, "Delete document record");
+    } catch {
+      disableFirestore();
+    }
   }
 
-  // 3. Try delete from Storage
-  if (storagePath) {
+  // 3. Try delete from Storage if available
+  if (isStorageAvailable() && storagePath) {
     try {
       const fileRef = ref(storage, storagePath);
-      await deleteObject(fileRef);
-    } catch (e) {
-      console.warn("[cloud-documents] Storage deleteObject ignored:", e);
+      await deleteObject(fileRef).catch(() => {});
+    } catch {
+      disableStorage();
     }
   }
 }

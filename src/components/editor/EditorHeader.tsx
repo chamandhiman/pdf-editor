@@ -175,11 +175,11 @@ export function EditorHeader({
               </Link>
             )}
           </TooltipTrigger>
-          <TooltipContent>Exit Editor</TooltipContent>
+          <TooltipContent>Back to Home</TooltipContent>
         </Tooltip>
 
         {/* When user is logged in: Dashboard button */}
-        {user ? (
+        {user && (
           <Button
             variant="ghost"
             size="sm"
@@ -191,20 +191,6 @@ export function EditorHeader({
               <LayoutDashboard className="h-3.5 w-3.5 text-brand" />
               <span className="hidden sm:inline">Dashboard</span>
             </Link>
-          </Button>
-        ) : (
-          /* When NOT logged in: Exit Editor button opening the leave confirmation modal */
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
-            style={{ borderRadius: "4px" }}
-            onClick={onLeaveClick}
-            title="Exit editor and move to home page"
-          >
-            <LogOut className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="hidden sm:inline">Exit Editor</span>
           </Button>
         )}
 

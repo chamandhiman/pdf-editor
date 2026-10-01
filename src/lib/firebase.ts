@@ -8,7 +8,7 @@
 
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, setLogLevel } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -32,4 +32,52 @@ export const googleProvider = new GoogleAuthProvider();
 // Request additional profile scopes so we always get name + photo
 googleProvider.addScope("profile");
 googleProvider.addScope("email");
+
+// Silence Firestore internal SDK logs
+try {
+  setLogLevel("silent");
+} catch {}
+
+// Suppress unconfigured Firestore and Storage errors in console
+if (typeof window !== "undefined") {
+  const origError = console.error;
+  const origWarn = console.warn;
+
+  console.error = (...args: any[]) => {
+    const text = args
+      .map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a)))
+      .join(" ");
+    if (
+      text.includes("Database '(default)' not found") ||
+      text.includes("@firebase/firestore") ||
+      text.includes("firebasestorage.googleapis.com")
+    ) {
+      try {
+        localStorage.setItem("pdfstudio_firestore_disabled", "true");
+        localStorage.setItem("pdfstudio_storage_disabled", "true");
+      } catch {}
+      return;
+    }
+    origError.apply(console, args);
+  };
+
+  console.warn = (...args: any[]) => {
+    const text = args
+      .map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a)))
+      .join(" ");
+    if (
+      text.includes("Database '(default)' not found") ||
+      text.includes("@firebase/firestore") ||
+      text.includes("firebasestorage.googleapis.com")
+    ) {
+      try {
+        localStorage.setItem("pdfstudio_firestore_disabled", "true");
+        localStorage.setItem("pdfstudio_storage_disabled", "true");
+      } catch {}
+      return;
+    }
+    origWarn.apply(console, args);
+  };
+}
+
 
