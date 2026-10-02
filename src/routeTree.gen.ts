@@ -21,6 +21,7 @@ import { Route as DeletePagesRouteImport } from './routes/delete-pages'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as EditPdfRouteImport } from './routes/edit-pdf'
 import { Route as EditorRouteImport } from './routes/editor'
+import { Route as ExcelToPdfRouteImport } from './routes/excel-to-pdf'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ImageToPdfRouteImport } from './routes/image-to-pdf'
 import { Route as JpgToPdfRouteImport } from './routes/jpg-to-pdf'
@@ -34,6 +35,9 @@ import { Route as PdfToJpgRouteImport } from './routes/pdf-to-jpg'
 import { Route as PdfToPngRouteImport } from './routes/pdf-to-png'
 import { Route as PdfToPptRouteImport } from './routes/pdf-to-ppt'
 import { Route as PdfToWordRouteImport } from './routes/pdf-to-word'
+import { Route as PngToPdfRouteImport } from './routes/png-to-pdf'
+import { Route as PowerpointToPdfRouteImport } from './routes/powerpoint-to-pdf'
+import { Route as PptToPdfRouteImport } from './routes/ppt-to-pdf'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProtectRouteImport } from './routes/protect'
@@ -50,6 +54,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as UnlockRouteImport } from './routes/unlock'
 import { Route as UnlockPdfRouteImport } from './routes/unlock-pdf'
+import { Route as WordToPdfRouteImport } from './routes/word-to-pdf'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -109,6 +114,11 @@ const EditPdfRoute = EditPdfRouteImport.update({
 const EditorRoute = EditorRouteImport.update({
   id: '/editor',
   path: '/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExcelToPdfRoute = ExcelToPdfRouteImport.update({
+  id: '/excel-to-pdf',
+  path: '/excel-to-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -174,6 +184,21 @@ const PdfToPptRoute = PdfToPptRouteImport.update({
 const PdfToWordRoute = PdfToWordRouteImport.update({
   id: '/pdf-to-word',
   path: '/pdf-to-word',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PngToPdfRoute = PngToPdfRouteImport.update({
+  id: '/png-to-pdf',
+  path: '/png-to-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PowerpointToPdfRoute = PowerpointToPdfRouteImport.update({
+  id: '/powerpoint-to-pdf',
+  path: '/powerpoint-to-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PptToPdfRoute = PptToPdfRouteImport.update({
+  id: '/ppt-to-pdf',
+  path: '/ppt-to-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -256,6 +281,11 @@ const UnlockPdfRoute = UnlockPdfRouteImport.update({
   path: '/unlock-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WordToPdfRoute = WordToPdfRouteImport.update({
+  id: '/word-to-pdf',
+  path: '/word-to-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -270,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
+  '/excel-to-pdf': typeof ExcelToPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -283,6 +314,9 @@ export interface FileRoutesByFullPath {
   '/pdf-to-png': typeof PdfToPngRoute
   '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
+  '/png-to-pdf': typeof PngToPdfRoute
+  '/powerpoint-to-pdf': typeof PowerpointToPdfRoute
+  '/ppt-to-pdf': typeof PptToPdfRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/protect': typeof ProtectRoute
@@ -299,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -313,6 +348,7 @@ export interface FileRoutesByTo {
   '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
+  '/excel-to-pdf': typeof ExcelToPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -326,6 +362,9 @@ export interface FileRoutesByTo {
   '/pdf-to-png': typeof PdfToPngRoute
   '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
+  '/png-to-pdf': typeof PngToPdfRoute
+  '/powerpoint-to-pdf': typeof PowerpointToPdfRoute
+  '/ppt-to-pdf': typeof PptToPdfRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/protect': typeof ProtectRoute
@@ -342,6 +381,7 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -357,6 +397,7 @@ export interface FileRoutesById {
   '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
+  '/excel-to-pdf': typeof ExcelToPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -370,6 +411,9 @@ export interface FileRoutesById {
   '/pdf-to-png': typeof PdfToPngRoute
   '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
+  '/png-to-pdf': typeof PngToPdfRoute
+  '/powerpoint-to-pdf': typeof PowerpointToPdfRoute
+  '/ppt-to-pdf': typeof PptToPdfRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/protect': typeof ProtectRoute
@@ -386,6 +430,7 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -402,6 +447,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
+    | '/excel-to-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -415,6 +461,9 @@ export interface FileRouteTypes {
     | '/pdf-to-png'
     | '/pdf-to-ppt'
     | '/pdf-to-word'
+    | '/png-to-pdf'
+    | '/powerpoint-to-pdf'
+    | '/ppt-to-pdf'
     | '/pricing'
     | '/privacy'
     | '/protect'
@@ -431,6 +480,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/word-to-pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -445,6 +495,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
+    | '/excel-to-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -458,6 +509,9 @@ export interface FileRouteTypes {
     | '/pdf-to-png'
     | '/pdf-to-ppt'
     | '/pdf-to-word'
+    | '/png-to-pdf'
+    | '/powerpoint-to-pdf'
+    | '/ppt-to-pdf'
     | '/pricing'
     | '/privacy'
     | '/protect'
@@ -474,6 +528,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/word-to-pdf'
   id:
     | '__root__'
     | '/'
@@ -488,6 +543,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
+    | '/excel-to-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -501,6 +557,9 @@ export interface FileRouteTypes {
     | '/pdf-to-png'
     | '/pdf-to-ppt'
     | '/pdf-to-word'
+    | '/png-to-pdf'
+    | '/powerpoint-to-pdf'
+    | '/ppt-to-pdf'
     | '/pricing'
     | '/privacy'
     | '/protect'
@@ -517,6 +576,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/word-to-pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -532,6 +592,7 @@ export interface RootRouteChildren {
   DisclaimerRoute: typeof DisclaimerRoute
   EditPdfRoute: typeof EditPdfRoute
   EditorRoute: typeof EditorRoute
+  ExcelToPdfRoute: typeof ExcelToPdfRoute
   FaqRoute: typeof FaqRoute
   ImageToPdfRoute: typeof ImageToPdfRoute
   JpgToPdfRoute: typeof JpgToPdfRoute
@@ -545,6 +606,9 @@ export interface RootRouteChildren {
   PdfToPngRoute: typeof PdfToPngRoute
   PdfToPptRoute: typeof PdfToPptRoute
   PdfToWordRoute: typeof PdfToWordRoute
+  PngToPdfRoute: typeof PngToPdfRoute
+  PowerpointToPdfRoute: typeof PowerpointToPdfRoute
+  PptToPdfRoute: typeof PptToPdfRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProtectRoute: typeof ProtectRoute
@@ -561,6 +625,7 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   UnlockRoute: typeof UnlockRoute
   UnlockPdfRoute: typeof UnlockPdfRoute
+  WordToPdfRoute: typeof WordToPdfRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -647,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/editor'
       fullPath: '/editor'
       preLoaderRoute: typeof EditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/excel-to-pdf': {
+      id: '/excel-to-pdf'
+      path: '/excel-to-pdf'
+      fullPath: '/excel-to-pdf'
+      preLoaderRoute: typeof ExcelToPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -738,6 +810,27 @@ declare module '@tanstack/react-router' {
       path: '/pdf-to-word'
       fullPath: '/pdf-to-word'
       preLoaderRoute: typeof PdfToWordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/png-to-pdf': {
+      id: '/png-to-pdf'
+      path: '/png-to-pdf'
+      fullPath: '/png-to-pdf'
+      preLoaderRoute: typeof PngToPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/powerpoint-to-pdf': {
+      id: '/powerpoint-to-pdf'
+      path: '/powerpoint-to-pdf'
+      fullPath: '/powerpoint-to-pdf'
+      preLoaderRoute: typeof PowerpointToPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ppt-to-pdf': {
+      id: '/ppt-to-pdf'
+      path: '/ppt-to-pdf'
+      fullPath: '/ppt-to-pdf'
+      preLoaderRoute: typeof PptToPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -852,6 +945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnlockPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/word-to-pdf': {
+      id: '/word-to-pdf'
+      path: '/word-to-pdf'
+      fullPath: '/word-to-pdf'
+      preLoaderRoute: typeof WordToPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -868,6 +968,7 @@ const rootRouteChildren: RootRouteChildren = {
   DisclaimerRoute: DisclaimerRoute,
   EditPdfRoute: EditPdfRoute,
   EditorRoute: EditorRoute,
+  ExcelToPdfRoute: ExcelToPdfRoute,
   FaqRoute: FaqRoute,
   ImageToPdfRoute: ImageToPdfRoute,
   JpgToPdfRoute: JpgToPdfRoute,
@@ -881,6 +982,9 @@ const rootRouteChildren: RootRouteChildren = {
   PdfToPngRoute: PdfToPngRoute,
   PdfToPptRoute: PdfToPptRoute,
   PdfToWordRoute: PdfToWordRoute,
+  PngToPdfRoute: PngToPdfRoute,
+  PowerpointToPdfRoute: PowerpointToPdfRoute,
+  PptToPdfRoute: PptToPdfRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProtectRoute: ProtectRoute,
@@ -897,6 +1001,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   UnlockRoute: UnlockRoute,
   UnlockPdfRoute: UnlockPdfRoute,
+  WordToPdfRoute: WordToPdfRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

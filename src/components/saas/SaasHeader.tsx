@@ -187,6 +187,22 @@ export function SaasHeader({
       navigate({ to: "/jpg-to-pdf" });
       return;
     }
+    if (tool.id === "png-to-pdf") {
+      navigate({ to: "/png-to-pdf" });
+      return;
+    }
+    if (tool.id === "word-to-pdf") {
+      navigate({ to: "/word-to-pdf" });
+      return;
+    }
+    if (tool.id === "excel-to-pdf") {
+      navigate({ to: "/excel-to-pdf" });
+      return;
+    }
+    if (tool.id === "ppt-to-pdf" || tool.id === "powerpoint-to-pdf") {
+      navigate({ to: "/ppt-to-pdf" });
+      return;
+    }
     if (tool.id === "pdf-to-word") {
       navigate({ to: "/pdf-to-word" });
       return;
@@ -252,7 +268,11 @@ export function SaasHeader({
     { id: "pdf-to-ppt", name: "PDF to PowerPoint", desc: "Convert slides to PPTX", icon: Presentation },
     { id: "pdf-to-jpg", name: "PDF to JPG", desc: "Render high-res page images", icon: FileImage },
     { id: "pdf-to-png", name: "PDF to PNG", desc: "Export lossless PNG graphics", icon: FileImage },
-    { id: "jpg-to-pdf", name: "Images to PDF", desc: "Convert JPG & PNG into PDF", icon: FileUp },
+    { id: "word-to-pdf", name: "Word to PDF", desc: "Convert DOCX documents to PDF", icon: FileCode },
+    { id: "excel-to-pdf", name: "Excel to PDF", desc: "Convert XLSX spreadsheets to PDF", icon: FileSpreadsheet },
+    { id: "ppt-to-pdf", name: "PowerPoint to PDF", desc: "Turn PPTX slides into PDF", icon: Presentation },
+    { id: "png-to-pdf", name: "PNG to PDF", desc: "Convert PNG images into PDF", icon: FileImage },
+    { id: "jpg-to-pdf", name: "JPG to PDF", desc: "Convert JPG photos into PDF", icon: FileUp },
   ];
 
   return (
@@ -340,10 +360,34 @@ export function SaasHeader({
                   Convert to PDF
                 </DropdownMenuLabel>
                 <DropdownMenuItem
-                  onClick={() => handleToolClick({ id: "jpg-to-pdf", name: "Images to PDF" })}
-                  className="cursor-pointer text-xs py-2"
+                  onClick={() => handleToolClick({ id: "word-to-pdf", name: "Word to PDF" })}
+                  className="cursor-pointer text-xs py-1.5"
                 >
-                  <FileUp className="h-3.5 w-3.5 mr-2 text-brand" /> Images to PDF
+                  <FileCode className="h-3.5 w-3.5 mr-2 text-blue-500" /> Word to PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleToolClick({ id: "excel-to-pdf", name: "Excel to PDF" })}
+                  className="cursor-pointer text-xs py-1.5"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 mr-2 text-emerald-500" /> Excel to PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleToolClick({ id: "ppt-to-pdf", name: "PowerPoint to PDF" })}
+                  className="cursor-pointer text-xs py-1.5"
+                >
+                  <Presentation className="h-3.5 w-3.5 mr-2 text-amber-500" /> PowerPoint to PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleToolClick({ id: "jpg-to-pdf", name: "JPG to PDF" })}
+                  className="cursor-pointer text-xs py-1.5"
+                >
+                  <FileUp className="h-3.5 w-3.5 mr-2 text-brand" /> JPG to PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleToolClick({ id: "png-to-pdf", name: "PNG to PDF" })}
+                  className="cursor-pointer text-xs py-1.5"
+                >
+                  <FileImage className="h-3.5 w-3.5 mr-2 text-purple-500" /> PNG to PDF
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -894,6 +938,58 @@ export function SaasHeader({
                     >
                       <FileSpreadsheet className="h-4 w-4 text-brand" />
                       PDF to Excel
+                    </Link>
+                    <Link
+                      to="/word-to-pdf"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-[4px] px-3 py-2 text-sm font-semibold transition-colors",
+                        isActive("/word-to-pdf")
+                          ? "bg-brand/15 text-brand font-bold border border-brand/25"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <FileCode className="h-4 w-4 text-blue-500" />
+                      Word to PDF
+                    </Link>
+                    <Link
+                      to="/excel-to-pdf"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-[4px] px-3 py-2 text-sm font-semibold transition-colors",
+                        isActive("/excel-to-pdf")
+                          ? "bg-brand/15 text-brand font-bold border border-brand/25"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                      Excel to PDF
+                    </Link>
+                    <Link
+                      to="/ppt-to-pdf"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-[4px] px-3 py-2 text-sm font-semibold transition-colors",
+                        isActive("/ppt-to-pdf")
+                          ? "bg-brand/15 text-brand font-bold border border-brand/25"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <Presentation className="h-4 w-4 text-amber-500" />
+                      PowerPoint to PDF
+                    </Link>
+                    <Link
+                      to="/png-to-pdf"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-[4px] px-3 py-2 text-sm font-semibold transition-colors",
+                        isActive("/png-to-pdf")
+                          ? "bg-brand/15 text-brand font-bold border border-brand/25"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <FileImage className="h-4 w-4 text-purple-500" />
+                      PNG to PDF
                     </Link>
                     <Link
                       to="/tools"

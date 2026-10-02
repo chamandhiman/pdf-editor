@@ -150,13 +150,33 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </Link>
               </li>
               <li>
-                <Link to="/jpg-to-pdf" className="text-muted-foreground hover:text-foreground">
-                  Images to PDF
+                <Link to="/word-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  Word to PDF
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
-                  More Converters
+                <Link to="/excel-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  Excel to PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/ppt-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  PowerPoint to PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/jpg-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  JPG to PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/png-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  PNG to PDF
+                </Link>
+              </li>
+              <li>
+                <Link to="/tools" className="font-semibold text-brand hover:underline">
+                  All Converters →
                 </Link>
               </li>
             </ul>

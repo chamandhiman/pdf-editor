@@ -207,6 +207,20 @@ export function HomePage() {
       navigate({ to: "/pdf-to-word" });
     } else if (tool.id === "pdf-to-excel" || tool.slug === "pdf-to-excel") {
       navigate({ to: "/pdf-to-excel" });
+    } else if (tool.id === "pdf-to-ppt" || tool.slug === "pdf-to-ppt") {
+      navigate({ to: "/pdf-to-ppt" });
+    } else if (tool.id === "pdf-to-jpg" || tool.slug === "pdf-to-jpg") {
+      navigate({ to: "/pdf-to-jpg" });
+    } else if (tool.id === "pdf-to-png" || tool.slug === "pdf-to-png") {
+      navigate({ to: "/pdf-to-png" });
+    } else if (tool.id === "word-to-pdf" || tool.slug === "word-to-pdf") {
+      navigate({ to: "/word-to-pdf" });
+    } else if (tool.id === "excel-to-pdf" || tool.slug === "excel-to-pdf") {
+      navigate({ to: "/excel-to-pdf" });
+    } else if (tool.id === "ppt-to-pdf" || tool.slug === "ppt-to-pdf") {
+      navigate({ to: "/ppt-to-pdf" });
+    } else if (tool.id === "png-to-pdf" || tool.slug === "png-to-pdf") {
+      navigate({ to: "/png-to-pdf" });
     } else if (tool.status === "available" && tool.slug === "edit-pdf") {
       navigate({ to: "/edit-pdf" });
     } else {

@@ -547,6 +547,75 @@ export const securityFaq: FaqItem[] = [
   },
 ];
 
+export const wordToPdfFaq: FaqItem[] = [
+  {
+    q: "How does the Word to PDF converter work?",
+    a: "Our converter parses your DOCX document structure (including headings, paragraphs, bullet points, text styling, and tables) directly in your browser using client-side JavaScript, compiling it into a clean, standardized PDF file with zero server uploads.",
+  },
+  {
+    q: "Are my confidential Word documents uploaded to remote servers?",
+    a: "Never. All parsing and PDF rendering occurs locally on your computer's processor. Your confidential files never leave your device.",
+  },
+  {
+    q: "Are tables and formatted lists preserved?",
+    a: "Yes! Document headings, body text, lists, and tabular data are cleanly converted into formatted PDF pages matching standard A4 dimensions.",
+  },
+  {
+    q: "Can I open the generated PDF in the online PDF Editor right away?",
+    a: "Yes! Once converted, you can either download the PDF immediately or click 'Open in Editor' to annotate, sign, or modify text in your newly generated document.",
+  },
+];
+
+export const excelToPdfFaq: FaqItem[] = [
+  {
+    q: "How does the Excel to PDF converter format large spreadsheets?",
+    a: "Our Excel to PDF engine automatically uses Landscape A4 orientation (842 x 595 pt) to ensure maximum column visibility, applying alternating row fills and clean grid lines for effortless readability.",
+  },
+  {
+    q: "Are my financial figures and spreadsheet data private?",
+    a: "100% private. Processing happens completely inside your device browser sandbox. No financial data, customer lists, or numbers are transmitted across the web.",
+  },
+  {
+    q: "What Excel file formats are supported?",
+    a: "We support standard Microsoft Excel OpenXML (.xlsx) workbooks, templates, and exports from Google Sheets and Apple Numbers.",
+  },
+  {
+    q: "Can I convert multi-row datasets?",
+    a: "Yes! The converter automatically paginates long spreadsheets into sequential pages with persistent header banners and page indicators.",
+  },
+];
+
+export const pptToPdfFaq: FaqItem[] = [
+  {
+    q: "How does the PowerPoint to PDF converter format slides?",
+    a: "Each slide is rendered into a 16:9 widescreen PDF presentation page, preserving slide titles, bullet points, numbering, and slide layouts for high-impact viewing and printing.",
+  },
+  {
+    q: "Can I present or print the converted PDF deck?",
+    a: "Yes! The output PDF conforms to the ISO 32000 standard and can be viewed in full-screen presentation mode in Adobe Acrobat Reader, Google Chrome, Apple Preview, or printed as slide handouts.",
+  },
+  {
+    q: "Are my presentation slides uploaded to cloud servers?",
+    a: "No. The entire slide extraction and PDF creation executes in your browser's private memory. Confidential corporate decks remain 100% safe on your workstation.",
+  },
+];
+
+export const pngToPdfFaq: FaqItem[] = [
+  {
+    q: "Does the PNG to PDF converter preserve image transparency?",
+    a: "Yes. Our PNG converter embeds lossless PNG graphics onto standard PDF canvas pages, retaining crisp edges, sharp text captures, and logo fidelity without JPEG compression artifacts.",
+  },
+  {
+    q: "Can I convert multiple PNG images into a single multi-page PDF?",
+    a: "Yes! You can drop multiple PNG screenshots or scans, reorder pages, rotate images, customize page margins, and download a single consolidated PDF document.",
+  },
+  {
+    q: "What page sizes are supported for PNG to PDF?",
+    a: "You can choose between A4, US Letter, or 'Fit to Image' dimensions depending on whether you are preparing documents for print or digital archiving.",
+  },
+];
+
+
 
 
 
