@@ -3,6 +3,8 @@
  * No server / Firestore calls here — wire those in later.
  */
 
+import { cleanDocName, isSameDoc } from "./doc-naming";
+
 export interface RecentDoc {
   id: string;
   fileName: string;
@@ -38,12 +40,16 @@ export function getRecentDocs(): RecentDoc[] {
 }
 
 export function recordRecentDoc(fileName: string, pages?: number): RecentDoc {
+  if (!fileName || fileName.trim().length === 0) {
+    return { id: "doc-empty", fileName: "Untitled.pdf", openedAt: new Date().toISOString() };
+  }
+  const cleanName = cleanDocName(fileName);
   const all = readAll();
-  // Remove any existing entry with same filename so we bubble it to top
-  const filtered = all.filter((d) => d.fileName !== fileName);
+  // Remove any existing entry matching same document so we bubble it to top
+  const filtered = all.filter((d) => !isSameDoc(d.fileName, cleanName));
   const doc: RecentDoc = {
     id: `doc-${Date.now()}`,
-    fileName,
+    fileName: cleanName,
     openedAt: new Date().toISOString(),
     ...(pages !== undefined ? { pages } : {}),
   };
@@ -52,8 +58,10 @@ export function recordRecentDoc(fileName: string, pages?: number): RecentDoc {
   return doc;
 }
 
-export function removeRecentDoc(id: string) {
-  const updated = readAll().filter((d) => d.id !== id);
+export function removeRecentDoc(idOrName: string) {
+  const updated = readAll().filter(
+    (d) => d.id !== idOrName && !isSameDoc(d.fileName, idOrName)
+  );
   writeAll(updated);
 }
 

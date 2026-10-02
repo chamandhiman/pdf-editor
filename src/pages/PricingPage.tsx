@@ -13,11 +13,14 @@ import { ConsistentCtaSection } from "@/components/saas/ConsistentCtaSection";
 import { pricingFaq } from "@/lib/faq-data";
 import { type PdfTool } from "@/lib/pdf-tools-data";
 import { setUploadedPdf } from "@/lib/pdf-store";
+import { PLANS, detectUserCurrency, type SupportedCurrency } from "@/lib/pricing-plans";
+import { cn } from "@/lib/utils";
 
 export function PricingPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedTool, setSelectedTool] = useState<PdfTool | null>(null);
+  const [currency, setCurrency] = useState<SupportedCurrency>(() => detectUserCurrency());
 
   const handleProcessFile = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf") && file.type !== "application/pdf") {
@@ -73,7 +76,7 @@ export function PricingPage() {
       <main className="flex-1 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-soft text-brand text-xs font-semibold mb-4">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Transparent & Predictable</span>
@@ -83,169 +86,180 @@ export function PricingPage() {
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground">
               Get started with our full suite of in-browser editing tools for free.
-              Upgrade when your organization needs expanded team storage and automated batch pipelines.
+              Upgrade when you need expanded cloud document storage and seamless multi-device access.
             </p>
+
+            {/* Currency toggle */}
+            <div className="flex justify-center mt-6">
+              <div className="inline-flex items-center rounded-xl border border-border bg-card p-1 text-xs shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setCurrency("INR")}
+                  className={cn(
+                    "px-4 py-1.5 font-semibold rounded-lg transition-all cursor-pointer",
+                    currency === "INR"
+                      ? "bg-brand text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  🇮🇳 INR (₹)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("USD")}
+                  className={cn(
+                    "px-4 py-1.5 font-semibold rounded-lg transition-all cursor-pointer",
+                    currency === "USD"
+                      ? "bg-brand text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  🌐 USD ($)
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
             {/* Free Plan */}
-            <div className="rounded-3xl border border-border bg-card p-8 flex flex-col justify-between shadow-sm">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted text-xs font-semibold text-muted-foreground mb-4">
-                  Community
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">Free</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Core editing and annotation for personal documents.
-                </p>
+            {(() => {
+              const plan = PLANS.free;
+              const pricing = plan.pricing[currency];
+              return (
+                <div className="rounded-3xl border border-border bg-card p-8 flex flex-col justify-between shadow-sm hover:border-brand/40 transition-all">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted text-xs font-semibold text-muted-foreground mb-4">
+                      {plan.name}
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">{plan.name}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {plan.tagline}
+                    </p>
 
-                <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-foreground">$0</span>
-                  <span className="text-sm text-muted-foreground">/ month</span>
-                </div>
+                    <div className="mt-6 flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-foreground">{pricing.displayPrice}</span>
+                      <span className="text-sm text-muted-foreground">free forever</span>
+                    </div>
 
-                <div className="mt-8 space-y-3.5">
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Basic PDF tools</span>
+                    <div className="mt-8 space-y-3.5">
+                      {plan.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-3 text-sm text-foreground">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Upload and edit any PDF</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Basic downloads with zero watermarks</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Full text, heading & drawing overlays</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Private local in-browser processing</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="mt-10 pt-6 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => handleSubscribeClick("Free")}
-                  className="w-full py-3 rounded-xl border border-input bg-card font-semibold text-sm text-foreground hover:bg-accent transition-colors cursor-pointer"
-                >
-                  Start Free Now
-                </button>
-              </div>
-            </div>
-
-            {/* Premium Plan */}
-            <div className="rounded-3xl border-2 border-brand bg-card p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-brand text-white text-[11px] font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
-                Most Popular
-              </div>
-
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-soft text-brand text-xs font-semibold mb-4">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Professional
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">Premium</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  High-speed processing and advanced format utilities.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-foreground">$9</span>
-                  <span className="text-sm text-muted-foreground">/ month</span>
-                </div>
-
-                <div className="mt-8 space-y-3.5">
-                  <div className="flex items-center gap-3 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
-                    <span>Everything in Free, plus:</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
-                    <span>Advanced tools & OCR recognition</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
-                    <span>More document storage & cloud sync</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
-                    <span>High-volume batch conversions</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
-                    <span>Priority features & early releases</span>
+                  <div className="mt-10 pt-6 border-t border-border">
+                    <button
+                      type="button"
+                      onClick={() => handleSubscribeClick("Free")}
+                      className="w-full py-3 rounded-xl border border-input bg-card font-semibold text-sm text-foreground hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      {plan.ctaText}
+                    </button>
                   </div>
                 </div>
-              </div>
+              );
+            })()}
 
-              <div className="mt-10 pt-6 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => handleSubscribeClick("Premium")}
-                  className="w-full py-3 rounded-xl bg-brand text-white font-semibold text-sm shadow hover:bg-brand/90 transition-colors cursor-pointer"
-                >
-                  Join Premium Waitlist
-                </button>
-              </div>
-            </div>
+            {/* Pro Monthly Plan */}
+            {(() => {
+              const plan = PLANS.pro_monthly;
+              const pricing = plan.pricing[currency];
+              return (
+                <div className="rounded-3xl border-2 border-brand bg-card p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-brand text-white text-[11px] font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
+                    {plan.badge}
+                  </div>
 
-            {/* Team Plan */}
-            <div className="rounded-3xl border border-border bg-card p-8 flex flex-col justify-between shadow-sm">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted text-xs font-semibold text-muted-foreground mb-4">
-                  Organization
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">Team</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Shared document workspaces, audit logs, and SSO.
-                </p>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-soft text-brand text-xs font-semibold mb-4">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {plan.name}
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">{plan.name}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {plan.tagline}
+                    </p>
 
-                <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-foreground">$19</span>
-                  <span className="text-sm text-muted-foreground">/ user / mo</span>
-                </div>
+                    <div className="mt-6 flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-foreground">{pricing.displayPrice}</span>
+                      <span className="text-sm text-muted-foreground">{pricing.periodLabel}</span>
+                    </div>
 
-                <div className="mt-8 space-y-3.5">
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Everything in Premium</span>
+                    <div className="mt-8 space-y-3.5">
+                      {plan.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-3 text-sm text-foreground font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Centralized admin console</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Shared team document templates</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Audit history and access control</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Dedicated priority email support</span>
+
+                  <div className="mt-10 pt-6 border-t border-border">
+                    <button
+                      type="button"
+                      onClick={() => handleSubscribeClick(plan.name)}
+                      className="w-full py-3 rounded-xl bg-brand text-white font-semibold text-sm shadow hover:bg-brand/90 transition-colors cursor-pointer"
+                    >
+                      {plan.ctaText}
+                    </button>
                   </div>
                 </div>
-              </div>
+              );
+            })()}
 
-              <div className="mt-10 pt-6 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => handleSubscribeClick("Team")}
-                  className="w-full py-3 rounded-xl border border-input bg-card font-semibold text-sm text-foreground hover:bg-accent transition-colors cursor-pointer"
-                >
-                  Contact Sales
-                </button>
-              </div>
-            </div>
+            {/* Pro Annual Plan */}
+            {(() => {
+              const plan = PLANS.pro_annual;
+              const pricing = plan.pricing[currency];
+              return (
+                <div className="rounded-3xl border border-border bg-card p-8 flex flex-col justify-between shadow-sm hover:border-emerald-500/50 transition-all relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[11px] font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
+                    {plan.badge}
+                  </div>
+
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-4">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {plan.name}
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">{plan.name}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {plan.tagline}
+                    </p>
+
+                    <div className="mt-6 flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-foreground">{pricing.displayPrice}</span>
+                      <span className="text-sm text-muted-foreground">{pricing.periodLabel}</span>
+                    </div>
+
+                    <div className="mt-8 space-y-3.5">
+                      {plan.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-3 text-sm text-foreground">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-10 pt-6 border-t border-border">
+                    <button
+                      type="button"
+                      onClick={() => handleSubscribeClick(plan.name)}
+                      className="w-full py-3 rounded-xl border border-input bg-card font-semibold text-sm text-foreground hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      {plan.ctaText}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Note */}

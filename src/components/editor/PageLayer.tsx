@@ -33,6 +33,11 @@ export function PageLayer({
   // Support Delete and Backspace keyboard shortcuts for deleting selected object
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && editor.tool === "add-text") {
+        e.preventDefault();
+        editor.setTool("select");
+        return;
+      }
       if ((e.key === "Delete" || e.key === "Backspace") && editor.selectedId && !editor.editingId) {
         const active = document.activeElement;
         const isEditingField =

@@ -1109,16 +1109,19 @@ export function HomePage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-soft text-brand text-xs font-semibold mb-4">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Professional Suite
+                  Pro Plans
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Premium</h3>
+                <h3 className="text-2xl font-bold text-foreground">Pro</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Advanced workflow tools and expanded document capacity.
+                  Unlimited document saving, cloud storage & sync across devices.
                 </p>
 
-                <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-foreground">$9</span>
-                  <span className="text-sm text-muted-foreground">/ month</span>
+                <div className="mt-6 flex items-baseline gap-2">
+                  <span className="text-4xl font-extrabold text-foreground">$2</span>
+                  <span className="text-sm text-muted-foreground">/ mo (₹199/mo)</span>
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full ml-1">
+                    $10/yr (₹999)
+                  </span>
                 </div>
 
                 <div className="mt-8 space-y-3">

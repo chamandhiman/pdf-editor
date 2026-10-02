@@ -32,6 +32,46 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
 }
 
+export function resolveStandardFont(
+  fontFamily: string | undefined | null,
+  bold = false,
+  italic = false,
+  extraHints = "",
+): StandardFonts {
+  const str = `${fontFamily || ""} ${extraHints}`.toLowerCase();
+
+  // 1. Monospace check
+  const isMono = /courier|consolas|monaco|menlo|typewriter|monospace|fira\s*code/i.test(str);
+  if (isMono) {
+    if (bold && italic) return StandardFonts.CourierBoldOblique;
+    if (bold) return StandardFonts.CourierBold;
+    if (italic) return StandardFonts.CourierOblique;
+    return StandardFonts.Courier;
+  }
+
+  // 2. Explicit Sans-Serif check (MUST precede serif check, since "sans-serif" contains "serif")
+  const isExplicitSans = /sans|helvetica|arial|inter|roboto|verdana|tahoma|calibri|trebuchet|open\s*sans|lato|montserrat|system-ui/i.test(str);
+
+  // 3. Serif check - only if not explicitly sans-serif
+  const isSerif = !isExplicitSans && (
+    /(^|[^a-z])serif($|[^a-z])/i.test(str) ||
+    /times|georgia|garamond|palatino|caslon|baskerville|bookman|charter|cambria|minion|merriweather|source\s*serif/i.test(str)
+  );
+
+  if (isSerif) {
+    if (bold && italic) return StandardFonts.TimesRomanBoldItalic;
+    if (bold) return StandardFonts.TimesRomanBold;
+    if (italic) return StandardFonts.TimesRomanItalic;
+    return StandardFonts.TimesRoman;
+  }
+
+  // 4. Default to modern Helvetica (crisp clean sans-serif)
+  if (bold && italic) return StandardFonts.HelveticaBoldOblique;
+  if (bold) return StandardFonts.HelveticaBold;
+  if (italic) return StandardFonts.HelveticaOblique;
+  return StandardFonts.Helvetica;
+}
+
 function classifyFont(
   embeddedName: string,
   fallbackName: string,
@@ -39,14 +79,62 @@ function classifyFont(
   bold: boolean,
   italic: boolean,
 ): StandardFonts {
-  const hint = `${embeddedName} ${fallbackName} ${styleFam}`.toLowerCase();
-  const isSerif = /times|georgia|garamond|palatino|caslon|baskerville|bookman|charter|cambria|minion/i.test(hint);
-  const isMono = /courier|consolas|monaco|menlo|typewriter/i.test(hint);
+  return resolveStandardFont(styleFam, bold, italic, `${embeddedName} ${fallbackName}`);
+}
 
-  if (isMono) return bold ? StandardFonts.CourierBold : (italic ? StandardFonts.CourierOblique : StandardFonts.Courier);
-  if (isSerif) return bold ? StandardFonts.TimesRomanBold : (italic ? StandardFonts.TimesRomanItalic : StandardFonts.TimesRoman);
-  // default → Helvetica (most modern PDFs are sans-serif)
-  return bold ? StandardFonts.HelveticaBold : (italic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica);
+/** Ensures text only contains characters encodable by standard WinAnsi fonts */
+export function sanitizeTextForFont(text: string, font: PDFFont): string {
+  if (!text) return "";
+  const s = text
+    .replace(/[✦★]/g, "*")
+    .replace(/[→➔➜➝]/g, "->")
+    .replace(/[←]/g, "<-")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'");
+
+  let out = "";
+  for (const char of s) {
+    try {
+      font.encodeText(char);
+      out += char;
+    } catch {
+      // Discard or replace non-WinAnsi / emoji character
+      out += " ";
+    }
+  }
+  return out;
+}
+
+/** Word wrapping helper for paragraphs and bullet points */
+function wrapTextLines(text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
+  if (maxWidth <= 0 || !text) return [text];
+  const safeText = sanitizeTextForFont(text, font);
+  const words = safeText.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    let width = 0;
+    try {
+      width = font.widthOfTextAtSize(testLine, fontSize);
+    } catch {
+      width = testLine.length * fontSize * 0.55;
+    }
+
+    if (width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines.length > 0 ? lines : [safeText];
 }
 
 /** Lazy font cache so the same font isn't embedded multiple times per export. */
@@ -108,7 +196,7 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
   const libPages = pdfLib.getPages();
 
   for (let pageIdx = 0; pageIdx < libPages.length; pageIdx++) {
-    const libPage = libPages[pageIdx]!;
+    let libPage = libPages[pageIdx]!;
     const appPage = appDoc.pages[pageIdx];
     const { height: pdfPageHeight } = libPage.getSize();
 
@@ -255,24 +343,10 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
 
         // Classify font with style overrides if present
         let fontEnum = ri.fontEnum;
-        if (style?.fontFamily) {
-          const fLow = style.fontFamily.toLowerCase();
-          const isMono = /courier|mono|consolas/i.test(fLow);
-          const isSerif = /serif|merriweather|georgia|times/i.test(fLow);
-          const isBold = style.bold !== undefined ? style.bold : ri.fontEnum.toString().includes("Bold");
-          const isItalic = style.italic !== undefined ? style.italic : (ri.fontEnum.toString().includes("Italic") || ri.fontEnum.toString().includes("Oblique"));
-
-          if (isMono) {
-            fontEnum = isBold ? StandardFonts.CourierBold : (isItalic ? StandardFonts.CourierOblique : StandardFonts.Courier);
-          } else if (isSerif) {
-            fontEnum = isBold ? StandardFonts.TimesRomanBold : (isItalic ? StandardFonts.TimesRomanItalic : StandardFonts.TimesRoman);
-          } else {
-            fontEnum = isBold ? StandardFonts.HelveticaBold : (isItalic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica);
-          }
-        } else if (style?.bold !== undefined || style?.italic !== undefined) {
-          const isBold = style.bold !== undefined ? style.bold : false;
-          const isItalic = style.italic !== undefined ? style.italic : false;
-          fontEnum = isBold ? StandardFonts.HelveticaBold : (isItalic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica);
+        if (style?.fontFamily || style?.bold !== undefined || style?.italic !== undefined) {
+          const isBold = style?.bold !== undefined ? style.bold : ri.fontEnum.toString().includes("Bold");
+          const isItalic = style?.italic !== undefined ? style.italic : (ri.fontEnum.toString().includes("Italic") || ri.fontEnum.toString().includes("Oblique"));
+          fontEnum = resolveStandardFont(style?.fontFamily || ri.fontEnum.toString(), isBold, isItalic);
         }
 
         const font = await getFont(pdfLib, fontEnum, fontCache);
@@ -344,8 +418,9 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
         }
 
         // Draw the replacement text in the preserved color (if not deleted)
-        if (newText.trim() !== "") {
-          libPage.drawText(newText, {
+        const safeReplacement = sanitizeTextForFont(newText, font);
+        if (safeReplacement.trim() !== "") {
+          libPage.drawText(safeReplacement, {
             x: drawX,
             y: finalDrawY,
             size: fs,
@@ -384,13 +459,7 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
         case "text": {
           if (!obj.text?.value) break;
           const t = obj.text;
-          const isSerif = /times|georgia|garamond|palatino|serif/i.test(t.fontFamily);
-          const isMono = /courier|consolas|mono/i.test(t.fontFamily);
-          let fn: StandardFonts;
-          if (isMono) fn = t.bold ? StandardFonts.CourierBold : StandardFonts.Courier;
-          else if (isSerif) fn = t.bold ? StandardFonts.TimesRomanBold : (t.italic ? StandardFonts.TimesRomanItalic : StandardFonts.TimesRoman);
-          else fn = t.bold ? StandardFonts.HelveticaBold : (t.italic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica);
-
+          const fn = resolveStandardFont(t.fontFamily, !!t.bold, !!t.italic);
           const font = await getFont(pdfLib, fn, fontCache);
           const [cr, cg, cb] = hexToRgb(t.color);
 
@@ -458,41 +527,57 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
               }
 
               if (cleanLine) {
-                libPage.drawText(cleanLine, {
-                  x: textX,
-                  y: curY,
-                  size: t.fontSize,
-                  font,
-                  color: rgb(cr, cg, cb),
-                  opacity,
-                  maxWidth: Math.max(10, obj.width - (textX - ox) - 4),
-                });
+                const maxLineW = Math.max(20, obj.width - (textX - ox) - 6);
+                const subLines = wrapTextLines(cleanLine, font, t.fontSize, maxLineW);
+                for (let si = 0; si < subLines.length; si++) {
+                  if (curY < 36 && appPage.type === "blank") {
+                    libPage = pdfLib.addPage([libPage.getWidth(), libPage.getHeight()]);
+                    curY = pdfPageHeight - 48;
+                  }
+                  libPage.drawText(subLines[si]!, {
+                    x: textX,
+                    y: curY,
+                    size: t.fontSize,
+                    font,
+                    color: rgb(cr, cg, cb),
+                    opacity,
+                  });
+                  if (si < subLines.length - 1) curY -= lineHeight;
+                }
               }
             } else if (isBullet) {
               const markerWidth = t.fontSize;
               const bulletRadius = Math.max(1.8, t.fontSize * 0.16);
               const bulletX = ox + 4 + markerWidth / 2;
-              const bulletY = curY + t.fontSize * 0.28;
               const textX = ox + 4 + markerWidth + 8;
 
-              libPage.drawCircle({
-                x: bulletX,
-                y: bulletY,
-                size: bulletRadius,
-                color: rgb(cr, cg, cb),
-                opacity,
-              });
-
               if (cleanLine) {
-                libPage.drawText(cleanLine, {
-                  x: textX,
-                  y: curY,
-                  size: t.fontSize,
-                  font,
-                  color: rgb(cr, cg, cb),
-                  opacity,
-                  maxWidth: Math.max(10, obj.width - (textX - ox) - 4),
-                });
+                const maxLineW = Math.max(20, obj.width - (textX - ox) - 6);
+                const subLines = wrapTextLines(cleanLine, font, t.fontSize, maxLineW);
+                for (let si = 0; si < subLines.length; si++) {
+                  if (curY < 36 && appPage.type === "blank") {
+                    libPage = pdfLib.addPage([libPage.getWidth(), libPage.getHeight()]);
+                    curY = pdfPageHeight - 48;
+                  }
+                  if (si === 0) {
+                    libPage.drawCircle({
+                      x: bulletX,
+                      y: curY + t.fontSize * 0.28,
+                      size: bulletRadius,
+                      color: rgb(cr, cg, cb),
+                      opacity,
+                    });
+                  }
+                  libPage.drawText(subLines[si]!, {
+                    x: textX,
+                    y: curY,
+                    size: t.fontSize,
+                    font,
+                    color: rgb(cr, cg, cb),
+                    opacity,
+                  });
+                  if (si < subLines.length - 1) curY -= lineHeight;
+                }
               }
             } else if (isNumbered) {
               const numStr = `${li + 1}.`;
@@ -506,39 +591,56 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
               const numX = ox + 4 + Math.max(0, markerWidth - numWidth);
               const textX = ox + 4 + markerWidth + 8;
 
-              libPage.drawText(numStr, {
-                x: numX,
-                y: curY,
-                size: t.fontSize,
-                font,
-                color: rgb(cr, cg, cb),
-                opacity,
-              });
-
               if (cleanLine) {
-                libPage.drawText(cleanLine, {
-                  x: textX,
-                  y: curY,
-                  size: t.fontSize,
-                  font,
-                  color: rgb(cr, cg, cb),
-                  opacity,
-                  maxWidth: Math.max(10, obj.width - (textX - ox) - 4),
-                });
+                const maxLineW = Math.max(20, obj.width - (textX - ox) - 6);
+                const subLines = wrapTextLines(cleanLine, font, t.fontSize, maxLineW);
+                for (let si = 0; si < subLines.length; si++) {
+                  if (curY < 36 && appPage.type === "blank") {
+                    libPage = pdfLib.addPage([libPage.getWidth(), libPage.getHeight()]);
+                    curY = pdfPageHeight - 48;
+                  }
+                  if (si === 0) {
+                    libPage.drawText(numStr, {
+                      x: numX,
+                      y: curY,
+                      size: t.fontSize,
+                      font,
+                      color: rgb(cr, cg, cb),
+                      opacity,
+                    });
+                  }
+                  libPage.drawText(subLines[si]!, {
+                    x: textX,
+                    y: curY,
+                    size: t.fontSize,
+                    font,
+                    color: rgb(cr, cg, cb),
+                    opacity,
+                  });
+                  if (si < subLines.length - 1) curY -= lineHeight;
+                }
               }
             } else {
               // Standard text line
               const safeLine = cleanLine.replace(/[\u2610\u25A1\u25A2]/g, "");
               if (safeLine) {
-                libPage.drawText(safeLine, {
-                  x: ox + 4,
-                  y: curY,
-                  size: t.fontSize,
-                  font,
-                  color: rgb(cr, cg, cb),
-                  opacity,
-                  maxWidth: Math.max(10, obj.width - 8),
-                });
+                const maxLineW = Math.max(20, obj.width - 8);
+                const subLines = wrapTextLines(safeLine, font, t.fontSize, maxLineW);
+                for (let si = 0; si < subLines.length; si++) {
+                  if (curY < 36 && appPage.type === "blank") {
+                    libPage = pdfLib.addPage([libPage.getWidth(), libPage.getHeight()]);
+                    curY = pdfPageHeight - 48;
+                  }
+                  libPage.drawText(subLines[si]!, {
+                    x: ox + 4,
+                    y: curY,
+                    size: t.fontSize,
+                    font,
+                    color: rgb(cr, cg, cb),
+                    opacity,
+                  });
+                  if (si < subLines.length - 1) curY -= lineHeight;
+                }
               }
             }
 

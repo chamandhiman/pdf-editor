@@ -7,7 +7,10 @@ const description =
 
 export const Route = createFileRoute("/editor")({
   validateSearch: (search: Record<string, unknown>) => ({
-    file: typeof search["file"] === "string" ? (search["file"] as string) : "Sample-Document.pdf",
+    file:
+      typeof search["file"] === "string" && search["file"].trim().length > 0
+        ? (search["file"] as string)
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -28,5 +31,5 @@ export const Route = createFileRoute("/editor")({
 
 function EditorRoute() {
   const { file } = Route.useSearch();
-  return <EditorPage fileName={file || "Sample-Document.pdf"} />;
+  return <EditorPage fileName={file} />;
 }

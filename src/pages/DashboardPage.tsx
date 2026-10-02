@@ -44,6 +44,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { SignInModal } from "@/components/editor/modals/SignInModal";
 import { SupportModal } from "@/components/SupportModal";
 import { useAuth } from "@/lib/auth-context";
+import { auth } from "@/lib/firebase";
 import { setUploadedPdf } from "@/lib/pdf-store";
 import {
   saveActiveDocument,
@@ -58,6 +59,8 @@ import {
   clearRecentDocs,
   type RecentDoc,
 } from "@/lib/recent-docs";
+import { cleanDocName, normalizeDocKey, isSameDoc } from "@/lib/doc-naming";
+import { PDF_TEMPLATES, generateTemplatePdfAndDoc } from "@/lib/pdf-templates";
 import {
   getCloudDocuments,
   deleteCloudDocument,
@@ -321,7 +324,41 @@ function LocalDocCard({
 export function DashboardPage() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
+
+  // Protect dashboard: no access for unauthenticated users, redirect immediately to home
+  useEffect(() => {
+    if (!loading && !user) {
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      } else {
+        navigate({ to: "/", replace: true });
+      }
+    }
+  }, [loading, user, navigate]);
+
+  // Prevent browser back-forward cache (bfcache) from showing dashboard after logout
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || !auth.currentUser) {
+        window.location.replace("/");
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      } else {
+        navigate({ to: "/", replace: true });
+      }
+    }
+  };
 
   const [signInOpen, setSignInOpen] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
@@ -429,7 +466,7 @@ export function DashboardPage() {
       if (!buffer) {
         const allOffline = await getOfflineCloudDocs();
         const match = allOffline.find(
-          (o) => o.id === doc.id || o.name.toLowerCase() === doc.name.toLowerCase()
+          (o) => o.id === doc.id || isSameDoc(o.name, doc.name) || isSameDoc(o.id, doc.id)
         );
         if (match?.bytes) {
           buffer = match.bytes;
@@ -454,7 +491,7 @@ export function DashboardPage() {
       // 5. Check active document session
       if (!buffer) {
         const active = await loadActiveDocument();
-        if (active?.bytes && active.fileName.toLowerCase() === doc.name.toLowerCase()) {
+        if (active?.bytes && isSameDoc(active.fileName, doc.name)) {
           buffer = active.bytes;
           if (active.docState && (!editorState || !editorState.pages || editorState.pages.length === 0)) {
             editorState = active.docState;
@@ -494,11 +531,12 @@ export function DashboardPage() {
   };
 
   const openLocalDoc = async (doc: RecentDoc) => {
-    const toastId = toast.loading(`Opening ${doc.fileName}…`);
+    const targetName = cleanDocName(doc.fileName);
+    const toastId = toast.loading(`Opening ${targetName}…`);
     try {
       // 1. If user is logged in, check if document is in cloudDocs
       const matchingCloud = cloudDocs.find(
-        (c) => c.name.toLowerCase() === doc.fileName.toLowerCase() || c.id === doc.id
+        (c) => isSameDoc(c.name, targetName) || c.id === doc.id || isSameDoc(c.id, targetName)
       );
       if (matchingCloud) {
         toast.dismiss(toastId);
@@ -506,28 +544,27 @@ export function DashboardPage() {
         return;
       }
 
-      // 2. Look up in offline saved docs by sanitized recent id or doc id
-      const sanitizedId = `recent_${doc.fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
-      let offlineMatch = await getOfflineCloudDoc(sanitizedId);
+      // 2. Look up in offline saved docs by name, id, or sanitized id
+      const allOffline = await getOfflineCloudDocs();
+      const sanitizedId = `recent_${normalizeDocKey(targetName)}`;
+      let offlineMatch = allOffline.find(
+        (o) =>
+          isSameDoc(o.name, targetName) ||
+          isSameDoc(o.id, targetName) ||
+          o.id === doc.id ||
+          o.id === sanitizedId
+      );
+
       if (!offlineMatch) {
-        offlineMatch = await getOfflineCloudDoc(doc.id);
-      }
-      if (!offlineMatch) {
-        const allOffline = await getOfflineCloudDocs();
-        offlineMatch =
-          allOffline.find(
-            (o) =>
-              o.name.toLowerCase() === doc.fileName.toLowerCase() ||
-              o.id === doc.id ||
-              o.id === sanitizedId
-          ) ?? null;
+        offlineMatch = (await getOfflineCloudDoc(sanitizedId)) ?? (await getOfflineCloudDoc(doc.id)) ?? undefined;
       }
 
       if (offlineMatch?.bytes && offlineMatch.bytes.byteLength > 0) {
-        setUploadedPdf(offlineMatch.bytes, offlineMatch.name, offlineMatch.editorState);
-        await saveActiveDocument(offlineMatch.name, offlineMatch.bytes, offlineMatch.editorState);
-        toast.success(`Opened "${offlineMatch.name}"`, { id: toastId });
-        navigate({ to: "/editor", search: { file: offlineMatch.name } });
+        const finalName = offlineMatch.name || targetName;
+        setUploadedPdf(offlineMatch.bytes, finalName, offlineMatch.editorState);
+        await saveActiveDocument(finalName, offlineMatch.bytes, offlineMatch.editorState);
+        toast.success(`Opened "${finalName}"`, { id: toastId });
+        navigate({ to: "/editor", search: { file: finalName } });
         return;
       }
 
@@ -536,21 +573,39 @@ export function DashboardPage() {
       if (
         active?.bytes &&
         active.bytes.byteLength > 0 &&
-        active.fileName.toLowerCase() === doc.fileName.toLowerCase()
+        isSameDoc(active.fileName, targetName)
       ) {
-        setUploadedPdf(active.bytes, active.fileName, active.docState);
-        toast.success(`Opened "${active.fileName}"`, { id: toastId });
-        navigate({ to: "/editor", search: { file: active.fileName } });
+        const finalName = active.fileName || targetName;
+        setUploadedPdf(active.bytes, finalName, active.docState);
+        toast.success(`Opened "${finalName}"`, { id: toastId });
+        navigate({ to: "/editor", search: { file: finalName } });
         return;
       }
 
-      // 4. Fallback only if bytes were cleared from browser storage
+      // 4. Check if it matches a template in the catalog
+      const matchedTemplate = PDF_TEMPLATES.find(
+        (t) =>
+          isSameDoc(t.name, targetName) ||
+          isSameDoc(t.id, targetName) ||
+          isSameDoc(t.fileName, targetName) ||
+          t.id === doc.id
+      );
+      if (matchedTemplate) {
+        const generated = await generateTemplatePdfAndDoc(matchedTemplate.id);
+        setUploadedPdf(generated.bytes, generated.fileName, generated.doc);
+        await saveActiveDocument(generated.fileName, generated.bytes, generated.doc);
+        toast.success(`Opened "${generated.fileName}"`, { id: toastId });
+        navigate({ to: "/editor", search: { file: generated.fileName } });
+        return;
+      }
+
+      // 5. Fallback only if bytes were completely cleared from browser storage
       toast.dismiss(toastId);
-      toast.info(`Please re-select "${doc.fileName}" to continue editing.`);
+      toast.info(`Please re-select "${targetName}" to continue editing.`);
       inputRef.current?.click();
     } catch (err) {
       console.error("[dashboard] Failed to open local doc:", err);
-      toast.error(`Could not open "${doc.fileName}".`, { id: toastId });
+      toast.error(`Could not open "${targetName}".`, { id: toastId });
     }
   };
 
@@ -559,22 +614,29 @@ export function DashboardPage() {
     setRecentDocs(getRecentDocs());
   };
 
-  const navItems = user
-    ? [
-        { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
-        { icon: Cloud, label: "My Documents", id: "my-docs" },
-        { icon: Clock, label: "Recent", id: "recent" },
-        { icon: Star, label: "Templates", id: "templates" },
-        { icon: Settings, label: "Settings", id: "settings" },
-        { icon: Home, label: "Go to Home", id: "home" },
-      ]
-    : [
-        { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
-        { icon: Clock, label: "Recent", id: "recent" },
-        { icon: Star, label: "Templates", id: "templates" },
-        { icon: Settings, label: "Settings", id: "settings" },
-        { icon: Home, label: "Go to Home", id: "home" },
-      ];
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+          <p className="text-sm font-medium text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
+    { icon: Cloud, label: "My Documents", id: "my-docs" },
+    { icon: Clock, label: "Recent", id: "recent" },
+    { icon: Star, label: "Templates", id: "templates" },
+    { icon: Settings, label: "Settings", id: "settings" },
+    { icon: Home, label: "Go to Home", id: "home" },
+  ];
 
   return (
     <div className="flex h-screen bg-background">
@@ -702,7 +764,7 @@ export function DashboardPage() {
                   Exit Dashboard (Home)
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={signOut}>
+                <DropdownMenuItem onSelect={handleSignOut}>
                   <LogOut className="mr-2 h-3.5 w-3.5" />
                   Sign out
                 </DropdownMenuItem>
@@ -804,7 +866,7 @@ export function DashboardPage() {
                           {user.displayName ?? user.email}
                         </span>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={signOut}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={handleSignOut}>
                         <LogOut className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -862,39 +924,11 @@ export function DashboardPage() {
               <FileUp className="h-3.5 w-3.5" />
               Upload PDF
             </Button>
-            {!user && (
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => setSignInOpen(true)}>
-                Sign In
-              </Button>
-            )}
           </div>
         </header>
 
         {/* Scrollable body */}
         <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 pb-safe touch-scroll">
-          {/* Guest Mode Notification Banner (Requirement 8 & 9) */}
-          {!user && (
-            <div className="mb-6 p-4 rounded-2xl border border-brand/20 bg-brand/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  Guest-First Mode (Browser Local Storage)
-                </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
-                  You can edit and download PDFs freely without an account. Documents shown here are stored in this browser only. Sign in with Google anytime to save documents to cloud storage for 30 days and access them across devices.
-                </p>
-              </div>
-              <Button
-                variant="brand"
-                size="sm"
-                className="shrink-0 text-xs font-semibold gap-1.5 self-start sm:self-auto shadow-sm"
-                onClick={() => setSignInOpen(true)}
-              >
-                <User className="h-3.5 w-3.5" />
-                Sign in with Google
-              </Button>
-            </div>
-          )}
 
           {/* Quick Access Row */}
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1059,7 +1093,7 @@ export function DashboardPage() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h2 className="text-[14px] font-semibold text-foreground">
-                    {user ? "Recent Documents (Local)" : "Recent Documents"}
+                    Recent Documents (Local)
                   </h2>
                   <p className="text-[11px] text-muted-foreground">
                     Stored locally in this web browser.
@@ -1084,7 +1118,11 @@ export function DashboardPage() {
                   Loading recent documents…
                 </div>
               ) : recentDocs.length === 0 ? (
-                !user && <EmptyState onUpload={() => inputRef.current?.click()} />
+                <EmptyState
+                  title="No recent local documents"
+                  description="Documents opened in this browser will appear here."
+                  onUpload={() => inputRef.current?.click()}
+                />
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {recentDocs.map((doc) => (
@@ -1124,7 +1162,7 @@ export function DashboardPage() {
                   <div className="flex items-center justify-between py-2 border-b border-border/60">
                     <span className="text-muted-foreground">Status:</span>
                     <span className="font-semibold text-foreground">
-                      {user ? `Signed in as ${user.email}` : "Guest Mode"}
+                      Signed in as {user.email}
                     </span>
                   </div>
 

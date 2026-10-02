@@ -233,10 +233,10 @@ export function PropertiesPanel({ editor }: { editor: EditorState }) {
 function DocumentProps({ editor }: { editor: EditorState }) {
   return (
     <div className="space-y-1 p-3">
-      <Row label="Page Size" value={editor.document.pageSize} />
+      <Row label="Page Size" value={editor.document.pageSize || "A4"} />
       <Row label="Pages" value={String(editor.document.pages.length)} />
       <Row label="Zoom" value={`${editor.zoom}%`} />
-      <Row label="Orientation" value={editor.document.orientation} />
+      <Row label="Orientation" value={editor.document.orientation || "Portrait"} />
       <Separator className="my-3" />
       <Row label="Objects" value={String(editor.document.pages.reduce((n, p) => n + p.objects.length, 0))} />
       <Row label="Annotations" value={String(editor.annotations.length)} />

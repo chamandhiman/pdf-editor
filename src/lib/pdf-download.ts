@@ -47,32 +47,32 @@ export function documentHasEdits(appDoc: AppDocument): boolean {
 }
 
 /**
- * Retrieves the compiled PDF bytes for the current document (applying all edits if present, or falling back to original upload).
+ * Retrieves the compiled PDF bytes for the current document (applying all edits from current editor state).
  */
 export async function getDocumentPdfBytes(appDoc: AppDocument): Promise<ArrayBuffer> {
   const upload = getUploadedPdf();
-  const hasEdits = documentHasEdits(appDoc);
+  const isTemplateOrBlank = appDoc.pages.some((p) => p.type === "blank");
+  const hasObjects = appDoc.pages.some((p) => p.objects && p.objects.length > 0);
 
-  if (hasEdits || !upload) {
-    try {
-      const edited = await exportEditedPdf(appDoc);
-      if (edited) {
-        const ab = edited.buffer.slice(
-          edited.byteOffset,
-          edited.byteOffset + edited.byteLength,
-        ) as ArrayBuffer;
-        return ab;
-      }
-    } catch (err) {
-      console.error("[pdf-download] Export failed, attempting upload bytes fallback:", err);
+  try {
+    const edited = await exportEditedPdf(appDoc);
+    if (edited) {
+      const ab = edited.buffer.slice(
+        edited.byteOffset,
+        edited.byteOffset + edited.byteLength,
+      ) as ArrayBuffer;
+      return ab;
     }
+  } catch (err) {
+    console.error("[pdf-download] Export failed from current state:", err);
   }
 
-  if (upload?.bytes) {
+  // Only fall back to raw upload bytes for normal uploaded PDFs when NO template or edits exist
+  if (!isTemplateOrBlank && !hasObjects && upload?.bytes) {
     return upload.bytes.slice(0);
   }
 
-  throw new Error("No PDF data found in current session.");
+  throw new Error("Could not compile PDF from current document edits.");
 }
 
 /**
@@ -93,9 +93,12 @@ export async function downloadEditedPdf(
 
   onStart?.();
 
+  const isTemplateOrBlank = appDoc.pages.some((p) => p.type === "blank");
+  const hasAnyObjects = appDoc.pages.some((p) => p.objects && p.objects.length > 0);
   const hasEdits = documentHasEdits(appDoc);
 
-  if (hasEdits || !upload) {
+  // ALWAYS generate and export from current editor state
+  if (isTemplateOrBlank || hasAnyObjects || hasEdits || !upload) {
     try {
       const edited = await exportEditedPdf(appDoc);
       if (edited) {
@@ -104,12 +107,12 @@ export async function downloadEditedPdf(
         return true;
       }
     } catch (err) {
-      console.error("[pdf-export] Export failed, falling back to original:", err);
+      console.error("[pdf-export] Export from current document failed:", err);
     }
   }
 
-  // Fallback to original bytes if available
-  if (upload) {
+  // Fallback to original bytes ONLY for untouched, non-template uploaded PDFs
+  if (!isTemplateOrBlank && !hasAnyObjects && upload?.bytes) {
     triggerDownload(upload.bytes, fileName);
     onDone?.(true);
     return true;

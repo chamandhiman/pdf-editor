@@ -390,5 +390,163 @@ export const pdfToExcelFaq: FaqItem[] = [
   },
 ];
 
+export const pdfToPptFaq: FaqItem[] = [
+  {
+    q: "Does the PDF to PowerPoint converter include images and graphics from the PDF?",
+    a: "Yes! Unlike simple text-only converters, our tool renders every PDF page as a full-resolution 2.5× PNG image and embeds it as the slide background. Every image, chart, logo, graphic, and design element is preserved with complete visual fidelity.",
+  },
+  {
+    q: "Can I edit the converted slides in Microsoft PowerPoint?",
+    a: "Yes! Every slide contains fully editable PowerPoint text boxes matching the original font sizes, weights, and colors, positioned over a clean visual background containing your illustrations, charts, and graphics without duplicate text overlay. You can directly click, select, edit, reformat, and replace any text in PowerPoint, Google Slides, or Apple Keynote.",
+  },
+  {
+    q: "Are my PDF files uploaded to any server during conversion?",
+    a: "No. All processing happens entirely in your browser using PDF.js and JavaScript. Your files never leave your device. This guarantees complete privacy for confidential presentations, reports, and business documents.",
+  },
+  {
+    q: "What is the output slide size and resolution?",
+    a: "Each slide inherits the exact dimensions of its corresponding PDF page (converted from points to EMUs), so there is no stretching or cropping. The background image is rendered at 2.5× scale (~190 DPI equivalent) for crisp text and sharp graphics.",
+  },
+  {
+    q: "Can I also download the slide images separately?",
+    a: "Yes! Along with the .pptx download, you can also download a ZIP archive containing all slide pages as individual high-resolution PNG files — perfect for embedding into other documents or sharing online.",
+  },
+];
+
+export const pdfToJpgFaq: FaqItem[] = [
+  {
+    q: "What resolution are the JPG images exported at?",
+    a: "Our converter renders PDF pages at 2.5× scale by default (approximately 180 DPI), producing sharp, publication-quality JPG images. You can also choose 1.5×, 2×, or 3× scale in the export settings panel.",
+  },
+  {
+    q: "Can I control the JPG compression quality?",
+    a: "Yes. The export settings panel lets you adjust JPEG quality from 60% to 100%. Higher quality means larger file size but sharper images. 90–95% is recommended for most use cases.",
+  },
+  {
+    q: "Can I convert all pages of a multi-page PDF to JPG at once?",
+    a: "Yes. All pages are rendered simultaneously and you can download individual pages or all images together in a single organized ZIP archive with one click.",
+  },
+  {
+    q: "Are my PDF documents sent to external servers?",
+    a: "Never. All PDF rendering and JPEG encoding is performed locally inside your web browser using HTML5 Canvas and PDF.js. Your documents remain completely private on your device.",
+  },
+  {
+    q: "Which PDF types are supported?",
+    a: "Any standard PDF file is supported — including text-based documents, scanned documents, presentations, reports, forms, and brochures.",
+  },
+];
+
+export const pdfToPngFaq: FaqItem[] = [
+  {
+    q: "Why use PNG instead of JPG for PDF export?",
+    a: "PNG uses lossless compression, meaning every pixel is preserved exactly without JPEG artifacts. This is ideal for documents with sharp text, line art, logos, diagrams, or any content where visual accuracy is critical.",
+  },
+  {
+    q: "Does the PNG export support transparency?",
+    a: "The renderer uses a white background canvas for maximum compatibility. If your PDF pages have transparent areas, they will appear white in the output — which is the standard behavior for maximum viewer compatibility.",
+  },
+  {
+    q: "What is the output resolution for PNG images?",
+    a: "Pages are rendered at 2.5× scale by default (approximately 180 DPI equivalent), producing crisp, high-detail PNG images. You can increase scale to 3× for print-quality output or decrease to 1.5× for smaller file sizes.",
+  },
+  {
+    q: "Can I export all PDF pages as PNG in one click?",
+    a: "Yes. Click 'All as ZIP' to download every page as an individually named PNG file inside a single ZIP archive — perfectly organized and ready for use.",
+  },
+  {
+    q: "Are my files uploaded to any server?",
+    a: "No. All rendering runs 100% locally in your browser with zero server uploads. Your confidential documents never leave your device.",
+  },
+];
+
+export const cookiesFaq: FaqItem[] = [
+  {
+    q: "Why does WebToolOcean PDF Studio use cookies?",
+    a: "We use essential cookies and browser storage (such as IndexedDB and localStorage) to keep your editing sessions active, remember your theme preference, and preserve draft documents locally. Third-party advertising partners like Google AdSense may also set cookies to serve relevant, non-intrusive advertisements.",
+  },
+  {
+    q: "What is Google's DoubleClick DART cookie and how does it affect me?",
+    a: "Google uses DART cookies to serve ads to users based on their visits to websites across the internet. You can opt out of personalized DART cookie targeting at any time by visiting the Google Ad and Content Network Privacy Policy at adssettings.google.com.",
+  },
+  {
+    q: "Can I use PDF Studio without enabling advertising cookies?",
+    a: "Yes! All core document editing, conversion, splitting, merging, and encryption functions work seamlessly regardless of whether you accept advertising cookies. You can reject non-essential cookies via our consent prompt or your browser settings.",
+  },
+  {
+    q: "How do I clear or disable cookies in my browser?",
+    a: "You can manage, restrict, or clear cookies in your browser settings under Privacy & Security. Detailed step-by-step instructions for Chrome, Safari, Firefox, and Microsoft Edge are provided on our Cookie Policy page.",
+  },
+  {
+    q: "Does PDF Studio track my document contents using cookies?",
+    a: "Never. Cookies cannot access, read, or transmit your PDF document data. All PDF parsing and rendering happens in a closed, client-side browser sandbox without telemetry.",
+  },
+];
+
+export const disclaimerFaq: FaqItem[] = [
+  {
+    q: "Does PDF Studio offer legal advice regarding signed documents?",
+    a: "No. PDF Studio provides technical software tools for electronic document modification and drawing signatures. We do not provide legal counsel, compliance certifications, or legal enforceability guarantees for contracts signed through the platform.",
+  },
+  {
+    q: "Is document conversion 100% guaranteed to be identical to original files?",
+    a: "While our conversion engine strives for maximum fidelity by extracting vector layout, styles, and high-resolution graphics, differences in system fonts, embedded complex scripts, or non-standard PDF formats may occasionally result in slight visual variances.",
+  },
+  {
+    q: "What happens if I lose a password set on an encrypted PDF?",
+    a: "Because PDF Studio implements true zero-knowledge client-side 256-bit AES encryption, passwords are never transmitted to our servers or stored in any database. If you forget your password, our team cannot recover or reset it.",
+  },
+  {
+    q: "Are third-party links and advertisements endorsed by PDF Studio?",
+    a: "Third-party advertisements served via networks like Google AdSense and links to external websites are provided for reference and convenience. WebToolOcean does not warrant or endorse third-party products, services, or claims.",
+  },
+  {
+    q: "Is there any warranty on free PDF utilities?",
+    a: "The services are provided on an 'as-is' and 'as-available' basis without warranties of any kind, whether statutory, express, or implied. Users are encouraged to retain backups of important original files.",
+  },
+];
+
+export const aboutFaq: FaqItem[] = [
+  {
+    q: "What is WebToolOcean PDF Studio?",
+    a: "PDF Studio by WebToolOcean is a modern, privacy-first web document platform. We engineer high-performance web applications that handle professional PDF editing, conversion, password protection, and page manipulation directly in your browser without requiring server uploads.",
+  },
+  {
+    q: "How does the client-side architecture work?",
+    a: "By leveraging modern web standards including WebAssembly, Web Workers, and the HTML5 Canvas API, computation is executed on your local computer's processor. Your confidential files never touch external servers or cloud databases.",
+  },
+  {
+    q: "Is PDF Studio completely free to use?",
+    a: "Yes! All fundamental document tools — including editing, merging, splitting, compressing, password protection, and conversions — are free to use without requiring an account or credit card.",
+  },
+  {
+    q: "What other products are part of the WebToolOcean ecosystem?",
+    a: "WebToolOcean develops a suite of high-productivity web applications including the AI Resume Builder (Resume.webtoolocean.com), drag-and-drop Website Builder (builder.webtoolocean.com), and the core WebToolOcean productivity toolkit.",
+  },
+  {
+    q: "How does PDF Studio adhere to web accessibility standards?",
+    a: "We adhere strictly to WCAG 2.1 AA accessibility guidelines, providing comprehensive keyboard navigation, high contrast UI themes, screen reader ARIA labels, and responsive typography.",
+  },
+];
+
+export const securityFaq: FaqItem[] = [
+  {
+    q: "How does PDF Studio guarantee document privacy?",
+    a: "We operate on a zero-knowledge, client-side execution model. When you open a PDF, it is parsed directly in your browser's private memory heap. At no point is the document stream uploaded to or stored on our servers.",
+  },
+  {
+    q: "What encryption standards are used for password protection?",
+    a: "We use standard 256-bit AES (Advanced Encryption Standard) encryption via the browser's hardware-accelerated Web Crypto API, conforming to the ISO 32000 PDF security specification.",
+  },
+  {
+    q: "Are Google OAuth sessions safe and private?",
+    a: "Yes. Google OAuth 2.0 uses encrypted tokens and only requests basic profile information (name, email, and avatar) to display your workspace. We never request access to your Google Drive, contacts, or personal cloud files.",
+  },
+  {
+    q: "How can I report a security vulnerability?",
+    a: "We welcome responsible security disclosures. If you discover a potential vulnerability, please email our security engineering team directly at security@webtoolocean.com.",
+  },
+];
+
+
 
 

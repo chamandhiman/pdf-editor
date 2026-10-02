@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { ShieldCheck, Lock, EyeOff, Server, HardDrive, FileUp } from "lucide-react";
 import { toast } from "sonner";
 
@@ -127,23 +127,78 @@ export function PrivacyPage() {
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">3. Local Storage, Cookies & Security</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">3. Local Storage, Cookies & Advertising Partners</h2>
+              <div className="space-y-3 leading-relaxed">
+                <p>
+                  PDF Studio utilizes browser local storage (IndexedDB and localStorage) to preserve your document drafts, signature presets, and recent workspace files locally on your own machine.
+                </p>
+                <p>
+                  <strong>Google AdSense & DoubleClick DART Cookie:</strong> We use Google AdSense and third-party advertising partners to serve ads when you visit our website. Google, as a third-party vendor, uses cookies to serve ads on our site. Google's use of the DoubleClick DART cookie enables it and its partners to serve ads to users based on their visit to our site and/or other sites on the internet.
+                </p>
+                <p>
+                  Users may opt out of the use of the DART cookie for interest-based advertising by visiting the{" "}
+                  <a
+                    href="https://adssettings.google.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand font-semibold hover:underline"
+                  >
+                    Google Ad and Content Network Privacy Policy
+                  </a>{" "}
+                  or the{" "}
+                  <a
+                    href="https://optout.aboutads.info/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand font-semibold hover:underline"
+                  >
+                    Digital Advertising Alliance Opt-Out Page
+                  </a>. For more information, please see our dedicated <Link to="/cookies" className="text-brand font-semibold hover:underline">Cookie Policy</Link>.
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">4. California Consumer Privacy Act (CCPA / CPRA)</h2>
+              <div className="space-y-3 leading-relaxed">
+                <p>
+                  Under the CCPA, California consumers have the right to:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Request disclosure of the categories and specific pieces of personal data collected.</li>
+                  <li>Request immediate deletion of any personal data collected.</li>
+                  <li><strong>Do Not Sell My Personal Information:</strong> WebToolOcean does not sell your personal information or document contents to any third parties for monetary or other considerations.</li>
+                  <li>Not be discriminated against for exercising any of your consumer privacy rights.</li>
+                </ul>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">5. European Union (GDPR) & UK Data Subject Rights</h2>
+              <div className="space-y-3 leading-relaxed">
+                <p>
+                  If you reside in the European Economic Area (EEA) or United Kingdom, you are entitled to rights under the General Data Protection Regulation (GDPR), including the right of access, rectification, erasure, restriction of processing, data portability, and the right to object to processing.
+                </p>
+                <p>
+                  Because PDF Studio functions strictly on client-side technology, your document contents never enter our custody. To exercise rights over account information or request total profile erasure, email us at <a href="mailto:privacy@webtoolocean.com" className="text-brand font-semibold hover:underline">privacy@webtoolocean.com</a>.
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground mb-3">6. Children's Online Privacy Protection (COPPA)</h2>
               <p className="leading-relaxed">
-                PDF Studio utilizes browser local storage (IndexedDB and localStorage) to preserve your document drafts, signature presets, and recent workspace files locally on your own machine. We do not place invasive cross-site tracking cookies.
+                We believe in protecting children's privacy online. WebToolOcean PDF Studio does not knowingly collect or solicit any personally identifiable information from children under the age of 13. If you believe that a child has provided us with personal information, please contact us immediately and we will promptly delete such records.
               </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">4. Data Retention & Account Deletion (GDPR & CCPA)</h2>
+              <h2 className="text-xl font-bold text-foreground mb-3">7. Contact Information & Policy Updates</h2>
               <p className="leading-relaxed">
-                You have the right to access, export, or delete your account and personal data at any time. When you delete your account or clear local browser storage, all associated local sessions and cloud records are permanently purged. To request immediate manual erasure, contact us at privacy@webtoolocean.com.
-              </p>
-            </section>
-
-            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-foreground mb-3">5. Updates & Contact Information</h2>
-              <p className="leading-relaxed">
-                We may periodically update this policy to reflect new capabilities or regulatory requirements. For any privacy inquiries, reach out through our contact page or directly at privacy@webtoolocean.com.
+                We may periodically update this policy to reflect new capabilities or regulatory requirements. For any privacy inquiries, reach out through our <Link to="/contact" className="text-brand font-semibold hover:underline">Contact Page</Link> or directly via email at{" "}
+                <a href="mailto:privacy@webtoolocean.com" className="text-brand font-semibold hover:underline">
+                  privacy@webtoolocean.com
+                </a>.
               </p>
             </section>
           </div>

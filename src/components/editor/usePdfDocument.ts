@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { loadPdfDocument, type PdfDocumentProxy } from "@/lib/pdf-loader";
 import { getUploadedPdf, setUploadedPdf } from "@/lib/pdf-store";
-import { loadActiveDocument, getOfflineCloudDocs } from "@/lib/pdf-storage";
+import { loadActiveDocument, getOfflineCloudDocs, saveActiveDocument } from "@/lib/pdf-storage";
+import { cleanDocName, normalizeDocKey, isSameDoc } from "@/lib/doc-naming";
+import { PDF_TEMPLATES, generateTemplatePdfAndDoc } from "@/lib/pdf-templates";
 import type { PDFDocument } from "@/types/pdf";
 
 export interface LoadedPdf {
@@ -55,66 +57,109 @@ export function usePdfUpload(targetFileName?: string) {
 
     (async () => {
       try {
+        const cleanTarget = targetFileName ? cleanDocName(targetFileName) : undefined;
         let upload = getUploadedPdf();
         let storedDocState: PDFDocument | undefined = upload?.docState;
 
-        // If targetFileName is requested and either in-memory is missing or has a different file
-        if (
-          targetFileName &&
-          (!upload || upload.fileName.toLowerCase() !== targetFileName.toLowerCase())
-        ) {
-          // Check active document first
-          const active = await loadActiveDocument();
-          if (
-            active &&
-            active.bytes &&
-            active.bytes.byteLength > 0 &&
-            active.fileName.toLowerCase() === targetFileName.toLowerCase()
-          ) {
-            setUploadedPdf(active.bytes, active.fileName, active.docState);
-            upload = { bytes: active.bytes, fileName: active.fileName, docState: active.docState };
-            storedDocState = active.docState;
-          } else {
-            // Check offline saved docs
-            const allSaved = await getOfflineCloudDocs();
-            const match = allSaved.find(
-              (d) =>
-                d.name.toLowerCase() === targetFileName.toLowerCase() ||
-                d.id === targetFileName ||
-                d.id === `recent_${targetFileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`
-            );
-            if (match && match.bytes && match.bytes.byteLength > 0) {
-              setUploadedPdf(match.bytes, match.name, match.editorState);
-              upload = { bytes: match.bytes, fileName: match.name, docState: match.editorState };
-              storedDocState = match.editorState;
+        // If targetFileName is requested:
+        if (cleanTarget) {
+          const memoryMatches = upload && isSameDoc(upload.fileName, cleanTarget);
+
+          if (!memoryMatches) {
+            // Memory has a different/stale document or none. Reset upload so the wrong document NEVER opens.
+            upload = null;
+            storedDocState = undefined;
+
+            // 1. Check active document in IndexedDB
+            const active = await loadActiveDocument();
+            if (
+              active &&
+              active.bytes &&
+              active.bytes.byteLength > 0 &&
+              isSameDoc(active.fileName, cleanTarget)
+            ) {
+              const fName = active.fileName || cleanTarget;
+              upload = {
+                bytes: active.bytes,
+                fileName: fName,
+                ...(active.docState ? { docState: active.docState } : {}),
+              };
+              storedDocState = active.docState;
+              setUploadedPdf(active.bytes, fName, active.docState);
+            }
+
+            // 2. Check offline saved docs
+            if (!upload) {
+              const allSaved = await getOfflineCloudDocs();
+              const match = allSaved.find(
+                (d) =>
+                  isSameDoc(d.name, cleanTarget) ||
+                  isSameDoc(d.id, cleanTarget) ||
+                  d.id === `recent_${normalizeDocKey(cleanTarget)}`
+              );
+              if (match && match.bytes && match.bytes.byteLength > 0) {
+                const fName = match.name || cleanTarget;
+                upload = { bytes: match.bytes, fileName: fName, docState: match.editorState };
+                storedDocState = match.editorState;
+                setUploadedPdf(match.bytes, fName, match.editorState);
+                await saveActiveDocument(fName, match.bytes, match.editorState);
+              }
+            }
+
+            // 3. Check templates catalog
+            if (!upload) {
+              const matchedTemplate = PDF_TEMPLATES.find(
+                (t) =>
+                  isSameDoc(t.name, cleanTarget) ||
+                  isSameDoc(t.id, cleanTarget) ||
+                  isSameDoc(t.fileName, cleanTarget)
+              );
+              if (matchedTemplate) {
+                try {
+                  const generated = await generateTemplatePdfAndDoc(matchedTemplate.id);
+                  upload = { bytes: generated.bytes, fileName: generated.fileName, docState: generated.doc };
+                  storedDocState = generated.doc;
+                  setUploadedPdf(generated.bytes, generated.fileName, generated.doc);
+                  await saveActiveDocument(generated.fileName, generated.bytes, generated.doc);
+                } catch (tErr) {
+                  console.warn("[pdf] Failed to auto-generate template for target:", cleanTarget, tErr);
+                }
+              }
             }
           }
         }
 
-        // If in-memory upload is null (e.g. after fresh browser reload), restore from active IndexedDB
-        if (!upload) {
-          const stored = await loadActiveDocument();
-          if (stored && stored.bytes && stored.bytes.byteLength > 0) {
-            setUploadedPdf(stored.bytes, stored.fileName, stored.docState);
-            upload = { bytes: stored.bytes, fileName: stored.fileName, docState: stored.docState };
-            storedDocState = stored.docState;
+        // If NO targetFileName was specified (generic /editor open or fresh reload):
+        if (!cleanTarget) {
+          if (!upload) {
+            const stored = await loadActiveDocument();
+            if (stored && stored.bytes && stored.bytes.byteLength > 0) {
+              const fName = stored.fileName || "Document.pdf";
+              setUploadedPdf(stored.bytes, fName, stored.docState);
+              upload = {
+                bytes: stored.bytes,
+                fileName: fName,
+                ...(stored.docState ? { docState: stored.docState } : {}),
+              };
+              storedDocState = stored.docState;
+            }
           }
-        }
 
-        // As a secondary fallback on browser reload, restore the most recent saved document
-        if (!upload) {
-          const allSaved = await getOfflineCloudDocs();
-          if (allSaved.length > 0) {
-            const sorted = [...allSaved].sort(
-              (a, b) =>
-                new Date(b.updatedAt || b.savedAt).getTime() -
-                new Date(a.updatedAt || a.savedAt).getTime()
-            );
-            const latest = sorted[0];
-            if (latest?.bytes && latest.bytes.byteLength > 0) {
-              setUploadedPdf(latest.bytes, latest.name, latest.editorState);
-              upload = { bytes: latest.bytes, fileName: latest.name, docState: latest.editorState };
-              storedDocState = latest.editorState;
+          if (!upload) {
+            const allSaved = await getOfflineCloudDocs();
+            if (allSaved.length > 0) {
+              const sorted = [...allSaved].sort(
+                (a, b) =>
+                  new Date(b.updatedAt || b.savedAt).getTime() -
+                  new Date(a.updatedAt || a.savedAt).getTime()
+              );
+              const latest = sorted[0];
+              if (latest?.bytes && latest.bytes.byteLength > 0) {
+                const fName = latest.name || "Document.pdf";
+                setUploadedPdf(latest.bytes, fName, latest.editorState);
+                upload = { bytes: latest.bytes, fileName: fName, docState: latest.editorState };
+                storedDocState = latest.editorState;
+              }
             }
           }
         }

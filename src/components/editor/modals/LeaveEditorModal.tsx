@@ -6,26 +6,23 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth-context";
-import { AlertTriangle, Cloud, LogOut } from "lucide-react";
+import { AlertTriangle, LogOut, Save, Loader2 } from "lucide-react";
 
 interface LeaveEditorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirmLeave: () => void;
-  onSignInClick: () => void;
-  onSaveClick?: () => void;
+  onSaveAndExit: () => void | Promise<void>;
+  isSaving?: boolean;
 }
 
 export function LeaveEditorModal({
   open,
   onOpenChange,
   onConfirmLeave,
-  onSignInClick,
-  onSaveClick,
+  onSaveAndExit,
+  isSaving = false,
 }: LeaveEditorModalProps) {
-  const { user } = useAuth();
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px] p-6 rounded-2xl border-border bg-card shadow-2xl">
@@ -37,42 +34,29 @@ export function LeaveEditorModal({
             Exit Editor?
           </DialogTitle>
           <DialogDescription className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            {user
-              ? "You will lose any unsaved edits, added text, signatures, or changes you made. Save your document safely to the cloud before leaving, or leave without saving."
-              : "You will lose any unsaved edits, added text, signatures, or changes you made. Sign in to save your files safely to your cloud account, or leave without saving."}
+            You will lose any unsaved edits, added text, signatures, or changes you made. Save your document before leaving, or leave without saving.
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-6 flex flex-col gap-2.5">
-          {user ? (
-            <Button
-              variant="brand"
-              className="w-full gap-2 font-bold shadow-md shadow-brand/20 py-2.5"
-              onClick={() => {
-                onOpenChange(false);
-                onSaveClick?.();
-              }}
-            >
-              <Cloud className="h-4 w-4" />
-              Save Document to Cloud
-            </Button>
-          ) : (
-            <Button
-              variant="brand"
-              className="w-full gap-2 font-bold shadow-md shadow-brand/20 py-2.5"
-              onClick={() => {
-                onOpenChange(false);
-                onSignInClick();
-              }}
-            >
-              <Cloud className="h-4 w-4" />
-              Sign In to Save Files
-            </Button>
-          )}
+          <Button
+            variant="brand"
+            className="w-full gap-2 font-bold shadow-md shadow-brand/20 py-2.5"
+            disabled={isSaving}
+            onClick={onSaveAndExit}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            Save and Exit
+          </Button>
 
           <div className="grid grid-cols-2 gap-2 mt-1">
             <Button
               variant="outline"
+              disabled={isSaving}
               className="text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive border-border/80"
               onClick={() => {
                 onOpenChange(false);
@@ -85,6 +69,7 @@ export function LeaveEditorModal({
 
             <Button
               variant="secondary"
+              disabled={isSaving}
               className="text-xs font-semibold"
               onClick={() => onOpenChange(false)}
             >

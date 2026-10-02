@@ -492,7 +492,7 @@ export function ProtectPdfPage() {
                             Download Protected PDF
                           </Button>
 
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="xl"
                             className="w-full sm:w-auto px-6 font-semibold"
@@ -500,7 +500,7 @@ export function ProtectPdfPage() {
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             Open in Editor
-                          </Button>
+                          </Button> */}
 
                           <Button
                             variant="ghost"
@@ -517,277 +517,272 @@ export function ProtectPdfPage() {
                       /* CONFIGURATION VIEW */
                       <div className="space-y-8">
                       /* Document selected bar with rich thumbnail preview */
-                      <div className="p-4 sm:p-5 rounded-2xl bg-muted/40 border border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
-                          {thumbnailUrl ? (
-                            <div className="w-16 h-22 rounded-xl overflow-hidden border border-border shadow-md bg-white shrink-0">
-                              <img src={thumbnailUrl} alt="Document page 1" className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-14 h-16 rounded-xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md">
-                              PDF
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
-                                Ready to Encrypt
-                              </span>
-                              <span className="text-xs text-muted-foreground">{selectedFile.pageCount} page(s)</span>
-                            </div>
-                            <p className="font-bold text-base text-foreground truncate mt-1 max-w-xs sm:max-w-md">
-                              {selectedFile.file.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {(selectedFile.file.size / (1024 * 1024)).toFixed(2)} MB • Client-side encryption
-                            </p>
-                          </div>
-                        </div>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-xs font-semibold shrink-0"
-                        >
-                          Change PDF
-                        </Button>
-                      </div>
-
-                      {/* Step 2: Password Inputs */}
-                      <div className="space-y-6 pt-4 border-t border-border">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Primary Password Input */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center justify-between">
-                            <span className="flex items-center gap-1.5">
-                              <Key className="w-3.5 h-3.5 text-brand" />
-                              Choose Password
-                            </span>
-                            <span className="text-[11px] font-normal text-muted-foreground">Required to open PDF</span>
-                          </label>
-
-                          <div className="relative">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder="Enter strong password..."
-                              className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-
-                          {/* Password Strength Meter */}
-                          {password && (
-                            <div className="pt-1.5 space-y-1.5">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">Password Strength:</span>
-                                <span className="font-bold text-foreground">{strength.label}</span>
+                        <div className="p-4 sm:p-5 rounded-2xl bg-muted/40 border border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                            {thumbnailUrl ? (
+                              <div className="w-16 h-22 rounded-xl overflow-hidden border border-border shadow-md bg-white shrink-0">
+                                <img src={thumbnailUrl} alt="Document page 1" className="w-full h-full object-cover" />
                               </div>
-                              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex gap-1">
-                                {[0, 1, 2, 3].map((step) => (
-                                  <div
-                                    key={step}
-                                    className={`h-full flex-1 rounded-full transition-colors ${
-                                      step <= strength.score ? strength.color : "bg-muted"
-                                    }`}
-                                  />
-                                ))}
+                            ) : (
+                              <div className="w-14 h-16 rounded-xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md">
+                                PDF
                               </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Confirm Password Input */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center justify-between">
-                            <span className="flex items-center gap-1.5">
-                              <ShieldCheck className="w-3.5 h-3.5 text-brand" />
-                              Confirm Password
-                            </span>
-                            {confirmPassword && (
-                              <span
-                                className={`text-[11px] font-bold ${
-                                  passwordsMatch ? "text-emerald-600" : "text-destructive"
-                                }`}
-                              >
-                                {passwordsMatch ? "✓ Passwords Match" : "✗ Do not match"}
-                              </span>
                             )}
-                          </label>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
+                                  Ready to Encrypt
+                                </span>
+                                <span className="text-xs text-muted-foreground">{selectedFile.pageCount} page(s)</span>
+                              </div>
+                              <p className="font-bold text-base text-foreground truncate mt-1 max-w-xs sm:max-w-md">
+                                {selectedFile.file.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {(selectedFile.file.size / (1024 * 1024)).toFixed(2)} MB • Client-side encryption
+                              </p>
+                            </div>
+                          </div>
 
-                          <div className="relative">
-                            <input
-                              type={showConfirmPassword ? "text" : "password"}
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              placeholder="Re-enter password..."
-                              className={`w-full pr-10 pl-4 py-3 rounded-xl border bg-background text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 ${
-                                confirmPassword
-                                  ? passwordsMatch
-                                    ? "border-emerald-500 focus:ring-emerald-500/30"
-                                    : "border-destructive focus:ring-destructive/30"
-                                  : "border-input focus:ring-brand/40"
-                              }`}
-                            />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="text-xs font-semibold shrink-0"
+                          >
+                            Change PDF
+                          </Button>
+                        </div>
+
+                        {/* Step 2: Password Inputs */}
+                        <div className="space-y-6 pt-4 border-t border-border">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Primary Password Input */}
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center justify-between">
+                                <span className="flex items-center gap-1.5">
+                                  <Key className="w-3.5 h-3.5 text-brand" />
+                                  Choose Password
+                                </span>
+                                <span className="text-[11px] font-normal text-muted-foreground">Required to open PDF</span>
+                              </label>
+
+                              <div className="relative">
+                                <input
+                                  type={showPassword ? "text" : "password"}
+                                  value={password}
+                                  onChange={(e) => setPassword(e.target.value)}
+                                  placeholder="Enter strong password..."
+                                  className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
+                                >
+                                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                              </div>
+
+                              {/* Password Strength Meter */}
+                              {password && (
+                                <div className="pt-1.5 space-y-1.5">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">Password Strength:</span>
+                                    <span className="font-bold text-foreground">{strength.label}</span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex gap-1">
+                                    {[0, 1, 2, 3].map((step) => (
+                                      <div
+                                        key={step}
+                                        className={`h-full flex-1 rounded-full transition-colors ${step <= strength.score ? strength.color : "bg-muted"
+                                          }`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Confirm Password Input */}
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center justify-between">
+                                <span className="flex items-center gap-1.5">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-brand" />
+                                  Confirm Password
+                                </span>
+                                {confirmPassword && (
+                                  <span
+                                    className={`text-[11px] font-bold ${passwordsMatch ? "text-emerald-600" : "text-destructive"
+                                      }`}
+                                  >
+                                    {passwordsMatch ? "✓ Passwords Match" : "✗ Do not match"}
+                                  </span>
+                                )}
+                              </label>
+
+                              <div className="relative">
+                                <input
+                                  type={showConfirmPassword ? "text" : "password"}
+                                  value={confirmPassword}
+                                  onChange={(e) => setConfirmPassword(e.target.value)}
+                                  placeholder="Re-enter password..."
+                                  className={`w-full pr-10 pl-4 py-3 rounded-xl border bg-background text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 ${confirmPassword
+                                      ? passwordsMatch
+                                        ? "border-emerald-500 focus:ring-emerald-500/30"
+                                        : "border-destructive focus:ring-destructive/30"
+                                      : "border-input focus:ring-brand/40"
+                                    }`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
+                                >
+                                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Advanced Options Toggle */}
+                          <div className="pt-2">
                             <button
                               type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
+                              onClick={() => setShowAdvanced(!showAdvanced)}
+                              className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-brand cursor-pointer transition-colors"
                             >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              <span>{showAdvanced ? "Hide Advanced Permissions" : "Show Advanced Permissions & Algorithm"}</span>
+                              {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
+
+                            {showAdvanced && (
+                              <div className="mt-4 p-5 rounded-2xl bg-muted/30 border border-border/80 space-y-5 animate-in fade-in-50 duration-200">
+                                {/* Algorithm Selection */}
+                                <div>
+                                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">
+                                    Encryption Algorithm
+                                  </label>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label
+                                      className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${algorithm === "AES-256"
+                                          ? "border-brand bg-brand-soft/40 text-foreground"
+                                          : "border-border bg-card hover:bg-accent/40"
+                                        }`}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="algo"
+                                        checked={algorithm === "AES-256"}
+                                        onChange={() => setAlgorithm("AES-256")}
+                                        className="mt-1"
+                                      />
+                                      <div>
+                                        <div className="font-bold text-xs flex items-center gap-1.5">
+                                          <span>AES-256 (PDF 2.0 / Acrobat X+)</span>
+                                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand text-white">Recommended</span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                                          Highest military-grade security. Supported by all modern PDF viewers.
+                                        </p>
+                                      </div>
+                                    </label>
+
+                                    <label
+                                      className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${algorithm === "RC4"
+                                          ? "border-brand bg-brand-soft/40 text-foreground"
+                                          : "border-border bg-card hover:bg-accent/40"
+                                        }`}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="algo"
+                                        checked={algorithm === "RC4"}
+                                        onChange={() => setAlgorithm("RC4")}
+                                        className="mt-1"
+                                      />
+                                      <div>
+                                        <div className="font-bold text-xs">RC4 128-bit (Legacy Acrobat 5+)</div>
+                                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                                          Backwards compatible with older or embedded systems.
+                                        </p>
+                                      </div>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                {/* Permissions Checkboxes */}
+                                <div className="pt-2 border-t border-border/60">
+                                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">
+                                    Document Permissions
+                                  </label>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <label className="flex items-center gap-2.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={allowPrinting}
+                                        onChange={(e) => setAllowPrinting(e.target.checked)}
+                                        className="rounded border-input text-brand focus:ring-brand w-4 h-4"
+                                      />
+                                      <span className="font-medium text-foreground">Allow printing document</span>
+                                    </label>
+
+                                    <label className="flex items-center gap-2.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={allowCopying}
+                                        onChange={(e) => setAllowCopying(e.target.checked)}
+                                        className="rounded border-input text-brand focus:ring-brand w-4 h-4"
+                                      />
+                                      <span className="font-medium text-foreground">Allow copying text & graphics</span>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                {/* Optional Master/Owner Password */}
+                                <div className="pt-2 border-t border-border/60">
+                                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                                    Permissions Master Password (Optional)
+                                  </label>
+                                  <input
+                                    type="password"
+                                    value={ownerPassword}
+                                    onChange={(e) => setOwnerPassword(e.target.value)}
+                                    placeholder="Leave blank to use the same password"
+                                    className="w-full max-w-md px-3.5 py-2 rounded-xl border border-input bg-background text-xs"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Main Encrypt CTA Button */}
+                          <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                              <span>Protected with 256-bit AES encryption client-side</span>
+                            </div>
+
+                            <Button
+                              variant="brand"
+                              size="xl"
+                              disabled={!password || !confirmPassword || !passwordsMatch || isProcessing}
+                              onClick={handleProtect}
+                              className="w-full sm:w-auto px-8 py-3.5 font-bold text-base shadow-xl shadow-brand/25 pdf-shine disabled:opacity-50"
+                            >
+                              <Lock className="w-4 h-4 mr-2" />
+                              {isProcessing ? processingStep || "Encrypting PDF..." : "Encrypt & Protect PDF"}
+                            </Button>
                           </div>
                         </div>
                       </div>
-
-                      {/* Advanced Options Toggle */}
-                      <div className="pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowAdvanced(!showAdvanced)}
-                          className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-brand cursor-pointer transition-colors"
-                        >
-                          <span>{showAdvanced ? "Hide Advanced Permissions" : "Show Advanced Permissions & Algorithm"}</span>
-                          {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        </button>
-
-                        {showAdvanced && (
-                          <div className="mt-4 p-5 rounded-2xl bg-muted/30 border border-border/80 space-y-5 animate-in fade-in-50 duration-200">
-                            {/* Algorithm Selection */}
-                            <div>
-                              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">
-                                Encryption Algorithm
-                              </label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label
-                                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${
-                                    algorithm === "AES-256"
-                                      ? "border-brand bg-brand-soft/40 text-foreground"
-                                      : "border-border bg-card hover:bg-accent/40"
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name="algo"
-                                    checked={algorithm === "AES-256"}
-                                    onChange={() => setAlgorithm("AES-256")}
-                                    className="mt-1"
-                                  />
-                                  <div>
-                                    <div className="font-bold text-xs flex items-center gap-1.5">
-                                      <span>AES-256 (PDF 2.0 / Acrobat X+)</span>
-                                      <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-brand text-white">Recommended</span>
-                                    </div>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                      Highest military-grade security. Supported by all modern PDF viewers.
-                                    </p>
-                                  </div>
-                                </label>
-
-                                <label
-                                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${
-                                    algorithm === "RC4"
-                                      ? "border-brand bg-brand-soft/40 text-foreground"
-                                      : "border-border bg-card hover:bg-accent/40"
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name="algo"
-                                    checked={algorithm === "RC4"}
-                                    onChange={() => setAlgorithm("RC4")}
-                                    className="mt-1"
-                                  />
-                                  <div>
-                                    <div className="font-bold text-xs">RC4 128-bit (Legacy Acrobat 5+)</div>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                      Backwards compatible with older or embedded systems.
-                                    </p>
-                                  </div>
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* Permissions Checkboxes */}
-                            <div className="pt-2 border-t border-border/60">
-                              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">
-                                Document Permissions
-                              </label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <label className="flex items-center gap-2.5 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={allowPrinting}
-                                    onChange={(e) => setAllowPrinting(e.target.checked)}
-                                    className="rounded border-input text-brand focus:ring-brand w-4 h-4"
-                                  />
-                                  <span className="font-medium text-foreground">Allow printing document</span>
-                                </label>
-
-                                <label className="flex items-center gap-2.5 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={allowCopying}
-                                    onChange={(e) => setAllowCopying(e.target.checked)}
-                                    className="rounded border-input text-brand focus:ring-brand w-4 h-4"
-                                  />
-                                  <span className="font-medium text-foreground">Allow copying text & graphics</span>
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* Optional Master/Owner Password */}
-                            <div className="pt-2 border-t border-border/60">
-                              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                                Permissions Master Password (Optional)
-                              </label>
-                              <input
-                                type="password"
-                                value={ownerPassword}
-                                onChange={(e) => setOwnerPassword(e.target.value)}
-                                placeholder="Leave blank to use the same password"
-                                className="w-full max-w-md px-3.5 py-2 rounded-xl border border-input bg-background text-xs"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Main Encrypt CTA Button */}
-                      <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>Protected with 256-bit AES encryption client-side</span>
-                        </div>
-
-                        <Button
-                          variant="brand"
-                          size="xl"
-                          disabled={!password || !confirmPassword || !passwordsMatch || isProcessing}
-                          onClick={handleProtect}
-                          className="w-full sm:w-auto px-8 py-3.5 font-bold text-base shadow-xl shadow-brand/25 pdf-shine disabled:opacity-50"
-                        >
-                          <Lock className="w-4 h-4 mr-2" />
-                          {isProcessing ? processingStep || "Encrypting PDF..." : "Encrypt & Protect PDF"}
-                        </Button>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </section>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
 
         {/* 1. HOW IT WORKS WORKFLOW */}
         <HowItWorksSection

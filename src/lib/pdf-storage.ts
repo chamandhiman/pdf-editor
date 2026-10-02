@@ -3,6 +3,7 @@
  * Allows persisting the PDF across page refreshes.
  */
 import type { PDFDocument } from "@/types/pdf";
+import { normalizeDocKey, isSameDoc } from "./doc-naming";
 
 const DB_NAME = "pdf_studio_storage";
 const DB_VERSION = 2;
@@ -87,7 +88,9 @@ export async function saveActiveDocument(
     });
 
     // 2. Also persist a named copy to SAVED_DOCS_STORE so it can be restored from history/recent documents
-    const sanitizedId = `recent_${fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+    const safeName = fileName || "Document.pdf";
+    const key = normalizeDocKey(safeName) || safeName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_");
+    const sanitizedId = `recent_${key}`;
     const nowIso = new Date().toISOString();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
@@ -96,7 +99,7 @@ export async function saveActiveDocument(
       const savedDoc: OfflineCloudDoc = {
         id: sanitizedId,
         userId: "local",
-        name: fileName,
+        name: safeName,
         bytes: bytes.slice(0),
         savedAt: nowIso,
         createdAt: nowIso,
@@ -107,7 +110,7 @@ export async function saveActiveDocument(
         thumbnailUrl: null,
         editorState: docState || {
           id: "doc-1",
-          fileName,
+          fileName: safeName,
           pageSize: "A4",
           orientation: "Portrait",
           pages: [],
@@ -156,7 +159,8 @@ export async function saveDocumentState(docState: PDFDocument): Promise<void> {
     });
 
     if (existing && existing.fileName) {
-      const sanitizedId = `recent_${existing.fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_")}`;
+      const key = normalizeDocKey(existing.fileName) || existing.fileName.toLowerCase().replace(/[^a-z0-9_.-]/g, "_");
+      const sanitizedId = `recent_${key}`;
       await new Promise<void>((resolve, reject) => {
         const tx = db.transaction(SAVED_DOCS_STORE, "readwrite");
         const store = tx.objectStore(SAVED_DOCS_STORE);
@@ -273,13 +277,17 @@ export async function getOfflineCloudDocs(userId?: string): Promise<OfflineCloud
 export async function getOfflineCloudDoc(id: string): Promise<OfflineCloudDoc | null> {
   try {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+    const direct = await new Promise<OfflineCloudDoc | null>((resolve, reject) => {
       const tx = db.transaction(SAVED_DOCS_STORE, "readonly");
       const store = tx.objectStore(SAVED_DOCS_STORE);
       const req = store.get(id);
       req.onsuccess = () => resolve((req.result as OfflineCloudDoc) || null);
       req.onerror = () => reject(req.error);
     });
+    if (direct) return direct;
+
+    const all = await getOfflineCloudDocs();
+    return all.find((d) => isSameDoc(d.id, id) || isSameDoc(d.name, id)) || null;
   } catch (err) {
     console.warn("[pdf-storage] Failed to get offline cloud doc:", err);
     return null;

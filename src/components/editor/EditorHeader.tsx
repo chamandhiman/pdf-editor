@@ -20,7 +20,7 @@ import {
   Undo2,
   User,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -58,9 +58,22 @@ export function EditorHeader({
   isSaving = false,
   isSaved = false,
 }: EditorHeaderProps) {
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [downloading, setDownloading] = useState(false);
   const [printing, setPrinting] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      } else {
+        navigate({ to: "/" });
+      }
+    }
+  };
 
   const handleDownload = async () => {
     if (downloading) return;
@@ -97,7 +110,7 @@ export function EditorHeader({
   };
 
   const handleMakeCopy = () => {
-    const currentName = editor.document.fileName;
+    const currentName = editor.document.fileName || editor.document.name || "Document.pdf";
     const baseName = currentName.replace(/\.pdf$/i, "");
     const copyName = `${baseName} (Copy).pdf`;
     editor.setDocument(
@@ -111,7 +124,7 @@ export function EditorHeader({
   };
 
   const handleRename = () => {
-    const current = editor.document.fileName.replace(/\.pdf$/i, "");
+    const current = (editor.document.fileName || editor.document.name || "Document.pdf").replace(/\.pdf$/i, "");
     const next = window.prompt("Rename document:", current);
     if (next && next.trim()) {
       const finalName = next.trim().endsWith(".pdf") ? next.trim() : `${next.trim()}.pdf`;
@@ -349,7 +362,7 @@ export function EditorHeader({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={signOut} className="cursor-pointer">
+              <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-3.5 w-3.5" />
                 Sign out
               </DropdownMenuItem>

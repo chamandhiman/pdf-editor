@@ -41,6 +41,7 @@ import {
   FileBadge,
   ExternalLink,
   Boxes,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,18 @@ export function SaasHeader({
 
   const { user, signOut } = useAuth();
   const [signInOpen, setSignInOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      } else {
+        navigate({ to: "/" });
+      }
+    }
+  };
   const [supportOpen, setSupportOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,6 +195,18 @@ export function SaasHeader({
       navigate({ to: "/pdf-to-excel" });
       return;
     }
+    if (tool.id === "pdf-to-ppt") {
+      navigate({ to: "/pdf-to-ppt" });
+      return;
+    }
+    if (tool.id === "pdf-to-jpg") {
+      navigate({ to: "/pdf-to-jpg" });
+      return;
+    }
+    if (tool.id === "pdf-to-png") {
+      navigate({ to: "/pdf-to-png" });
+      return;
+    }
     if (tool.id === "sign-pdf") {
       fileInputRef.current?.click();
       return;
@@ -224,9 +249,9 @@ export function SaasHeader({
   const conversionTools = [
     { id: "pdf-to-word", name: "PDF to Word", desc: "Convert PDF to editable DOCX", icon: FileCode },
     { id: "pdf-to-excel", name: "PDF to Excel", desc: "Extract tables into XLSX", icon: FileSpreadsheet },
-    { id: "pdf-to-ppt", name: "PDF to PowerPoint", desc: "Convert slides to PPTX", icon: Presentation, isComingSoon: true },
-    { id: "pdf-to-jpg", name: "PDF to JPG", desc: "Render high-res page images", icon: FileImage, isComingSoon: true },
-    { id: "pdf-to-png", name: "PDF to PNG", desc: "Export lossless PNG graphics", icon: FileImage, isComingSoon: true },
+    { id: "pdf-to-ppt", name: "PDF to PowerPoint", desc: "Convert slides to PPTX", icon: Presentation },
+    { id: "pdf-to-jpg", name: "PDF to JPG", desc: "Render high-res page images", icon: FileImage },
+    { id: "pdf-to-png", name: "PDF to PNG", desc: "Export lossless PNG graphics", icon: FileImage },
     { id: "jpg-to-pdf", name: "Images to PDF", desc: "Convert JPG & PNG into PDF", icon: FileUp },
   ];
 
@@ -337,16 +362,22 @@ export function SaasHeader({
                   <FileSpreadsheet className="h-3.5 w-3.5 mr-2 text-emerald-500" /> PDF to Excel
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleToolClick({ id: "pdf-to-ppt", name: "PDF to PowerPoint", isComingSoon: true })}
+                  onClick={() => handleToolClick({ id: "pdf-to-ppt", name: "PDF to PowerPoint" })}
                   className="cursor-pointer text-xs py-2"
                 >
                   <Presentation className="h-3.5 w-3.5 mr-2 text-amber-500" /> PDF to PowerPoint
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleToolClick({ id: "pdf-to-jpg", name: "PDF to JPG", isComingSoon: true })}
+                  onClick={() => handleToolClick({ id: "pdf-to-jpg", name: "PDF to JPG" })}
                   className="cursor-pointer text-xs py-2"
                 >
-                  <FileImage className="h-3.5 w-3.5 mr-2 text-rose-500" /> PDF to JPG
+                  <FileImage className="h-3.5 w-3.5 mr-2 text-orange-500" /> PDF to JPG
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleToolClick({ id: "pdf-to-png", name: "PDF to PNG" })}
+                  className="cursor-pointer text-xs py-2"
+                >
+                  <FileImage className="h-3.5 w-3.5 mr-2 text-emerald-500" /> PDF to PNG
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -448,7 +479,7 @@ export function SaasHeader({
                               <span className="text-[11px] text-muted-foreground line-clamp-1">{tool.desc}</span>
                             </div>
                           </div>
-                          {tool.isComingSoon && (
+                          {(tool as any).isComingSoon && (
                             <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-semibold shrink-0 ml-1">
                               Soon
                             </span>
@@ -480,19 +511,36 @@ export function SaasHeader({
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2 px-2">
+                  <Button variant="ghost" size="sm" className="gap-0 px-1.5 rounded-full" id="user-menu-trigger">
                     <Avatar className="h-7 w-7">
                       <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
                       <AvatarFallback className="text-[10px] bg-brand text-brand-foreground">
                         {(user.displayName ?? user.email ?? "U").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-xs font-medium md:inline-block max-w-[120px] truncate">
-                      {user.displayName ?? user.email ?? "User"}
-                    </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 shadow-lg rounded-xl">
+                <DropdownMenuContent align="end" className="w-56 shadow-lg rounded-xl">
+                  {/* User name header inside dropdown */}
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
+                      <AvatarFallback className="text-xs bg-brand text-brand-foreground">
+                        {(user.displayName ?? user.email ?? "U").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold truncate leading-tight">
+                        {user.displayName ?? "User"}
+                      </span>
+                      {user.email && (
+                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                          {user.email}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
@@ -519,7 +567,7 @@ export function SaasHeader({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => signOut()}
+                    onClick={handleSignOut}
                     className="flex items-center gap-2 text-destructive cursor-pointer"
                   >
                     <LogOut className="h-4 w-4" />
@@ -582,7 +630,7 @@ export function SaasHeader({
                       </a>
 
                       <a
-                        href="https://build.webtoolocean.com"
+                        href="https://builder.webtoolocean.com"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-start gap-3 p-2 rounded-xl hover:bg-muted/60 transition-colors group"
@@ -596,7 +644,7 @@ export function SaasHeader({
                             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </p>
                           <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-                            build.webtoolocean.com • Drag & drop sites
+                            builder.webtoolocean.com • Drag & drop sites
                           </p>
                         </div>
                       </a>
@@ -666,7 +714,7 @@ export function SaasHeader({
                       </Link>
 
                       <Link
-                        to="/privacy"
+                        to="/security"
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/70 hover:text-brand transition-colors"
                       >
                         <Shield className="w-4 h-4 text-muted-foreground" />
@@ -682,7 +730,7 @@ export function SaasHeader({
                       </Link>
 
                       <Link
-                        to="/contact"
+                        to="/about"
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/70 hover:text-brand transition-colors"
                       >
                         <Heart className="w-4 h-4 text-rose-500" />
@@ -876,17 +924,25 @@ export function SaasHeader({
                       <ExternalLink className="h-3 w-3 text-muted-foreground" />
                     </a>
                     <a
-                      href="https://build.webtoolocean.com"
+                      href="https://builder.webtoolocean.com"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted rounded-lg"
                     >
-                      <span>build.webtoolocean.com</span>
+                      <span>builder.webtoolocean.com</span>
                       <ExternalLink className="h-3 w-3 text-muted-foreground" />
                     </a>
                   </div>
 
                   <div className="pt-3 border-t border-border space-y-1">
+                    <Link
+                      to="/about"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-muted rounded-lg"
+                    >
+                      <Heart className="h-3.5 w-3.5 text-rose-500" />
+                      About us
+                    </Link>
                     <Link
                       to="/pricing"
                       onClick={() => setMobileMenuOpen(false)}
@@ -896,12 +952,20 @@ export function SaasHeader({
                       Pricing
                     </Link>
                     <Link
+                      to="/security"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-muted rounded-lg"
+                    >
+                      <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                      Security
+                    </Link>
+                    <Link
                       to="/contact"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-muted rounded-lg"
                     >
-                      <Heart className="h-3.5 w-3.5 text-rose-500" />
-                      About us
+                      <Mail className="h-3.5 w-3.5 text-brand" />
+                      Contact Support
                     </Link>
                   </div>
                 </div>

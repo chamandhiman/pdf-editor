@@ -25,6 +25,7 @@ import {
   Type,
   RotateCw,
   RotateCcw,
+  LayoutList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -239,78 +240,64 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
     };
 
     return (
-      <div
-        className={cn(
-          "flex shrink-0 items-center rounded-md",
-          isAddTextActive && "bg-brand-soft text-brand",
-        )}
-      >
+      <DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-pressed={isAddTextActive}
-              onClick={() => editor.setTool("add-text")}
-              className={cn(
-                "h-8 gap-1.5 rounded-r-none px-2 text-muted-foreground hover:text-foreground",
-                isAddTextActive && "bg-brand-soft text-brand hover:bg-brand-soft hover:text-brand",
-              )}
-            >
-              <CurrentIcon className="h-4 w-4" />
-              <span className="hidden text-xs font-medium xl:inline">{currentPreset.label}</span>
-            </Button>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Add Text options"
+                aria-pressed={isAddTextActive}
+                className={cn(
+                  "h-8 shrink-0 gap-1.5 px-2 text-muted-foreground hover:text-foreground",
+                  isAddTextActive && "bg-brand-soft text-brand hover:bg-brand-soft hover:text-brand",
+                )}
+              >
+                <CurrentIcon className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs font-medium">{currentPreset.label}</span>
+                <ChevronDown className="h-3 w-3 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent>
             <span className="font-semibold text-white">{currentPreset.label}</span>
-            <span className="ml-1.5 text-white/90">Click page to place, or choose preset from dropdown</span>
+            <span className="ml-1.5 text-white/90">Click to choose text preset</span>
           </TooltipContent>
         </Tooltip>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Add Text options"
-              className={cn(
-                "h-8 w-5 rounded-l-none px-0 text-muted-foreground hover:text-foreground",
-                isAddTextActive && "text-brand hover:bg-brand-soft hover:text-brand",
-              )}
-            >
-              <ChevronDown className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              Add Text
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {TEXT_PRESET_ITEMS.map((item) => {
-              const ItemIcon = item.icon;
-              const isSelected = editor.textPreset === item.id;
-              return (
-                <DropdownMenuItem
-                  key={item.id}
-                  onSelect={() => handleSelectPreset(item.id)}
-                  className={cn("flex items-center justify-between cursor-pointer py-2", isSelected && "bg-accent/60 font-medium")}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <ItemIcon className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span className="text-xs leading-none">{item.label}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5 leading-none">{item.hint}</span>
-                    </div>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Add Text
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {TEXT_PRESET_ITEMS.map((item) => {
+            const ItemIcon = item.icon;
+            const isSelected = editor.textPreset === item.id && isAddTextActive;
+            return (
+              <DropdownMenuItem
+                key={item.id}
+                onSelect={() => handleSelectPreset(item.id)}
+                className={cn(
+                  "flex items-center justify-between cursor-pointer py-2",
+                  isSelected && "bg-accent/60 font-medium text-brand",
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ItemIcon className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span className="text-xs leading-none">{item.label}</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5 leading-none">{item.hint}</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-mono ml-2">
-                    {TEXT_PRESETS[item.id].fontSize}px
-                  </span>
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-mono ml-2">
+                  {TEXT_PRESETS[item.id].fontSize}px
+                </span>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
@@ -323,6 +310,24 @@ export function EditorToolbar({ editor }: { editor: EditorState }) {
       <Separator orientation="vertical" className="mx-1.5 h-6" />
       <AddTextToolGroup />
       <ToolButton tool={{ id: "edit-text", label: "Edit Text", icon: PenLine, showLabel: true, hint: "Edit the document text" }} />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.setModal("section-builder")}
+            className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground hover:text-brand hover:bg-brand-soft/50"
+          >
+            <LayoutList className="h-4 w-4 text-brand" />
+            <span className="hidden text-xs font-semibold sm:inline text-brand">Add Section</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span className="font-semibold text-white">Add Resume / Document Section</span>
+          <span className="ml-1.5 text-white/90">Insert Experience, Education, Skills, Projects, etc.</span>
+        </TooltipContent>
+      </Tooltip>
 
       <Separator orientation="vertical" className="mx-1.5 h-6" />
       <Tooltip>

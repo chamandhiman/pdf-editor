@@ -125,38 +125,38 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
             </h3>
             <ul className="mt-3 space-y-2 text-xs">
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/pdf-to-word" className="text-muted-foreground hover:text-foreground">
                   PDF to Word
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/pdf-to-excel" className="text-muted-foreground hover:text-foreground">
                   PDF to Excel
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/pdf-to-ppt" className="text-muted-foreground hover:text-foreground">
                   PDF to PowerPoint
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
+                <Link to="/pdf-to-jpg" className="text-muted-foreground hover:text-foreground">
                   PDF to JPG
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
-                  Word to PDF
+                <Link to="/pdf-to-png" className="text-muted-foreground hover:text-foreground">
+                  PDF to PNG
+                </Link>
+              </li>
+              <li>
+                <Link to="/jpg-to-pdf" className="text-muted-foreground hover:text-foreground">
+                  Images to PDF
                 </Link>
               </li>
               <li>
                 <Link to="/tools" className="text-muted-foreground hover:text-foreground">
-                  Excel to PDF
-                </Link>
-              </li>
-              <li>
-                <Link to="/tools" className="text-muted-foreground hover:text-foreground">
-                  JPG to PDF
+                  More Converters
                 </Link>
               </li>
             </ul>
@@ -168,6 +168,11 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
               Company
             </h3>
             <ul className="mt-3 space-y-2 text-xs">
+              <li>
+                <Link to="/about" className="text-muted-foreground hover:text-foreground">
+                  About Us
+                </Link>
+              </li>
               <li>
                 <Link to="/pricing" className="text-muted-foreground hover:text-foreground">
                   Pricing Plans
@@ -199,7 +204,7 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </button>
               </li>
               <li>
-                <a href="#why-pdf-studio" className="text-muted-foreground hover:text-foreground">
+                <a href="/#why-pdf-studio" className="text-muted-foreground hover:text-foreground">
                   Why PDF Studio
                 </a>
               </li>
@@ -223,12 +228,17 @@ export function SaasFooter({ onSelectTool }: SaasFooterProps = {}) {
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
+                <Link to="/cookies" className="text-muted-foreground hover:text-foreground">
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
+                <Link to="/disclaimer" className="text-muted-foreground hover:text-foreground">
+                  Disclaimer
+                </Link>
+              </li>
+              <li>
+                <Link to="/security" className="text-muted-foreground hover:text-foreground">
                   Security Architecture
                 </Link>
               </li>

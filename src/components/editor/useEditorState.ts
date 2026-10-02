@@ -130,7 +130,7 @@ export function useEditorState(fileName?: string) {
   const [viewMode, setViewMode] = useState<ViewMode>("continuous");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [modal, setModal] = useState<null | "signature" | "image" | "link" | "crop">(null);
+  const [modal, setModal] = useState<null | "signature" | "image" | "link" | "crop" | "section-builder">(null);
   const [defaults, setDefaults] = useState<ToolDefaults>({
     stroke: "#2f5bd1",
     thickness: 3,
@@ -571,6 +571,34 @@ export function useEditorState(fileName?: string) {
     setActivePage(doc.pages.length + 1);
   }, [commit, doc.pages.length]);
 
+  const addPageWithInitialObjects = useCallback(
+    (initialObjects: PDFObject[]) => {
+      const newPageId = nextId("page");
+      commit((prev) => {
+        const refPage = prev.pages[prev.pages.length - 1] || prev.pages[0];
+        const width = refPage ? refPage.width : PAGE_WIDTH;
+        const height = refPage ? refPage.height : PAGE_HEIGHT;
+        const newPage: PDFPage = {
+          id: newPageId,
+          index: prev.pages.length,
+          label: `Page ${prev.pages.length + 1}`,
+          rotation: 0,
+          width,
+          height,
+          template: -1,
+          type: "blank",
+          objects: initialObjects.map((o) => ({ ...o, pageId: newPageId })),
+        };
+        return {
+          ...prev,
+          pages: reindex([...prev.pages, newPage]),
+        };
+      });
+      setActivePage(doc.pages.length + 1);
+    },
+    [commit, doc.pages.length],
+  );
+
   const duplicatePage = useCallback(
     (id: string) => {
       commit((prev) => {
@@ -812,6 +840,7 @@ export function useEditorState(fileName?: string) {
     addImage,
     addStamp,
     addPage,
+    addPageWithInitialObjects,
     duplicatePage,
     deletePage,
     rotatePage,

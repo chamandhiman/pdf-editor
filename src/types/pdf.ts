@@ -94,14 +94,17 @@ export interface TextStyleOverride {
 
 export interface PDFDocument {
   id: string;
-  fileName: string;
-  pageSize: "A4" | "Letter" | "Legal";
-  orientation: "Portrait" | "Landscape";
+  fileName?: string | undefined;
+  name?: string | undefined;
+  pageSize?: "A4" | "Letter" | "Legal" | undefined;
+  orientation?: "Portrait" | "Landscape" | undefined;
   pages: PDFPage[];
   textOverrides: Record<string, string>;
-  textColorOverrides: Record<string, string>;
-  textBgOverrides: Record<string, string>;
+  textColorOverrides?: Record<string, string> | undefined;
+  textBgOverrides?: Record<string, string> | undefined;
   textStyleOverrides: Record<string, TextStyleOverride>;
+  deletedTextItems?: Record<string, boolean> | undefined;
+  version?: number | undefined;
 }
 
 export type ViewMode = "single" | "continuous";

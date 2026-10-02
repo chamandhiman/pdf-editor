@@ -10,12 +10,14 @@ import { ThumbnailSidebar } from "@/components/editor/ThumbnailSidebar";
 import { PdfWorkspace } from "@/components/editor/PdfWorkspace";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { BottomToolbar } from "@/components/editor/BottomToolbar";
+import { EditorCursorFollower } from "@/components/editor/EditorCursorFollower";
 import { SignatureModal } from "@/components/editor/modals/SignatureModal";
 import { ImageModal } from "@/components/editor/modals/ImageModal";
 import { CropImageModal } from "@/components/editor/modals/CropImageModal";
 import { LinkModal } from "@/components/editor/modals/LinkModal";
 import { ReplacePdfModal } from "@/components/editor/modals/ReplacePdfModal";
 import { SignInModal } from "@/components/editor/modals/SignInModal";
+import { ResumeSectionBuilderModal } from "@/components/editor/ResumeSectionBuilderModal";
 import { useEditorState } from "@/components/editor/useEditorState";
 import { PdfDocContext, usePdfUpload } from "@/components/editor/usePdfDocument";
 import { recordRecentDoc } from "@/lib/recent-docs";
@@ -32,7 +34,7 @@ import { useAuth } from "@/lib/auth-context";
 import { auth } from "@/lib/firebase";
 import type { PlanId } from "@/lib/pricing-plans";
 
-export function EditorPage({ fileName }: { fileName?: string }) {
+export function EditorPage({ fileName }: { fileName?: string | undefined }) {
   const navigate = useNavigate();
   const editor = useEditorState(fileName);
   const { status, pdf, errorMessage, reload } = usePdfUpload(fileName);
@@ -173,20 +175,20 @@ export function EditorPage({ fileName }: { fileName?: string }) {
       }
 
       const cloudDoc = await saveDocumentToCloud(uid, {
-        name: documentRef.current.fileName,
+        name: documentRef.current.fileName || "Untitled.pdf",
         bytes,
         pageCount: documentRef.current.pages.length,
         editorState: documentRef.current,
         thumbnailUrl,
         existingId: currentSavedDocIdRef.current,
         planId,
-        userEmail: user?.email,
-        userDisplayName: user?.displayName,
+        userEmail: user?.email ?? null,
+        userDisplayName: user?.displayName ?? null,
       });
 
       setCurrentSavedDocId(cloudDoc.id);
       lastSavedJsonRef.current = JSON.stringify(documentRef.current);
-      recordRecentDoc(documentRef.current.fileName, documentRef.current.pages.length);
+      recordRecentDoc(documentRef.current.fileName || "Untitled.pdf", documentRef.current.pages.length);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 4000);
       if (toastId) {
@@ -201,6 +203,7 @@ export function EditorPage({ fileName }: { fileName?: string }) {
         toast.error(`Failed to save to cloud: ${err?.message || "Please check connection"}`, { id: toastId });
       }
       if (!isAutoSave) throw err;
+      return null;
     } finally {
       setIsSaving(false);
     }
@@ -222,7 +225,34 @@ export function EditorPage({ fileName }: { fileName?: string }) {
   const handleConfirmLeave = () => {
     clearUploadedPdf();
     setLeaveModalOpen(false);
-    navigate({ to: "/" });
+    navigate({ to: user ? "/dashboard" : "/" });
+  };
+
+  const handleSaveAndExit = async () => {
+    try {
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        const planId = profile?.planId || "free";
+        const check = await canUserSaveDocument(user.uid, currentSavedDocId, editor.document.fileName);
+        if (!check.allowed) {
+          setLeaveModalOpen(false);
+          setLimitModalOpen(true);
+          return;
+        }
+        await executeSave(user.uid, planId);
+      } else {
+        // Guest user: safely preserve in local storage IndexedDB and recent docs
+        if (documentRef.current) {
+          await saveDocumentState(documentRef.current);
+          recordRecentDoc(documentRef.current.fileName || "Untitled.pdf", documentRef.current.pages.length);
+        }
+        toast.success("Document saved locally.");
+      }
+      setLeaveModalOpen(false);
+      navigate({ to: user ? "/dashboard" : "/" });
+    } catch (err: any) {
+      console.error("[save-and-exit] Failed to save and exit:", err);
+    }
   };
 
   const handleSaveClick = async () => {
@@ -266,11 +296,19 @@ export function EditorPage({ fileName }: { fileName?: string }) {
     await proceedSaveWithLimitCheck(currentUser.uid, "free");
   };
 
-  const expectedPageCount = pdf?.storedDocState?.pages?.length ?? pdf?.sizes?.length ?? 0;
+  // Only wait for initial synchronization when a document is first opened
+  const [syncedFile, setSyncedFile] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pdf && editor.document.fileName === pdf.fileName && editor.document.pages.length > 0) {
+      setSyncedFile(pdf.fileName);
+    }
+  }, [pdf, editor.document.fileName, editor.document.pages.length]);
+
   const documentIsSynced =
     pdf !== null &&
-    editor.document.fileName === pdf.fileName &&
-    editor.document.pages.length === expectedPageCount &&
+    (syncedFile === pdf.fileName ||
+      (editor.document.fileName === pdf.fileName && editor.document.pages.length > 0)) &&
     editor.document.pages.every((p) => p.type === "pdf" || p.type === "blank");
 
   if (status === "loading" || (status === "ready" && !documentIsSynced) || status === "empty") {
@@ -565,9 +603,21 @@ export function EditorPage({ fileName }: { fileName?: string }) {
           open={leaveModalOpen}
           onOpenChange={setLeaveModalOpen}
           onConfirmLeave={handleConfirmLeave}
-          onSignInClick={() => setSignInOpen(true)}
-          onSaveClick={handleSaveClick}
+          onSaveAndExit={handleSaveAndExit}
+          isSaving={isSaving}
         />
+
+        {/* Resume & Document Section Builder Modal */}
+        <ResumeSectionBuilderModal
+          open={editor.modal === "section-builder"}
+          onOpenChange={(open) => {
+            if (!open) editor.setModal(null);
+          }}
+          editor={editor}
+        />
+
+        {/* Floating Mouse Cursor Handler for placing text / presets */}
+        <EditorCursorFollower editor={editor} />
       </div>
     </PdfDocContext.Provider>
   );

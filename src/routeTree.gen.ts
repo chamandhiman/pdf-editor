@@ -10,11 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as CompressRouteImport } from './routes/compress'
 import { Route as CompressPdfRouteImport } from './routes/compress-pdf'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeletePagesRouteImport } from './routes/delete-pages'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as EditPdfRouteImport } from './routes/edit-pdf'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -26,6 +30,9 @@ import { Route as OcrRouteImport } from './routes/ocr'
 import { Route as OcrPdfRouteImport } from './routes/ocr-pdf'
 import { Route as OrganizePagesRouteImport } from './routes/organize-pages'
 import { Route as PdfToExcelRouteImport } from './routes/pdf-to-excel'
+import { Route as PdfToJpgRouteImport } from './routes/pdf-to-jpg'
+import { Route as PdfToPngRouteImport } from './routes/pdf-to-png'
+import { Route as PdfToPptRouteImport } from './routes/pdf-to-ppt'
 import { Route as PdfToWordRouteImport } from './routes/pdf-to-word'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -35,6 +42,7 @@ import { Route as RemovePagesRouteImport } from './routes/remove-pages'
 import { Route as RemovePdfPagesRouteImport } from './routes/remove-pdf-pages'
 import { Route as ReorderRouteImport } from './routes/reorder'
 import { Route as ReorderPagesRouteImport } from './routes/reorder-pages'
+import { Route as SecurityRouteImport } from './routes/security'
 import { Route as SplitRouteImport } from './routes/split'
 import { Route as SplitPdfRouteImport } from './routes/split-pdf'
 import { Route as TemplatesRouteImport } from './routes/templates'
@@ -46,6 +54,11 @@ import { Route as UnlockPdfRouteImport } from './routes/unlock-pdf'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompressRoute = CompressRouteImport.update({
@@ -63,6 +76,16 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -71,6 +94,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const DeletePagesRoute = DeletePagesRouteImport.update({
   id: '/delete-pages',
   path: '/delete-pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditPdfRoute = EditPdfRouteImport.update({
@@ -128,6 +156,21 @@ const PdfToExcelRoute = PdfToExcelRouteImport.update({
   path: '/pdf-to-excel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PdfToJpgRoute = PdfToJpgRouteImport.update({
+  id: '/pdf-to-jpg',
+  path: '/pdf-to-jpg',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PdfToPngRoute = PdfToPngRouteImport.update({
+  id: '/pdf-to-png',
+  path: '/pdf-to-png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PdfToPptRoute = PdfToPptRouteImport.update({
+  id: '/pdf-to-ppt',
+  path: '/pdf-to-ppt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PdfToWordRoute = PdfToWordRouteImport.update({
   id: '/pdf-to-word',
   path: '/pdf-to-word',
@@ -173,6 +216,11 @@ const ReorderPagesRoute = ReorderPagesRouteImport.update({
   path: '/reorder-pages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SplitRoute = SplitRouteImport.update({
   id: '/split',
   path: '/split',
@@ -211,11 +259,15 @@ const UnlockPdfRoute = UnlockPdfRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/compress': typeof CompressRoute
   '/compress-pdf': typeof CompressPdfRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/delete-pages': typeof DeletePagesRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/faq': typeof FaqRoute
@@ -227,6 +279,9 @@ export interface FileRoutesByFullPath {
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
+  '/pdf-to-jpg': typeof PdfToJpgRoute
+  '/pdf-to-png': typeof PdfToPngRoute
+  '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -236,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/security': typeof SecurityRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
   '/templates': typeof TemplatesRoute
@@ -246,11 +302,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/compress': typeof CompressRoute
   '/compress-pdf': typeof CompressPdfRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/delete-pages': typeof DeletePagesRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/faq': typeof FaqRoute
@@ -262,6 +322,9 @@ export interface FileRoutesByTo {
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
+  '/pdf-to-jpg': typeof PdfToJpgRoute
+  '/pdf-to-png': typeof PdfToPngRoute
+  '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -271,6 +334,7 @@ export interface FileRoutesByTo {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/security': typeof SecurityRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
   '/templates': typeof TemplatesRoute
@@ -282,11 +346,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/compress': typeof CompressRoute
   '/compress-pdf': typeof CompressPdfRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/delete-pages': typeof DeletePagesRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/faq': typeof FaqRoute
@@ -298,6 +366,9 @@ export interface FileRoutesById {
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
+  '/pdf-to-jpg': typeof PdfToJpgRoute
+  '/pdf-to-png': typeof PdfToPngRoute
+  '/pdf-to-ppt': typeof PdfToPptRoute
   '/pdf-to-word': typeof PdfToWordRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -307,6 +378,7 @@ export interface FileRoutesById {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/security': typeof SecurityRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
   '/templates': typeof TemplatesRoute
@@ -319,11 +391,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/compress'
     | '/compress-pdf'
     | '/contact'
+    | '/cookie-policy'
+    | '/cookies'
     | '/dashboard'
     | '/delete-pages'
+    | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
     | '/faq'
@@ -335,6 +411,9 @@ export interface FileRouteTypes {
     | '/ocr-pdf'
     | '/organize-pages'
     | '/pdf-to-excel'
+    | '/pdf-to-jpg'
+    | '/pdf-to-png'
+    | '/pdf-to-ppt'
     | '/pdf-to-word'
     | '/pricing'
     | '/privacy'
@@ -344,6 +423,7 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/security'
     | '/split'
     | '/split-pdf'
     | '/templates'
@@ -354,11 +434,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/compress'
     | '/compress-pdf'
     | '/contact'
+    | '/cookie-policy'
+    | '/cookies'
     | '/dashboard'
     | '/delete-pages'
+    | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
     | '/faq'
@@ -370,6 +454,9 @@ export interface FileRouteTypes {
     | '/ocr-pdf'
     | '/organize-pages'
     | '/pdf-to-excel'
+    | '/pdf-to-jpg'
+    | '/pdf-to-png'
+    | '/pdf-to-ppt'
     | '/pdf-to-word'
     | '/pricing'
     | '/privacy'
@@ -379,6 +466,7 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/security'
     | '/split'
     | '/split-pdf'
     | '/templates'
@@ -389,11 +477,15 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/compress'
     | '/compress-pdf'
     | '/contact'
+    | '/cookie-policy'
+    | '/cookies'
     | '/dashboard'
     | '/delete-pages'
+    | '/disclaimer'
     | '/edit-pdf'
     | '/editor'
     | '/faq'
@@ -405,6 +497,9 @@ export interface FileRouteTypes {
     | '/ocr-pdf'
     | '/organize-pages'
     | '/pdf-to-excel'
+    | '/pdf-to-jpg'
+    | '/pdf-to-png'
+    | '/pdf-to-ppt'
     | '/pdf-to-word'
     | '/pricing'
     | '/privacy'
@@ -414,6 +509,7 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/security'
     | '/split'
     | '/split-pdf'
     | '/templates'
@@ -425,11 +521,15 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   CompressRoute: typeof CompressRoute
   CompressPdfRoute: typeof CompressPdfRoute
   ContactRoute: typeof ContactRoute
+  CookiePolicyRoute: typeof CookiePolicyRoute
+  CookiesRoute: typeof CookiesRoute
   DashboardRoute: typeof DashboardRoute
   DeletePagesRoute: typeof DeletePagesRoute
+  DisclaimerRoute: typeof DisclaimerRoute
   EditPdfRoute: typeof EditPdfRoute
   EditorRoute: typeof EditorRoute
   FaqRoute: typeof FaqRoute
@@ -441,6 +541,9 @@ export interface RootRouteChildren {
   OcrPdfRoute: typeof OcrPdfRoute
   OrganizePagesRoute: typeof OrganizePagesRoute
   PdfToExcelRoute: typeof PdfToExcelRoute
+  PdfToJpgRoute: typeof PdfToJpgRoute
+  PdfToPngRoute: typeof PdfToPngRoute
+  PdfToPptRoute: typeof PdfToPptRoute
   PdfToWordRoute: typeof PdfToWordRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -450,6 +553,7 @@ export interface RootRouteChildren {
   RemovePdfPagesRoute: typeof RemovePdfPagesRoute
   ReorderRoute: typeof ReorderRoute
   ReorderPagesRoute: typeof ReorderPagesRoute
+  SecurityRoute: typeof SecurityRoute
   SplitRoute: typeof SplitRoute
   SplitPdfRoute: typeof SplitPdfRoute
   TemplatesRoute: typeof TemplatesRoute
@@ -466,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compress': {
@@ -489,6 +600,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -501,6 +626,13 @@ declare module '@tanstack/react-router' {
       path: '/delete-pages'
       fullPath: '/delete-pages'
       preLoaderRoute: typeof DeletePagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/edit-pdf': {
@@ -580,6 +712,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PdfToExcelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pdf-to-jpg': {
+      id: '/pdf-to-jpg'
+      path: '/pdf-to-jpg'
+      fullPath: '/pdf-to-jpg'
+      preLoaderRoute: typeof PdfToJpgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pdf-to-png': {
+      id: '/pdf-to-png'
+      path: '/pdf-to-png'
+      fullPath: '/pdf-to-png'
+      preLoaderRoute: typeof PdfToPngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pdf-to-ppt': {
+      id: '/pdf-to-ppt'
+      path: '/pdf-to-ppt'
+      fullPath: '/pdf-to-ppt'
+      preLoaderRoute: typeof PdfToPptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pdf-to-word': {
       id: '/pdf-to-word'
       path: '/pdf-to-word'
@@ -643,6 +796,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReorderPagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/split': {
       id: '/split'
       path: '/split'
@@ -697,11 +857,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   CompressRoute: CompressRoute,
   CompressPdfRoute: CompressPdfRoute,
   ContactRoute: ContactRoute,
+  CookiePolicyRoute: CookiePolicyRoute,
+  CookiesRoute: CookiesRoute,
   DashboardRoute: DashboardRoute,
   DeletePagesRoute: DeletePagesRoute,
+  DisclaimerRoute: DisclaimerRoute,
   EditPdfRoute: EditPdfRoute,
   EditorRoute: EditorRoute,
   FaqRoute: FaqRoute,
@@ -713,6 +877,9 @@ const rootRouteChildren: RootRouteChildren = {
   OcrPdfRoute: OcrPdfRoute,
   OrganizePagesRoute: OrganizePagesRoute,
   PdfToExcelRoute: PdfToExcelRoute,
+  PdfToJpgRoute: PdfToJpgRoute,
+  PdfToPngRoute: PdfToPngRoute,
+  PdfToPptRoute: PdfToPptRoute,
   PdfToWordRoute: PdfToWordRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
@@ -722,6 +889,7 @@ const rootRouteChildren: RootRouteChildren = {
   RemovePdfPagesRoute: RemovePdfPagesRoute,
   ReorderRoute: ReorderRoute,
   ReorderPagesRoute: ReorderPagesRoute,
+  SecurityRoute: SecurityRoute,
   SplitRoute: SplitRoute,
   SplitPdfRoute: SplitPdfRoute,
   TemplatesRoute: TemplatesRoute,

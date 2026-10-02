@@ -63,6 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Prevent back/forward navigation into protected routes after sign-out
+  useEffect(() => {
+    const handlePopState = () => {
+      if (!auth.currentUser && typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
+        window.location.replace("/");
+      }
+    };
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if ((event.persisted || !auth.currentUser) && typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
+        window.location.replace("/");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, []);
+
   const signInWithGoogle = useCallback(async () => {
     setSigningIn(true);
     try {
@@ -74,8 +94,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await firebaseSignOut(auth);
-    setUser(null);
+    try {
+      await firebaseSignOut(auth);
+    } catch (err) {
+      console.error("[auth] Failed to sign out:", err);
+    } finally {
+      setUser(null);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.clear();
+        } catch {}
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", "/");
+        }
+        window.location.replace("/");
+      }
+    }
   }, []);
 
   return (
