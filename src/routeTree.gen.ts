@@ -22,6 +22,8 @@ import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as EditPdfRouteImport } from './routes/edit-pdf'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as ExcelToPdfRouteImport } from './routes/excel-to-pdf'
+import { Route as ExtractPagesRouteImport } from './routes/extract-pages'
+import { Route as ExtractPdfRouteImport } from './routes/extract-pdf'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ImageToPdfRouteImport } from './routes/image-to-pdf'
 import { Route as JpgToPdfRouteImport } from './routes/jpg-to-pdf'
@@ -30,6 +32,7 @@ import { Route as MergePdfRouteImport } from './routes/merge-pdf'
 import { Route as OcrRouteImport } from './routes/ocr'
 import { Route as OcrPdfRouteImport } from './routes/ocr-pdf'
 import { Route as OrganizePagesRouteImport } from './routes/organize-pages'
+import { Route as PageNumbersRouteImport } from './routes/page-numbers'
 import { Route as PdfToExcelRouteImport } from './routes/pdf-to-excel'
 import { Route as PdfToJpgRouteImport } from './routes/pdf-to-jpg'
 import { Route as PdfToPngRouteImport } from './routes/pdf-to-png'
@@ -46,14 +49,18 @@ import { Route as RemovePagesRouteImport } from './routes/remove-pages'
 import { Route as RemovePdfPagesRouteImport } from './routes/remove-pdf-pages'
 import { Route as ReorderRouteImport } from './routes/reorder'
 import { Route as ReorderPagesRouteImport } from './routes/reorder-pages'
+import { Route as RotatePdfRouteImport } from './routes/rotate-pdf'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SignPdfRouteImport } from './routes/sign-pdf'
 import { Route as SplitRouteImport } from './routes/split'
 import { Route as SplitPdfRouteImport } from './routes/split-pdf'
+import { Route as StampPdfRouteImport } from './routes/stamp-pdf'
 import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as UnlockRouteImport } from './routes/unlock'
 import { Route as UnlockPdfRouteImport } from './routes/unlock-pdf'
+import { Route as WatermarkPdfRouteImport } from './routes/watermark-pdf'
 import { Route as WordToPdfRouteImport } from './routes/word-to-pdf'
 
 const IndexRoute = IndexRouteImport.update({
@@ -121,6 +128,16 @@ const ExcelToPdfRoute = ExcelToPdfRouteImport.update({
   path: '/excel-to-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExtractPagesRoute = ExtractPagesRouteImport.update({
+  id: '/extract-pages',
+  path: '/extract-pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExtractPdfRoute = ExtractPdfRouteImport.update({
+  id: '/extract-pdf',
+  path: '/extract-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
@@ -159,6 +176,11 @@ const OcrPdfRoute = OcrPdfRouteImport.update({
 const OrganizePagesRoute = OrganizePagesRouteImport.update({
   id: '/organize-pages',
   path: '/organize-pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PageNumbersRoute = PageNumbersRouteImport.update({
+  id: '/page-numbers',
+  path: '/page-numbers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PdfToExcelRoute = PdfToExcelRouteImport.update({
@@ -241,9 +263,19 @@ const ReorderPagesRoute = ReorderPagesRouteImport.update({
   path: '/reorder-pages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RotatePdfRoute = RotatePdfRouteImport.update({
+  id: '/rotate-pdf',
+  path: '/rotate-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignPdfRoute = SignPdfRouteImport.update({
+  id: '/sign-pdf',
+  path: '/sign-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplitRoute = SplitRouteImport.update({
@@ -254,6 +286,11 @@ const SplitRoute = SplitRouteImport.update({
 const SplitPdfRoute = SplitPdfRouteImport.update({
   id: '/split-pdf',
   path: '/split-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StampPdfRoute = StampPdfRouteImport.update({
+  id: '/stamp-pdf',
+  path: '/stamp-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesRoute = TemplatesRouteImport.update({
@@ -281,6 +318,11 @@ const UnlockPdfRoute = UnlockPdfRouteImport.update({
   path: '/unlock-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatermarkPdfRoute = WatermarkPdfRouteImport.update({
+  id: '/watermark-pdf',
+  path: '/watermark-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WordToPdfRoute = WordToPdfRouteImport.update({
   id: '/word-to-pdf',
   path: '/word-to-pdf',
@@ -301,6 +343,8 @@ export interface FileRoutesByFullPath {
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/excel-to-pdf': typeof ExcelToPdfRoute
+  '/extract-pages': typeof ExtractPagesRoute
+  '/extract-pdf': typeof ExtractPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -309,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/ocr': typeof OcrRoute
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
+  '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
   '/pdf-to-jpg': typeof PdfToJpgRoute
   '/pdf-to-png': typeof PdfToPngRoute
@@ -325,14 +370,18 @@ export interface FileRoutesByFullPath {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/rotate-pdf': typeof RotatePdfRoute
   '/security': typeof SecurityRoute
+  '/sign-pdf': typeof SignPdfRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
+  '/stamp-pdf': typeof StampPdfRoute
   '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/watermark-pdf': typeof WatermarkPdfRoute
   '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRoutesByTo {
@@ -349,6 +398,8 @@ export interface FileRoutesByTo {
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/excel-to-pdf': typeof ExcelToPdfRoute
+  '/extract-pages': typeof ExtractPagesRoute
+  '/extract-pdf': typeof ExtractPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -357,6 +408,7 @@ export interface FileRoutesByTo {
   '/ocr': typeof OcrRoute
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
+  '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
   '/pdf-to-jpg': typeof PdfToJpgRoute
   '/pdf-to-png': typeof PdfToPngRoute
@@ -373,14 +425,18 @@ export interface FileRoutesByTo {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/rotate-pdf': typeof RotatePdfRoute
   '/security': typeof SecurityRoute
+  '/sign-pdf': typeof SignPdfRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
+  '/stamp-pdf': typeof StampPdfRoute
   '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/watermark-pdf': typeof WatermarkPdfRoute
   '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRoutesById {
@@ -398,6 +454,8 @@ export interface FileRoutesById {
   '/edit-pdf': typeof EditPdfRoute
   '/editor': typeof EditorRoute
   '/excel-to-pdf': typeof ExcelToPdfRoute
+  '/extract-pages': typeof ExtractPagesRoute
+  '/extract-pdf': typeof ExtractPdfRoute
   '/faq': typeof FaqRoute
   '/image-to-pdf': typeof ImageToPdfRoute
   '/jpg-to-pdf': typeof JpgToPdfRoute
@@ -406,6 +464,7 @@ export interface FileRoutesById {
   '/ocr': typeof OcrRoute
   '/ocr-pdf': typeof OcrPdfRoute
   '/organize-pages': typeof OrganizePagesRoute
+  '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-excel': typeof PdfToExcelRoute
   '/pdf-to-jpg': typeof PdfToJpgRoute
   '/pdf-to-png': typeof PdfToPngRoute
@@ -422,14 +481,18 @@ export interface FileRoutesById {
   '/remove-pdf-pages': typeof RemovePdfPagesRoute
   '/reorder': typeof ReorderRoute
   '/reorder-pages': typeof ReorderPagesRoute
+  '/rotate-pdf': typeof RotatePdfRoute
   '/security': typeof SecurityRoute
+  '/sign-pdf': typeof SignPdfRoute
   '/split': typeof SplitRoute
   '/split-pdf': typeof SplitPdfRoute
+  '/stamp-pdf': typeof StampPdfRoute
   '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/unlock': typeof UnlockRoute
   '/unlock-pdf': typeof UnlockPdfRoute
+  '/watermark-pdf': typeof WatermarkPdfRoute
   '/word-to-pdf': typeof WordToPdfRoute
 }
 export interface FileRouteTypes {
@@ -448,6 +511,8 @@ export interface FileRouteTypes {
     | '/edit-pdf'
     | '/editor'
     | '/excel-to-pdf'
+    | '/extract-pages'
+    | '/extract-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -456,6 +521,7 @@ export interface FileRouteTypes {
     | '/ocr'
     | '/ocr-pdf'
     | '/organize-pages'
+    | '/page-numbers'
     | '/pdf-to-excel'
     | '/pdf-to-jpg'
     | '/pdf-to-png'
@@ -472,14 +538,18 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/rotate-pdf'
     | '/security'
+    | '/sign-pdf'
     | '/split'
     | '/split-pdf'
+    | '/stamp-pdf'
     | '/templates'
     | '/terms'
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/watermark-pdf'
     | '/word-to-pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -496,6 +566,8 @@ export interface FileRouteTypes {
     | '/edit-pdf'
     | '/editor'
     | '/excel-to-pdf'
+    | '/extract-pages'
+    | '/extract-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -504,6 +576,7 @@ export interface FileRouteTypes {
     | '/ocr'
     | '/ocr-pdf'
     | '/organize-pages'
+    | '/page-numbers'
     | '/pdf-to-excel'
     | '/pdf-to-jpg'
     | '/pdf-to-png'
@@ -520,14 +593,18 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/rotate-pdf'
     | '/security'
+    | '/sign-pdf'
     | '/split'
     | '/split-pdf'
+    | '/stamp-pdf'
     | '/templates'
     | '/terms'
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/watermark-pdf'
     | '/word-to-pdf'
   id:
     | '__root__'
@@ -544,6 +621,8 @@ export interface FileRouteTypes {
     | '/edit-pdf'
     | '/editor'
     | '/excel-to-pdf'
+    | '/extract-pages'
+    | '/extract-pdf'
     | '/faq'
     | '/image-to-pdf'
     | '/jpg-to-pdf'
@@ -552,6 +631,7 @@ export interface FileRouteTypes {
     | '/ocr'
     | '/ocr-pdf'
     | '/organize-pages'
+    | '/page-numbers'
     | '/pdf-to-excel'
     | '/pdf-to-jpg'
     | '/pdf-to-png'
@@ -568,14 +648,18 @@ export interface FileRouteTypes {
     | '/remove-pdf-pages'
     | '/reorder'
     | '/reorder-pages'
+    | '/rotate-pdf'
     | '/security'
+    | '/sign-pdf'
     | '/split'
     | '/split-pdf'
+    | '/stamp-pdf'
     | '/templates'
     | '/terms'
     | '/tools'
     | '/unlock'
     | '/unlock-pdf'
+    | '/watermark-pdf'
     | '/word-to-pdf'
   fileRoutesById: FileRoutesById
 }
@@ -593,6 +677,8 @@ export interface RootRouteChildren {
   EditPdfRoute: typeof EditPdfRoute
   EditorRoute: typeof EditorRoute
   ExcelToPdfRoute: typeof ExcelToPdfRoute
+  ExtractPagesRoute: typeof ExtractPagesRoute
+  ExtractPdfRoute: typeof ExtractPdfRoute
   FaqRoute: typeof FaqRoute
   ImageToPdfRoute: typeof ImageToPdfRoute
   JpgToPdfRoute: typeof JpgToPdfRoute
@@ -601,6 +687,7 @@ export interface RootRouteChildren {
   OcrRoute: typeof OcrRoute
   OcrPdfRoute: typeof OcrPdfRoute
   OrganizePagesRoute: typeof OrganizePagesRoute
+  PageNumbersRoute: typeof PageNumbersRoute
   PdfToExcelRoute: typeof PdfToExcelRoute
   PdfToJpgRoute: typeof PdfToJpgRoute
   PdfToPngRoute: typeof PdfToPngRoute
@@ -617,14 +704,18 @@ export interface RootRouteChildren {
   RemovePdfPagesRoute: typeof RemovePdfPagesRoute
   ReorderRoute: typeof ReorderRoute
   ReorderPagesRoute: typeof ReorderPagesRoute
+  RotatePdfRoute: typeof RotatePdfRoute
   SecurityRoute: typeof SecurityRoute
+  SignPdfRoute: typeof SignPdfRoute
   SplitRoute: typeof SplitRoute
   SplitPdfRoute: typeof SplitPdfRoute
+  StampPdfRoute: typeof StampPdfRoute
   TemplatesRoute: typeof TemplatesRoute
   TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   UnlockRoute: typeof UnlockRoute
   UnlockPdfRoute: typeof UnlockPdfRoute
+  WatermarkPdfRoute: typeof WatermarkPdfRoute
   WordToPdfRoute: typeof WordToPdfRoute
 }
 
@@ -721,6 +812,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExcelToPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/extract-pages': {
+      id: '/extract-pages'
+      path: '/extract-pages'
+      fullPath: '/extract-pages'
+      preLoaderRoute: typeof ExtractPagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/extract-pdf': {
+      id: '/extract-pdf'
+      path: '/extract-pdf'
+      fullPath: '/extract-pdf'
+      preLoaderRoute: typeof ExtractPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faq': {
       id: '/faq'
       path: '/faq'
@@ -775,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/organize-pages'
       fullPath: '/organize-pages'
       preLoaderRoute: typeof OrganizePagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/page-numbers': {
+      id: '/page-numbers'
+      path: '/page-numbers'
+      fullPath: '/page-numbers'
+      preLoaderRoute: typeof PageNumbersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pdf-to-excel': {
@@ -889,11 +1001,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReorderPagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rotate-pdf': {
+      id: '/rotate-pdf'
+      path: '/rotate-pdf'
+      fullPath: '/rotate-pdf'
+      preLoaderRoute: typeof RotatePdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/security': {
       id: '/security'
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-pdf': {
+      id: '/sign-pdf'
+      path: '/sign-pdf'
+      fullPath: '/sign-pdf'
+      preLoaderRoute: typeof SignPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/split': {
@@ -908,6 +1034,13 @@ declare module '@tanstack/react-router' {
       path: '/split-pdf'
       fullPath: '/split-pdf'
       preLoaderRoute: typeof SplitPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stamp-pdf': {
+      id: '/stamp-pdf'
+      path: '/stamp-pdf'
+      fullPath: '/stamp-pdf'
+      preLoaderRoute: typeof StampPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates': {
@@ -945,6 +1078,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnlockPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watermark-pdf': {
+      id: '/watermark-pdf'
+      path: '/watermark-pdf'
+      fullPath: '/watermark-pdf'
+      preLoaderRoute: typeof WatermarkPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/word-to-pdf': {
       id: '/word-to-pdf'
       path: '/word-to-pdf'
@@ -969,6 +1109,8 @@ const rootRouteChildren: RootRouteChildren = {
   EditPdfRoute: EditPdfRoute,
   EditorRoute: EditorRoute,
   ExcelToPdfRoute: ExcelToPdfRoute,
+  ExtractPagesRoute: ExtractPagesRoute,
+  ExtractPdfRoute: ExtractPdfRoute,
   FaqRoute: FaqRoute,
   ImageToPdfRoute: ImageToPdfRoute,
   JpgToPdfRoute: JpgToPdfRoute,
@@ -977,6 +1119,7 @@ const rootRouteChildren: RootRouteChildren = {
   OcrRoute: OcrRoute,
   OcrPdfRoute: OcrPdfRoute,
   OrganizePagesRoute: OrganizePagesRoute,
+  PageNumbersRoute: PageNumbersRoute,
   PdfToExcelRoute: PdfToExcelRoute,
   PdfToJpgRoute: PdfToJpgRoute,
   PdfToPngRoute: PdfToPngRoute,
@@ -993,14 +1136,18 @@ const rootRouteChildren: RootRouteChildren = {
   RemovePdfPagesRoute: RemovePdfPagesRoute,
   ReorderRoute: ReorderRoute,
   ReorderPagesRoute: ReorderPagesRoute,
+  RotatePdfRoute: RotatePdfRoute,
   SecurityRoute: SecurityRoute,
+  SignPdfRoute: SignPdfRoute,
   SplitRoute: SplitRoute,
   SplitPdfRoute: SplitPdfRoute,
+  StampPdfRoute: StampPdfRoute,
   TemplatesRoute: TemplatesRoute,
   TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   UnlockRoute: UnlockRoute,
   UnlockPdfRoute: UnlockPdfRoute,
+  WatermarkPdfRoute: WatermarkPdfRoute,
   WordToPdfRoute: WordToPdfRoute,
 }
 export const routeTree = rootRouteImport

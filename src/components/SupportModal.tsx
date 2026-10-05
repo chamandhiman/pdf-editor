@@ -42,8 +42,8 @@ export function SupportModal({ open, onOpenChange }: SupportModalProps) {
                 <p className="text-[11px] text-muted-foreground">Google Pay, PhonePe, Paytm & BHIM</p>
               </div>
             </div>
-            <span className="rounded-md bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground border border-border/50">
-              Coming Soon
+            <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-[10px] font-semibold border border-emerald-500/20">
+              Active
             </span>
           </div>
 
@@ -58,8 +58,8 @@ export function SupportModal({ open, onOpenChange }: SupportModalProps) {
                 <p className="text-[11px] text-muted-foreground">International cards & direct donations</p>
               </div>
             </div>
-            <span className="rounded-md bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground border border-border/50">
-              Coming Soon
+            <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-[10px] font-semibold border border-emerald-500/20">
+              Active
             </span>
           </div>
 
@@ -74,8 +74,8 @@ export function SupportModal({ open, onOpenChange }: SupportModalProps) {
                 <p className="text-[11px] text-muted-foreground">Buy Me a Coffee & GitHub Sponsors</p>
               </div>
             </div>
-            <span className="rounded-md bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground border border-border/50">
-              Coming Soon
+            <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-[10px] font-semibold border border-emerald-500/20">
+              Active
             </span>
           </div>
         </div>

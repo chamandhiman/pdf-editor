@@ -32,6 +32,7 @@ import {
   Award,
   BookOpen,
   Cpu,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -221,7 +222,19 @@ export function HomePage() {
       navigate({ to: "/ppt-to-pdf" });
     } else if (tool.id === "png-to-pdf" || tool.slug === "png-to-pdf") {
       navigate({ to: "/png-to-pdf" });
-    } else if (tool.status === "available" && tool.slug === "edit-pdf") {
+    } else if (tool.id === "rotate-pdf" || tool.slug === "rotate-pdf") {
+      navigate({ to: "/rotate-pdf" });
+    } else if (tool.id === "watermark-pdf" || tool.slug === "watermark-pdf") {
+      navigate({ to: "/watermark-pdf" });
+    } else if (tool.id === "extract-pages" || tool.slug === "extract-pages") {
+      navigate({ to: "/extract-pages" });
+    } else if (tool.id === "page-numbers" || tool.slug === "page-numbers") {
+      navigate({ to: "/page-numbers" });
+    } else if (tool.id === "sign-pdf" || tool.slug === "sign-pdf") {
+      navigate({ to: "/sign-pdf" });
+    } else if (tool.id === "stamp-pdf" || tool.slug === "stamp-pdf") {
+      navigate({ to: "/stamp-pdf" });
+    } else if (tool.id === "edit-pdf" || tool.slug === "edit-pdf") {
       navigate({ to: "/edit-pdf" });
     } else {
       setSelectedTool(tool);
@@ -278,15 +291,15 @@ export function HomePage() {
     },
     {
       q: "Can I convert PDF to Word?",
-      a: "PDF to Word conversion is currently under active development. You can preview the upcoming format preservation engine in our Convert section and subscribe for early access updates.",
+      a: "Yes! PDF Studio includes a fast, private PDF to Word conversion tool that extracts text and structure into editable DOCX format directly inside your browser with zero file uploads.",
     },
     {
       q: "Can I merge multiple PDFs?",
-      a: "The multi-file merge engine is currently scheduled for the next platform release. Within the current editor, you can manage, reorder, rotate, and delete pages within your active document.",
+      a: "Yes! PDF Studio features a full client-side Merge PDF tool. You can combine multiple PDF documents, rearrange page sequences, and export a consolidated PDF in seconds.",
     },
     {
       q: "Can I compress a PDF?",
-      a: "A dedicated stream-compression utility is coming soon. The current PDF Studio export engine already optimizes image elements and font embeds to minimize output file size upon export.",
+      a: "Yes! Our Compress PDF tool optimizes embedded streams, downsamples image assets, and removes metadata to drastically reduce PDF file size while retaining visual sharpness.",
     },
     {
       q: "Can I edit PDFs on mobile?",
@@ -648,11 +661,7 @@ export function HomePage() {
                         <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-blue-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
-                      {tool.status === "available" ? (
-                        <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
-                      ) : (
-                        <span className="status-preview text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Preview</span>
-                      )}
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/item:text-foreground group-hover/item:translate-x-0.5 transition-all shrink-0 ml-1" />
                     </button>
                   ))}
                 </div>
@@ -685,7 +694,7 @@ export function HomePage() {
                         <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-emerald-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
-                      <span className="status-staging text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Staging</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/item:text-foreground group-hover/item:translate-x-0.5 transition-all shrink-0 ml-1" />
                     </button>
                   ))}
                 </div>
@@ -718,11 +727,7 @@ export function HomePage() {
                         <tool.icon className="w-3.5 h-3.5 text-muted-foreground group-hover/item:text-purple-600 flex-shrink-0" />
                         <span className="truncate">{tool.name}</span>
                       </div>
-                      {tool.status === "available" ? (
-                        <span className="status-active text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Active</span>
-                      ) : (
-                        <span className="status-preview text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1">Preview</span>
-                      )}
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/item:text-foreground group-hover/item:translate-x-0.5 transition-all shrink-0 ml-1" />
                     </button>
                   ))}
                 </div>
@@ -803,15 +808,9 @@ export function HomePage() {
                         <div className={`w-10 h-10 rounded-xl ${catIconClass} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
                           <tool.icon className="w-5 h-5 text-white" />
                         </div>
-                        {tool.status === "available" ? (
-                          <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                            Ready
-                          </span>
-                        ) : (
-                          <span className="status-preview text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                            Soon
-                          </span>
-                        )}
+                        <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-medium">
+                          Active
+                        </span>
                       </div>
 
                       <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">

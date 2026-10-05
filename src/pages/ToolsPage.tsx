@@ -69,8 +69,40 @@ export function ToolsPage() {
       navigate({ to: "/ocr-pdf" });
     } else if (tool.id === "compress-pdf" || tool.slug === "compress-pdf") {
       navigate({ to: "/compress-pdf" });
-    } else if (tool.status === "available" && tool.slug === "edit-pdf") {
-      handleTriggerUpload();
+    } else if (tool.id === "jpg-to-pdf" || tool.slug === "jpg-to-pdf") {
+      navigate({ to: "/jpg-to-pdf" });
+    } else if (tool.id === "pdf-to-word" || tool.slug === "pdf-to-word") {
+      navigate({ to: "/pdf-to-word" });
+    } else if (tool.id === "pdf-to-excel" || tool.slug === "pdf-to-excel") {
+      navigate({ to: "/pdf-to-excel" });
+    } else if (tool.id === "pdf-to-ppt" || tool.slug === "pdf-to-ppt") {
+      navigate({ to: "/pdf-to-ppt" });
+    } else if (tool.id === "pdf-to-jpg" || tool.slug === "pdf-to-jpg") {
+      navigate({ to: "/pdf-to-jpg" });
+    } else if (tool.id === "pdf-to-png" || tool.slug === "pdf-to-png") {
+      navigate({ to: "/pdf-to-png" });
+    } else if (tool.id === "word-to-pdf" || tool.slug === "word-to-pdf") {
+      navigate({ to: "/word-to-pdf" });
+    } else if (tool.id === "excel-to-pdf" || tool.slug === "excel-to-pdf") {
+      navigate({ to: "/excel-to-pdf" });
+    } else if (tool.id === "ppt-to-pdf" || tool.slug === "ppt-to-pdf") {
+      navigate({ to: "/ppt-to-pdf" });
+    } else if (tool.id === "png-to-pdf" || tool.slug === "png-to-pdf") {
+      navigate({ to: "/png-to-pdf" });
+    } else if (tool.id === "rotate-pdf" || tool.slug === "rotate-pdf") {
+      navigate({ to: "/rotate-pdf" });
+    } else if (tool.id === "watermark-pdf" || tool.slug === "watermark-pdf") {
+      navigate({ to: "/watermark-pdf" });
+    } else if (tool.id === "extract-pages" || tool.slug === "extract-pages") {
+      navigate({ to: "/extract-pages" });
+    } else if (tool.id === "page-numbers" || tool.slug === "page-numbers") {
+      navigate({ to: "/page-numbers" });
+    } else if (tool.id === "sign-pdf" || tool.slug === "sign-pdf") {
+      navigate({ to: "/sign-pdf" });
+    } else if (tool.id === "stamp-pdf" || tool.slug === "stamp-pdf") {
+      navigate({ to: "/stamp-pdf" });
+    } else if (tool.id === "edit-pdf" || tool.slug === "edit-pdf") {
+      navigate({ to: "/edit-pdf" });
     } else {
       setSelectedTool(tool);
     }
@@ -174,15 +206,9 @@ export function ToolsPage() {
                       <div className={`w-11 h-11 rounded-xl ${catIconClass} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
                         <tool.icon className="w-5 h-5 text-white" />
                       </div>
-                      {tool.status === "available" ? (
-                        <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                          Ready
-                        </span>
-                      ) : (
-                        <span className="status-preview text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                          Soon
-                        </span>
-                      )}
+                      <span className="status-active text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-medium">
+                        Active
+                      </span>
                     </div>
                     <h3 className="font-bold text-foreground text-base group-hover:text-brand transition-colors">
                       {tool.name}
@@ -193,7 +219,7 @@ export function ToolsPage() {
                   </div>
 
                   <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs font-bold text-brand group-hover:text-brand/80 transition-colors">
-                    <span>{tool.status === "available" ? "Open Tool" : "Coming Soon"}</span>
+                    <span>Open Tool</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
                   </div>
                 </div>

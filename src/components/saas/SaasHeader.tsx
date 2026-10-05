@@ -223,8 +223,28 @@ export function SaasHeader({
       navigate({ to: "/pdf-to-png" });
       return;
     }
+    if (tool.id === "rotate-pdf") {
+      navigate({ to: "/rotate-pdf" });
+      return;
+    }
+    if (tool.id === "watermark-pdf") {
+      navigate({ to: "/watermark-pdf" });
+      return;
+    }
+    if (tool.id === "extract-pages" || tool.id === "extract-pdf") {
+      navigate({ to: "/extract-pages" });
+      return;
+    }
+    if (tool.id === "page-numbers") {
+      navigate({ to: "/page-numbers" });
+      return;
+    }
     if (tool.id === "sign-pdf") {
-      fileInputRef.current?.click();
+      navigate({ to: "/sign-pdf" });
+      return;
+    }
+    if (tool.id === "stamp-pdf") {
+      navigate({ to: "/stamp-pdf" });
       return;
     }
     if (tool.isComingSoon) {
@@ -250,7 +270,7 @@ export function SaasHeader({
     { id: "compress-pdf", name: "Compress PDF", desc: "Shrink file size with crisp clarity", icon: Zap },
     { id: "reorder-pages", name: "Reorder PDF Pages", desc: "Rearrange page order easily", icon: ArrowUpDown },
     { id: "delete-pages", name: "Delete PDF Pages", desc: "Remove unwanted pages", icon: Trash2 },
-    { id: "rotate-pdf", name: "Rotate PDF", desc: "Rotate pages 90° or 180°", icon: RotateCw, isComingSoon: true },
+    { id: "rotate-pdf", name: "Rotate PDF", desc: "Rotate pages 90° or 180°", icon: RotateCw },
   ];
 
   const securityUtilityTools = [
@@ -258,8 +278,8 @@ export function SaasHeader({
     { id: "unlock-pdf", name: "Unlock PDF", desc: "Remove security passwords", icon: Unlock },
     { id: "ocr-pdf", name: "OCR PDF", desc: "Extract text from scans & images", icon: ScanText },
     { id: "sign-pdf", name: "Sign PDF", desc: "Add digital & draw signatures", icon: PenTool },
-    { id: "watermark-pdf", name: "Watermark PDF", desc: "Stamp confidential or custom text", icon: Stamp, isComingSoon: true },
-    { id: "extract-pages", name: "Extract PDF Pages", desc: "Save specific pages as new file", icon: FileDown, isComingSoon: true },
+    { id: "watermark-pdf", name: "Watermark PDF", desc: "Stamp confidential or custom text", icon: Stamp },
+    { id: "extract-pages", name: "Extract PDF Pages", desc: "Save specific pages as new file", icon: FileDown },
   ];
 
   const conversionTools = [
@@ -461,11 +481,6 @@ export function SaasHeader({
                               <span className="text-[11px] text-muted-foreground line-clamp-1">{tool.desc}</span>
                             </div>
                           </div>
-                          {tool.isComingSoon && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-semibold shrink-0 ml-1">
-                              Soon
-                            </span>
-                          )}
                         </DropdownMenuItem>
                       ))}
                     </div>
@@ -492,11 +507,6 @@ export function SaasHeader({
                               <span className="text-[11px] text-muted-foreground line-clamp-1">{tool.desc}</span>
                             </div>
                           </div>
-                          {tool.isComingSoon && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-semibold shrink-0 ml-1">
-                              Soon
-                            </span>
-                          )}
                         </DropdownMenuItem>
                       ))}
                     </div>
@@ -523,11 +533,6 @@ export function SaasHeader({
                               <span className="text-[11px] text-muted-foreground line-clamp-1">{tool.desc}</span>
                             </div>
                           </div>
-                          {(tool as any).isComingSoon && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-semibold shrink-0 ml-1">
-                              Soon
-                            </span>
-                          )}
                         </DropdownMenuItem>
                       ))}
                     </div>

@@ -733,9 +733,12 @@ export function DashboardPage() {
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
             Extended cloud storage, priority processing, and team features.
           </p>
-          <div className="mt-2 text-[11px] font-semibold text-muted-foreground text-center py-1 rounded bg-muted/60 border border-border/40">
-            Coming Soon
-          </div>
+          <Link
+            to="/pricing"
+            className="mt-2.5 block text-[11px] font-semibold text-brand text-center py-1.5 rounded-lg bg-brand/10 border border-brand/20 hover:bg-brand/20 transition-colors"
+          >
+            Explore Plans →
+          </Link>
         </div>
 
         {/* User profile / Sign in button */}
@@ -1138,16 +1141,62 @@ export function DashboardPage() {
             </section>
           )}
 
-          {/* ── SECTION 3: Templates placeholder ── */}
+          {/* ── SECTION 3: Templates ── */}
           {activeNav === "templates" && (
             <section className="mt-8">
-              <h2 className="mb-4 text-[14px] font-semibold text-foreground">Templates</h2>
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center bg-card/40">
-                <Star className="mb-3 h-8 w-8 text-muted-foreground/40" />
-                <p className="text-[14px] font-medium text-muted-foreground">Coming soon</p>
-                <p className="mt-1 text-[12.5px] text-muted-foreground max-w-sm">
-                  Pre-built document templates (invoices, resumes, contracts) will appear here.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <div>
+                  <h2 className="text-[15px] font-bold text-foreground">Document Templates Library</h2>
+                  <p className="text-xs text-muted-foreground">Select from professional invoices, contracts, agreements, and resumes.</p>
+                </div>
+                <Link
+                  to="/templates"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand/90 transition-colors shrink-0 shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Explore All Templates
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  to="/templates"
+                  className="p-5 rounded-2xl border border-border bg-card hover:border-brand/40 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-3">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-brand transition-colors">Invoices &amp; Billing</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Clean, printable tax invoices, quotes, and freelance billing receipts.</p>
+                  </div>
+                  <span className="text-xs font-semibold text-brand mt-4 group-hover:underline">Open Invoices →</span>
+                </Link>
+                <Link
+                  to="/templates"
+                  className="p-5 rounded-2xl border border-border bg-card hover:border-brand/40 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-3">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-brand transition-colors">Contracts &amp; NDAs</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Legally sound non-disclosure agreements, contracts, and proposals.</p>
+                  </div>
+                  <span className="text-xs font-semibold text-brand mt-4 group-hover:underline">Open Contracts →</span>
+                </Link>
+                <Link
+                  to="/templates"
+                  className="p-5 rounded-2xl border border-border bg-card hover:border-brand/40 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
+                      <Star className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-brand transition-colors">Resumes &amp; CVs</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Modern ATS-friendly resume layouts with customizable sections.</p>
+                  </div>
+                  <span className="text-xs font-semibold text-brand mt-4 group-hover:underline">Open Resumes →</span>
+                </Link>
               </div>
             </section>
           )}
@@ -1185,11 +1234,17 @@ export function DashboardPage() {
                 <div className="p-4 rounded-xl border border-brand/20 bg-brand/5 space-y-1.5 mt-4">
                   <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-brand" />
-                    Pro Subscription (Coming Soon)
+                    Pro Subscription Benefits
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Permanent cloud storage, larger storage quotas, no ads, and advanced PDF processing tools will be introduced in future updates.
+                    Permanent cloud storage, larger storage quotas, ad-free experience, and priority PDF processing tools.
                   </p>
+                  <Link
+                    to="/pricing"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline mt-1"
+                  >
+                    View Pricing &amp; Plans →
+                  </Link>
                 </div>
               </div>
             </section>

@@ -95,8 +95,8 @@ export function ToolWorkspaceModal({
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <tool.icon className="h-5 w-5" />
               </div>
-              <Badge variant={isAvailable ? "default" : "secondary"}>
-                {isAvailable ? "Fully Functional" : "Coming Soon"}
+              <Badge variant="default" className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 text-xs">
+                Active Tool
               </Badge>
             </div>
             <DialogTitle className="mt-3 text-lg font-bold">{tool.name}</DialogTitle>

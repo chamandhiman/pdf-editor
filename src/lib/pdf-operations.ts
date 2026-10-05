@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, degrees, rgb, StandardFonts } from "pdf-lib";
 import JSZip from "jszip";
 import { loadPdfDocument } from "./pdf-loader";
 
@@ -393,5 +393,187 @@ export async function renderAllDocumentThumbnails(
   }
 
   return results;
+}
+
+/**
+ * Rotates specific pages or all pages of a PDF document by 90, 180, or 270 degrees
+ */
+export async function rotatePdfPages(
+  bytes: ArrayBuffer,
+  rotations: Record<number, number> // pageNumber (1-indexed) -> degrees (e.g. 90, 180, 270)
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
+  const totalPages = doc.getPageCount();
+
+  for (let p = 1; p <= totalPages; p++) {
+    const additionalDeg = rotations[p] || 0;
+    if (additionalDeg !== 0) {
+      const page = doc.getPage(p - 1);
+      const current = page.getRotation().angle;
+      const newAngle = ((current + additionalDeg) % 360 + 360) % 360;
+      page.setRotation(degrees(newAngle));
+    }
+  }
+
+  return doc.save({ useObjectStreams: false, addDefaultPage: false });
+}
+
+export interface WatermarkOptions {
+  text: string;
+  fontSize?: number;
+  opacity?: number;
+  color?: { r: number; g: number; b: number };
+  angle?: number; // degrees, e.g. 45 for diagonal, 0 for horizontal
+}
+
+/**
+ * Applies a customizable text or stamp watermark across all pages of a PDF
+ */
+export async function watermarkPdf(
+  bytes: ArrayBuffer,
+  options: WatermarkOptions
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  const totalPages = doc.getPageCount();
+
+  const fontSize = options.fontSize || 48;
+  const opacity = options.opacity !== undefined ? options.opacity : 0.25;
+  const angle = options.angle !== undefined ? options.angle : 45;
+  const col = options.color || { r: 0.8, g: 0.1, b: 0.1 };
+  const text = (options.text || "CONFIDENTIAL").replace(/[^\x20-\x7E]/g, "?");
+
+  for (let i = 0; i < totalPages; i++) {
+    const page = doc.getPage(i);
+    const { width, height } = page.getSize();
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
+    const textHeight = font.heightAtSize(fontSize);
+
+    const rad = (angle * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    const x = cx - (textWidth / 2) * cos + (textHeight / 2) * sin;
+    const y = cy - (textWidth / 2) * sin - (textHeight / 2) * cos;
+
+    page.drawText(text, {
+      x,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(col.r, col.g, col.b),
+      opacity,
+      rotate: degrees(angle),
+    });
+  }
+
+  return doc.save({ useObjectStreams: false, addDefaultPage: false });
+}
+
+export interface PageNumberOptions {
+  format?: string; // e.g. "Page {n} of {total}" or "{n}" or "Page {n}"
+  position?: "bottom-center" | "bottom-right" | "bottom-left" | "top-right" | "top-center";
+  fontSize?: number;
+  startPage?: number;
+}
+
+/**
+ * Inserts formatted page numbers into each page of a PDF document
+ */
+export async function addPageNumbersToPdf(
+  bytes: ArrayBuffer,
+  options: PageNumberOptions = {}
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const totalPages = doc.getPageCount();
+
+  const format = options.format || "Page {n} of {total}";
+  const position = options.position || "bottom-center";
+  const fontSize = options.fontSize || 10;
+  const startPage = options.startPage || 1;
+
+  for (let i = 0; i < totalPages; i++) {
+    const pageNum = i + startPage;
+    const page = doc.getPage(i);
+    const { width, height } = page.getSize();
+
+    const label = format
+      .replace("{n}", String(pageNum))
+      .replace("{total}", String(totalPages + startPage - 1));
+
+    const textWidth = font.widthOfTextAtSize(label, fontSize);
+    let x = width / 2 - textWidth / 2;
+    let y = 30;
+
+    if (position === "bottom-right") {
+      x = width - textWidth - 36;
+      y = 30;
+    } else if (position === "bottom-left") {
+      x = 36;
+      y = 30;
+    } else if (position === "top-right") {
+      x = width - textWidth - 36;
+      y = height - 36;
+    } else if (position === "top-center") {
+      x = width / 2 - textWidth / 2;
+      y = height - 36;
+    }
+
+    page.drawText(label, {
+      x,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.3, 0.3, 0.3),
+    });
+  }
+
+  return doc.save({ useObjectStreams: false, addDefaultPage: false });
+}
+
+/**
+ * Extracts specific 1-indexed page numbers into a standalone PDF document
+ */
+export async function extractPdfPages(
+  bytes: ArrayBuffer,
+  pageNumbersToExtract: number[]
+): Promise<Uint8Array> {
+  const srcDoc = await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
+  try {
+    srcDoc.getForm().flatten();
+  } catch {
+    // ignore
+  }
+
+  const totalPages = srcDoc.getPageCount();
+  const validIndices = pageNumbersToExtract
+    .filter((n) => n >= 1 && n <= totalPages)
+    .map((n) => n - 1);
+
+  if (validIndices.length === 0) {
+    throw new Error("No valid pages selected to extract.");
+  }
+
+  const newDoc = await PDFDocument.create();
+  const copiedPages = await newDoc.copyPages(srcDoc, validIndices);
+
+  for (const page of copiedPages) {
+    try {
+      const mediaBox = page.getMediaBox();
+      const cropBox = page.getCropBox();
+      if (!cropBox || cropBox.width <= 0 || cropBox.height <= 0) {
+        page.setCropBox(mediaBox.x, mediaBox.y, mediaBox.width, mediaBox.height);
+      }
+    } catch {
+      // ignore
+    }
+    newDoc.addPage(page);
+  }
+
+  return newDoc.save({ useObjectStreams: false, addDefaultPage: false });
 }
 

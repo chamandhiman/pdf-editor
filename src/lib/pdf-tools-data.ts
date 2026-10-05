@@ -87,6 +87,7 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: Type,
     status: "available",
     badge: "Available Now",
+    slug: "edit-pdf",
     popular: true,
   },
 
@@ -99,6 +100,7 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: PenTool,
     status: "available",
     badge: "Available Now",
+    slug: "sign-pdf",
     popular: true,
   },
   {
@@ -109,6 +111,7 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: Stamp,
     status: "available",
     badge: "Available Now",
+    slug: "stamp-pdf",
   },
 
   // ── Organize Tools ────────────────────────────────────────────────
@@ -120,6 +123,7 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: RotateCw,
     status: "available",
     badge: "Available Now",
+    slug: "rotate-pdf",
   },
   {
     id: "delete-pages",
@@ -129,6 +133,7 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     icon: Trash2,
     status: "available",
     badge: "Available Now",
+    slug: "delete-pages",
   },
   {
     id: "reorder-pages",
@@ -169,8 +174,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "organize",
     description: "Save selected pages from a large PDF document into a brand new PDF file.",
     icon: FileDown,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "extract-pages",
+    popular: true,
   },
 
   // ── Convert from PDF ──────────────────────────────────────────────
@@ -336,8 +343,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "organize",
     description: "Insert customizable header and footer page numbering across all pages.",
     icon: Hash,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "page-numbers",
+    popular: true,
   },
   {
     id: "watermark-pdf",
@@ -345,8 +354,10 @@ export const ALL_PDF_TOOLS: PDFToolDef[] = [
     category: "security",
     description: "Overlay custom text or image watermarks with controllable opacity.",
     icon: Layers,
-    status: "coming-soon",
-    badge: "Coming Soon",
+    status: "available",
+    badge: "Available Now",
+    slug: "watermark-pdf",
+    popular: true,
   },
 ];
 

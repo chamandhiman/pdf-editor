@@ -615,6 +615,74 @@ export const pngToPdfFaq: FaqItem[] = [
   },
 ];
 
+export const rotatePdfFaq: FaqItem[] = [
+  {
+    q: "How do I rotate PDF pages online?",
+    a: "Upload your PDF document to our Rotate PDF tool. You can rotate individual pages 90° clockwise or counter-clockwise, or click 'Rotate All' to reorient the entire document at once, then save your newly rotated PDF.",
+  },
+  {
+    q: "Will rotating PDF pages reduce document quality?",
+    a: "No! PDF page rotation is a lossless metadata transformation that alters the viewport orientation without recompressing images, altering text, or changing vector elements.",
+  },
+  {
+    q: "Are my rotated PDFs uploaded to any external server?",
+    a: "Never. All page analysis and rotation operations run 100% locally inside your device browser memory via WebAssembly.",
+  },
+  {
+    q: "Can I rotate landscape scans to portrait or vice versa?",
+    a: "Yes! You can rotate any combination of portrait or landscape pages 90°, 180°, or 270° with immediate visual thumbnail previews.",
+  },
+];
+
+export const watermarkPdfFaq: FaqItem[] = [
+  {
+    q: "How does the Watermark PDF tool work?",
+    a: "Upload your PDF, enter custom text (such as CONFIDENTIAL, DRAFT, APPROVED, or your company name), customize opacity, color, angle, and font size, and download your watermarked PDF instantly.",
+  },
+  {
+    q: "Can I adjust the watermark transparency so text remains readable?",
+    a: "Yes! You can precisely adjust the opacity slider (from subtle 10% watermark up to 100% bold stamp) to ensure your underlying document text is completely readable.",
+  },
+  {
+    q: "Are watermarked files uploaded to third-party servers?",
+    a: "No. Watermarks are rendered directly into the PDF coordinate system inside your local browser sandbox.",
+  },
+  {
+    q: "Can I apply diagonal or horizontal watermarks?",
+    a: "Yes! You can toggle between standard diagonal (45°) or horizontal (0°) watermarks across all pages.",
+  },
+];
+
+export const extractPagesFaq: FaqItem[] = [
+  {
+    q: "How do I extract pages from a PDF?",
+    a: "Upload your PDF document, select the specific pages you want to keep by clicking their visual thumbnails or typing page ranges (such as '1, 3-5'), then click 'Extract Pages' to generate a brand new PDF with only your selected pages.",
+  },
+  {
+    q: "Does extracting pages modify my original file?",
+    a: "No. Your original PDF document remains completely untouched on your device. The tool generates a new PDF containing only your chosen pages.",
+  },
+  {
+    q: "Can I extract multiple non-consecutive pages?",
+    a: "Yes! You can select any combination of non-adjacent pages or custom ranges with full thumbnail visual previews.",
+  },
+];
+
+export const pageNumbersFaq: FaqItem[] = [
+  {
+    q: "How do I add page numbers to a PDF?",
+    a: "Upload your PDF, choose your numbering format (e.g. 'Page {n} of {total}' or simple numbers '{n}'), select your preferred placement (Bottom Center, Bottom Right, etc.), and download the numbered document.",
+  },
+  {
+    q: "Can I choose where page numbers appear?",
+    a: "Yes! You can position page numbers at the bottom center, bottom right, bottom left, top right, or top center.",
+  },
+  {
+    q: "Are font sizes and margins customizable?",
+    a: "Yes, you can adjust font size, starting page index, and numbering formats effortlessly.",
+  },
+];
+
 
 
 
