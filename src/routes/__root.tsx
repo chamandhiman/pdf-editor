@@ -95,12 +95,12 @@ function GoogleAnalyticsTracker() {
       typeof (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag === "function"
     ) {
       (window as unknown as { gtag: (...args: unknown[]) => void }).gtag("event", "page_view", {
-        page_path: location.pathname + location.search,
+        page_path: location.href,
         page_location: window.location.href,
         page_title: typeof document !== "undefined" ? document.title : "",
       });
     }
-  }, [location.pathname, location.search]);
+  }, [location.href]);
 
   return null;
 }

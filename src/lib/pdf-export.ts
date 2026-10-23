@@ -673,7 +673,25 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
             const embImg = obj.image.src.includes("image/png")
               ? await pdfLib.embedPng(imgBytes)
               : await pdfLib.embedJpg(imgBytes);
-            libPage.drawImage(embImg, { x: ox, y: oy, width: obj.width, height: obj.height, opacity });
+
+            const rotDeg = obj.rotation || 0;
+            const pdfAngle = -rotDeg;
+            const rad = (pdfAngle * Math.PI) / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            const cx = ox + obj.width / 2;
+            const cy = oy + obj.height / 2;
+            const imgX = cx - (obj.width / 2) * cos + (obj.height / 2) * sin;
+            const imgY = cy - (obj.width / 2) * sin - (obj.height / 2) * cos;
+
+            libPage.drawImage(embImg, {
+              x: imgX,
+              y: imgY,
+              width: obj.width,
+              height: obj.height,
+              opacity,
+              ...(rotDeg ? { rotate: degrees(pdfAngle) } : {}),
+            });
           } catch { /* skip non-embeddable images */ }
           break;
         }
@@ -687,7 +705,25 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
               const embImg = obj.signature.src.includes("image/png")
                 ? await pdfLib.embedPng(imgBytes)
                 : await pdfLib.embedJpg(imgBytes);
-              libPage.drawImage(embImg, { x: ox, y: oy, width: obj.width, height: obj.height, opacity });
+
+              const rotDeg = obj.rotation || 0;
+              const pdfAngle = -rotDeg;
+              const rad = (pdfAngle * Math.PI) / 180;
+              const cos = Math.cos(rad);
+              const sin = Math.sin(rad);
+              const cx = ox + obj.width / 2;
+              const cy = oy + obj.height / 2;
+              const imgX = cx - (obj.width / 2) * cos + (obj.height / 2) * sin;
+              const imgY = cy - (obj.width / 2) * sin - (obj.height / 2) * cos;
+
+              libPage.drawImage(embImg, {
+                x: imgX,
+                y: imgY,
+                width: obj.width,
+                height: obj.height,
+                opacity,
+                ...(rotDeg ? { rotate: degrees(pdfAngle) } : {}),
+              });
             } catch { /* skip */ }
           } else if (obj.signature?.name) {
             const font = await getFont(pdfLib, StandardFonts.TimesRomanItalic, fontCache);
@@ -714,15 +750,26 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
             : (([fr, fg, fb]) => rgb(fr, fg, fb))(hexToRgb(s.fill));
 
           if (s.kind === "rectangle") {
+            const rotDeg = obj.rotation || 0;
+            const pdfAngle = -rotDeg;
+            const rad = (pdfAngle * Math.PI) / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            const cx = ox + obj.width / 2;
+            const cy = oy + obj.height / 2;
+            const rectX = cx - (obj.width / 2) * cos + (obj.height / 2) * sin;
+            const rectY = cy - (obj.width / 2) * sin - (obj.height / 2) * cos;
+
             libPage.drawRectangle({
-              x: ox,
-              y: oy,
+              x: rectX,
+              y: rectY,
               width: obj.width,
               height: obj.height,
               borderColor: strokeColor,
               borderWidth: s.thickness,
               ...(fillColor ? { color: fillColor } : {}),
               opacity,
+              ...(rotDeg ? { rotate: degrees(pdfAngle) } : {}),
             });
           } else if (s.kind === "circle") {
             libPage.drawEllipse({
@@ -792,21 +839,71 @@ export async function exportEditedPdf(appDoc: AppDocument): Promise<Uint8Array |
           if (!obj.stamp) break;
           const [sr, sg, sb] = hexToRgb(obj.stamp.color);
           const sc = rgb(sr, sg, sb);
+
+          // Center of the stamp in PDF coordinates:
+          // ox = obj.x, oy = pdfPageHeight - obj.y - obj.height
+          const cx = ox + obj.width / 2;
+          const cy = oy + obj.height / 2;
+
+          // Rotation: in CSS, positive rotation is clockwise (screen Y down).
+          // In PDF, positive rotation is counter-clockwise (Y up).
+          // Therefore, pdfAngle = -rotDeg.
+          const rotDeg = obj.rotation || 0;
+          const pdfAngle = -rotDeg;
+          const rad = (pdfAngle * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+
+          // 1. Draw outer border rectangle centered at (cx, cy) and rotated
+          const borderWidth = 3;
+          const rectW = Math.max(10, obj.width - borderWidth);
+          const rectH = Math.max(10, obj.height - borderWidth);
+          const rectX = cx - (rectW / 2) * cos + (rectH / 2) * sin;
+          const rectY = cy - (rectW / 2) * sin - (rectH / 2) * cos;
+
           libPage.drawRectangle({
-            x: ox + 2, y: oy + 2,
-            width: obj.width - 4, height: obj.height - 4,
-            borderColor: sc, borderWidth: 3,
+            x: rectX,
+            y: rectY,
+            width: rectW,
+            height: rectH,
+            borderColor: sc,
+            borderWidth,
             opacity,
+            ...(rotDeg ? { rotate: degrees(pdfAngle) } : {}),
           });
+
+          // 2. Center and draw uppercase stamp text inside the rectangle
           const font = await getFont(pdfLib, StandardFonts.HelveticaBold, fontCache);
-          const fs = Math.min(obj.height * 0.42, 22);
-          libPage.drawText(obj.stamp.label.toUpperCase(), {
-            x: ox + 8,
-            y: oy + (obj.height - fs) / 2,
+          const rawLabel = (obj.stamp.label || "").trim().toUpperCase();
+          const stampText = rawLabel.replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
+
+          let fs = Math.min(obj.height * 0.42, 22);
+          let textWidth = font.widthOfTextAtSize(stampText, fs);
+          const maxTextW = Math.max(20, rectW - 16);
+          if (textWidth > maxTextW) {
+            fs = Math.max(8, fs * (maxTextW / textWidth));
+            textWidth = font.widthOfTextAtSize(stampText, fs);
+          }
+
+          // In HelveticaBold, the visual vertical center of capital letters is at ~half cap-height above baseline.
+          const capHeight = typeof font.heightAtSize === "function"
+            ? font.heightAtSize(fs, { descender: false })
+            : fs * 0.72;
+          const vt = capHeight / 2;
+          const ut = textWidth / 2;
+
+          // Transform (ut, vt) from local text center to baseline origin (textX, textY):
+          const textX = cx - ut * cos + vt * sin;
+          const textY = cy - ut * sin - vt * cos;
+
+          libPage.drawText(stampText, {
+            x: textX,
+            y: textY,
             size: fs,
             font,
             color: sc,
             opacity,
+            ...(rotDeg ? { rotate: degrees(pdfAngle) } : {}),
           });
           break;
         }
