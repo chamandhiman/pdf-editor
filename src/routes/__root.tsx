@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -58,7 +59,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         {error && (
           <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-left font-mono text-destructive overflow-auto max-h-48">
-            <div className="font-bold mb-1">{error.name || "Error"}: {error.message}</div>
+            <div className="font-bold mb-1">
+              {error.name || "Error"}: {error.message}
+            </div>
           </div>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -83,20 +86,49 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+function GoogleAnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      typeof (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag === "function"
+    ) {
+      (window as unknown as { gtag: (...args: unknown[]) => void }).gtag("event", "page_view", {
+        page_path: location.pathname + location.search,
+        page_location: window.location.href,
+        page_title: typeof document !== "undefined" ? document.title : "",
+      });
+    }
+  }, [location.pathname, location.search]);
+
+  return null;
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover",
+      },
       { title: "WebToolOcean PDF Studio — Complete In-Browser PDF Suite" },
       {
         name: "description",
         content:
           "Professional in-browser PDF suite. Edit text, password protect, convert, organize, annotate, and sign PDF documents online — 100% private and secure.",
       },
-      { name: "keywords", content: "pdf editor, protect pdf, free pdf tools, password protect pdf, convert pdf, compress pdf, webtoolocean" },
+      {
+        name: "keywords",
+        content:
+          "pdf editor, protect pdf, free pdf tools, password protect pdf, convert pdf, compress pdf, webtoolocean",
+      },
       { name: "author", content: "WebToolOcean" },
-      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
       { name: "theme-color", content: "#e5383b" },
       { property: "og:site_name", content: "WebToolOcean PDF Studio" },
       { property: "og:title", content: "WebToolOcean PDF Studio — Complete In-Browser PDF Suite" },
@@ -112,7 +144,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@WebToolOcean" },
       { name: "twitter:creator", content: "@WebToolOcean" },
       { name: "twitter:title", content: "WebToolOcean PDF Studio — Complete In-Browser PDF Suite" },
-      { name: "twitter:description", content: "Edit text, protect with 256-bit AES encryption, convert, and organize PDFs online." },
+      {
+        name: "twitter:description",
+        content:
+          "Edit text, protect with 256-bit AES encryption, convert, and organize PDFs online.",
+      },
+      { name: "google-site-verification", content: "Y4ZO2trgDXbKzMA1yC5bmxoSYw3063IMwh9C3Mk6roA" },
+      { name: "msvalidate.01", content: "F6CC90631F88A250A756F9F1DE579CBE" },
+      { name: "google-adsense-account", content: "ca-pub-5153046300758044" },
     ],
     links: [
       { rel: "canonical", href: "https://pdf.webtoolocean.com/" },
@@ -139,6 +178,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           logo: "https://pdf.webtoolocean.com/favicon.ico",
           sameAs: ["https://webtoolocean.com"],
         }),
+      },
+      {
+        src: "https://www.googletagmanager.com/gtag/js?id=G-4C1PP726EZ",
+        async: true,
+      },
+      {
+        children:
+          "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4C1PP726EZ', { send_page_view: false });",
+      },
+      {
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5153046300758044",
+        async: true,
+        crossOrigin: "anonymous",
       },
     ],
   }),
@@ -169,6 +221,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider delayDuration={250}>
+          <GoogleAnalyticsTracker />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <FloatingShareWidget />
